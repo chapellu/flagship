@@ -1,0 +1,21 @@
+# ------------------------------------------------------------------------------
+# OCI Authentication
+# Generate an API key in the OCI console:
+#   Profile → API Keys → Add API Key → download the private key
+# The console will show a config snippet with the values below.
+# ------------------------------------------------------------------------------
+
+tenancy_ocid     = "ocid1.tenancy.oc1..aaaa..."
+user_ocid        = "ocid1.user.oc1..aaaa..."
+fingerprint      = "aa:bb:cc:dd:..."
+private_key_path = "~/.oci/oci_api_key.pem"
+
+# OCI region — pick the one closest to you, e.g.:
+#   eu-paris-1, eu-frankfurt-1, eu-amsterdam-1, us-ashburn-1, us-phoenix-1
+region = "eu-paris-1"
+
+# Use tenancy_ocid for the root compartment, or a child compartment OCID
+compartment_id = "ocid1.tenancy.oc1..aaaa..."
+
+# Content of your SSH public key (cat ~/.ssh/id_ed25519.pub)
+ssh_public_key = "ssh-ed25519 AAAA..."

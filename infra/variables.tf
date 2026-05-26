@@ -1,0 +1,35 @@
+variable "tenancy_ocid" {
+  description = "OCID of the OCI tenancy (Profile → Tenancy in the console)"
+  type        = string
+}
+
+variable "user_ocid" {
+  description = "OCID of the OCI user (Profile → User settings)"
+  type        = string
+}
+
+variable "fingerprint" {
+  description = "Fingerprint of the API signing key"
+  type        = string
+}
+
+variable "private_key_path" {
+  description = "Path to the PEM private key used for OCI API authentication"
+  type        = string
+  default     = "~/.oci/oci_api_key.pem"
+}
+
+variable "region" {
+  description = "OCI region identifier (e.g. eu-paris-1, eu-frankfurt-1, us-ashburn-1)"
+  type        = string
+}
+
+variable "compartment_id" {
+  description = "OCID of the compartment where resources will be created (use tenancy_ocid for root)"
+  type        = string
+}
+
+variable "ssh_public_key" {
+  description = "SSH public key to inject into the VM (contents of ~/.ssh/id_ed25519.pub or similar)"
+  type        = string
+}
