@@ -42,7 +42,9 @@ jobs:
         run: terraform init
 
       - name: Plan & Apply (with AD retry for OCI capacity errors)
+        shell: bash
         run: |
+          set -o pipefail
           # A1.Flex instances frequently hit "Out of host capacity" in a given AD.
           # We re-plan and re-apply for each AD index until one succeeds.
           for ad_index in 0 1 2; do
@@ -52,7 +54,7 @@ jobs:
 
             if terraform apply -input=false tfplan 2>&1 | tee /tmp/tf_apply.log; then
               echo "Apply succeeded on AD index ${ad_index}"
-              break
+              exit 0
             fi
 
             if grep -q "Out of host capacity" /tmp/tf_apply.log; then
@@ -63,12 +65,10 @@ jobs:
               cat /tmp/tf_apply.log
               exit 1
             fi
-
-            if [ "${ad_index}" = "2" ]; then
-              echo "All 3 ADs exhausted. Retry the workflow later or change OCI_REGION."
-              exit 1
-            fi
           done
+
+          echo "All 3 ADs exhausted. Retry the workflow later or change OCI_REGION."
+          exit 1
 
       - name: Upload final plan artifact
         if: always()
