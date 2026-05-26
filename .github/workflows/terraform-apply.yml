@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "infra/**"
+  workflow_dispatch:
 
 jobs:
   apply:
@@ -37,6 +38,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "~1.9"
+          terraform_wrapper: false
 
       - name: Init
         run: terraform init
@@ -44,15 +46,19 @@ jobs:
       - name: Plan & Apply (with AD retry for OCI capacity errors)
         shell: bash
         run: |
-          set -o pipefail
           # A1.Flex instances frequently hit "Out of host capacity" in a given AD.
-          # We re-plan and re-apply for each AD index until one succeeds.
+          # Avoid pipes — capture exit code directly to bypass wrapper interference.
           for ad_index in 0 1 2; do
             echo "--- Attempt with availability_domain_index=${ad_index} ---"
+
             terraform plan -out=tfplan -input=false \
               -var "availability_domain_index=${ad_index}"
 
-            if terraform apply -input=false tfplan 2>&1 | tee /tmp/tf_apply.log; then
+            terraform apply -input=false tfplan > /tmp/tf_apply.log 2>&1
+            apply_exit=$?
+            cat /tmp/tf_apply.log
+
+            if [ $apply_exit -eq 0 ]; then
               echo "Apply succeeded on AD index ${ad_index}"
               exit 0
             fi
@@ -62,7 +68,6 @@ jobs:
               sleep 10
             else
               echo "Apply failed for a non-capacity reason, aborting."
-              cat /tmp/tf_apply.log
               exit 1
             fi
           done
