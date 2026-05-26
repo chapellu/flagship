@@ -33,3 +33,14 @@ variable "ssh_public_key" {
   description = "SSH public key to inject into the VM (contents of ~/.ssh/id_ed25519.pub or similar)"
   type        = string
 }
+
+variable "availability_domain_index" {
+  description = "Index of the availability domain to use (0, 1, or 2). Increment if you hit 'Out of host capacity' for A1.Flex."
+  type        = number
+  default     = 0
+
+  validation {
+    condition     = var.availability_domain_index >= 0 && var.availability_domain_index <= 2
+    error_message = "availability_domain_index must be 0, 1, or 2."
+  }
+}
