@@ -24,7 +24,9 @@ data "oci_identity_availability_domains" "ads" {
 }
 
 locals {
-  ad_name = data.oci_identity_availability_domains.ads.availability_domains[0].name
+  # OCI A1.Flex instances often hit "Out of host capacity" in a given AD.
+  # Increment availability_domain_index (0, 1, 2) to try another AD in the region.
+  ad_name = data.oci_identity_availability_domains.ads.availability_domains[var.availability_domain_index].name
 }
 
 # ---------------------------------------------------------------------------
