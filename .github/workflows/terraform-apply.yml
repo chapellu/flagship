@@ -46,19 +46,20 @@ jobs:
       - name: Plan & Apply (with AD retry for OCI capacity errors)
         shell: bash
         run: |
-          # A1.Flex instances frequently hit "Out of host capacity" in a given AD.
-          # Avoid pipes — capture exit code directly to bypass wrapper interference.
+          # GitHub Actions runs bash with -eo pipefail. Using "|| apply_exit=$?"
+          # prevents set -e from aborting the step on a failed apply so we can
+          # inspect the log and retry the next AD.
           for ad_index in 0 1 2; do
             echo "--- Attempt with availability_domain_index=${ad_index} ---"
 
             terraform plan -out=tfplan -input=false \
               -var "availability_domain_index=${ad_index}"
 
-            terraform apply -input=false tfplan > /tmp/tf_apply.log 2>&1
-            apply_exit=$?
+            apply_exit=0
+            terraform apply -input=false tfplan > /tmp/tf_apply.log 2>&1 || apply_exit=$?
             cat /tmp/tf_apply.log
 
-            if [ $apply_exit -eq 0 ]; then
+            if [ "$apply_exit" -eq 0 ]; then
               echo "Apply succeeded on AD index ${ad_index}"
               exit 0
             fi
