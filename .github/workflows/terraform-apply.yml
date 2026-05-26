@@ -41,19 +41,42 @@ jobs:
       - name: Init
         run: terraform init
 
-      - name: Plan
-        id: plan
-        run: terraform plan -out=tfplan -input=false
+      - name: Plan & Apply (with AD retry for OCI capacity errors)
+        run: |
+          # A1.Flex instances frequently hit "Out of host capacity" in a given AD.
+          # We re-plan and re-apply for each AD index until one succeeds.
+          for ad_index in 0 1 2; do
+            echo "--- Attempt with availability_domain_index=${ad_index} ---"
+            terraform plan -out=tfplan -input=false \
+              -var "availability_domain_index=${ad_index}"
 
-      - name: Upload plan artifact
+            if terraform apply -input=false tfplan 2>&1 | tee /tmp/tf_apply.log; then
+              echo "Apply succeeded on AD index ${ad_index}"
+              break
+            fi
+
+            if grep -q "Out of host capacity" /tmp/tf_apply.log; then
+              echo "Out of capacity on AD ${ad_index}, trying next in 10s..."
+              sleep 10
+            else
+              echo "Apply failed for a non-capacity reason, aborting."
+              cat /tmp/tf_apply.log
+              exit 1
+            fi
+
+            if [ "${ad_index}" = "2" ]; then
+              echo "All 3 ADs exhausted. Retry the workflow later or change OCI_REGION."
+              exit 1
+            fi
+          done
+
+      - name: Upload final plan artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: tfplan
           path: infra/tfplan
           retention-days: 7
-
-      - name: Apply
-        run: terraform apply -input=false tfplan
 
       - name: Show outputs
         run: terraform output
