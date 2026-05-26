@@ -51,7 +51,7 @@ jobs:
           #     regions like eu-paris-1 always stay on AD 0 without an index error).
           #   - On capacity failure, wait WAIT_SECS before the next attempt.
           #   - Abort immediately on any non-capacity error.
-          MAX_ATTEMPTS=10
+          MAX_ATTEMPTS=100
           WAIT_SECS=120
 
           for attempt in $(seq 1 $MAX_ATTEMPTS); do
