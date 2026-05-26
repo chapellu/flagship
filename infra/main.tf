@@ -24,9 +24,9 @@ data "oci_identity_availability_domains" "ads" {
 }
 
 locals {
-  # OCI A1.Flex instances often hit "Out of host capacity" in a given AD.
-  # Increment availability_domain_index (0, 1, 2) to try another AD in the region.
-  ad_name = data.oci_identity_availability_domains.ads.availability_domains[var.availability_domain_index].name
+  ad_count = length(data.oci_identity_availability_domains.ads.availability_domains)
+  # Modulo keeps the index valid even in single-AD regions (e.g. eu-paris-1 has 1 AD).
+  ad_name = data.oci_identity_availability_domains.ads.availability_domains[var.availability_domain_index % local.ad_count].name
 }
 
 # ---------------------------------------------------------------------------
