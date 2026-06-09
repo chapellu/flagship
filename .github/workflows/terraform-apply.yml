@@ -57,7 +57,7 @@ jobs:
           # or by updating the 'shape' Terraform variable. Do NOT auto-fallback
           # between shapes: A2.Flex is paid and switching shapes destroys the instance.
           MAX_ATTEMPTS=100
-          WAIT_SECS=120
+          WAIT_SECS=30
 
           for attempt in $(seq 1 $MAX_ATTEMPTS); do
             ad_index=$(( (attempt - 1) % 3 ))
