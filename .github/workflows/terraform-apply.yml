@@ -46,7 +46,7 @@ jobs:
       - name: Plan & Apply (with capacity retry)
         shell: bash
         run: |
-          # OCI A2.Flex free-tier capacity is scarce. Strategy:
+          # OCI A1.Flex free-tier capacity is scarce. Strategy:
           #   - Cycle through AD indices 0/1/2 (Terraform uses modulo so single-AD
           #     regions like eu-paris-1 always stay on AD 0 without an index error).
           #   - On capacity failure, wait WAIT_SECS before the next attempt.
