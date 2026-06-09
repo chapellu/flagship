@@ -116,7 +116,7 @@ resource "oci_core_instance" "main" {
   availability_domain = local.ad_name
   compartment_id      = var.compartment_id
   display_name        = "vm-main"
-  shape               = "VM.Standard.A1.Flex"
+  shape               = "VM.Standard.A2.Flex"
 
   shape_config {
     ocpus         = 4

@@ -35,7 +35,7 @@ variable "ssh_public_key" {
 }
 
 variable "availability_domain_index" {
-  description = "Index of the availability domain to use (0, 1, or 2). Increment if you hit 'Out of host capacity' for A1.Flex."
+  description = "Index of the availability domain to use (0, 1, or 2). Increment if you hit 'Out of host capacity' for A2.Flex."
   type        = number
   default     = 0
 
