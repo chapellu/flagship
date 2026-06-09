@@ -119,8 +119,8 @@ resource "oci_core_instance" "main" {
   shape               = var.shape
 
   shape_config {
-    ocpus         = 4
-    memory_in_gbs = 24
+    ocpus         = 1
+    memory_in_gbs = 6
   }
 
   source_details {
