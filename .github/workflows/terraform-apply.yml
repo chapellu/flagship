@@ -9,9 +9,9 @@ on:
   workflow_dispatch:
     inputs:
       region:
-        description: 'OCI region override (e.g. eu-frankfurt-1). Leave empty to use OCI_REGION secret.'
+        description: 'OCI region override. Leave empty to use OCI_REGION secret.'
         required: false
-        default: ''
+        default: 'eu-frankfurt-1'
 
 jobs:
   apply:
