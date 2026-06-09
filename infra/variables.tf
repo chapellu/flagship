@@ -44,3 +44,14 @@ variable "availability_domain_index" {
     error_message = "availability_domain_index must be 0, 1, or 2."
   }
 }
+
+variable "shape" {
+  description = "Compute shape to use. VM.Standard.A2.Flex (paid, Ampere Altra) or VM.Standard.A1.Flex (Always Free, Ampere A1)."
+  type        = string
+  default     = "VM.Standard.A1.Flex"
+
+  validation {
+    condition     = contains(["VM.Standard.A1.Flex", "VM.Standard.A2.Flex"], var.shape)
+    error_message = "shape must be VM.Standard.A1.Flex or VM.Standard.A2.Flex."
+  }
+}
