@@ -37,7 +37,7 @@ data "oci_core_images" "ubuntu_24_04_arm64" {
   compartment_id           = var.compartment_id
   operating_system         = "Canonical Ubuntu"
   operating_system_version = "24.04"
-  shape                    = "VM.Standard.A2.Flex"
+  shape                    = "VM.Standard.A1.Flex"
   sort_by                  = "TIMECREATED"
   sort_order               = "DESC"
   state                    = "AVAILABLE"
@@ -116,7 +116,7 @@ resource "oci_core_instance" "main" {
   availability_domain = local.ad_name
   compartment_id      = var.compartment_id
   display_name        = "vm-main"
-  shape               = "VM.Standard.A2.Flex"
+  shape               = "VM.Standard.A1.Flex"
 
   shape_config {
     ocpus         = 4
