@@ -11,7 +11,7 @@ on:
       region:
         description: 'OCI region override. Leave empty to use OCI_REGION secret.'
         required: false
-        default: 'eu-frankfurt-1'
+        default: ''
 
 jobs:
   apply:
@@ -51,17 +51,17 @@ jobs:
       - name: Plan & Apply (with capacity retry)
         shell: bash
         run: |
-          # OCI A1.Flex free-tier capacity is scarce. Strategy:
-          #   - Cycle through AD indices 0/1/2 (Terraform uses modulo so single-AD
-          #     regions like eu-paris-1 always stay on AD 0 without an index error).
-          #   - On capacity failure, wait WAIT_SECS before the next attempt.
-          #   - Abort immediately on any non-capacity error.
-          MAX_ATTEMPTS=100
-          WAIT_SECS=120
+          # Retry up to 100 times with 120s between attempts.
+          # AD index cycles 0/1/2 with modulo so single-AD regions stay valid.
+          # Shape is fixed per run — change it explicitly via workflow_dispatch input
+          # or by updating the 'shape' Terraform variable. Do NOT auto-fallback
+          # between shapes: A2.Flex is paid and switching shapes destroys the instance.
+          MAX_ATTEMPTS=300
+          WAIT_SECS=30
 
           for attempt in $(seq 1 $MAX_ATTEMPTS); do
             ad_index=$(( (attempt - 1) % 3 ))
-            echo "=== Attempt ${attempt}/${MAX_ATTEMPTS} — availability_domain_index=${ad_index} ==="
+            echo "=== Attempt ${attempt}/${MAX_ATTEMPTS} — AD index ${ad_index} ==="
 
             terraform plan -out=tfplan -input=false \
               -var "availability_domain_index=${ad_index}"
@@ -71,7 +71,7 @@ jobs:
             cat /tmp/tf_apply.log
 
             if [ "$apply_exit" -eq 0 ]; then
-              echo "Apply succeeded on attempt ${attempt} (AD index ${ad_index})"
+              echo "Apply succeeded on attempt ${attempt}"
               exit 0
             fi
 
@@ -86,7 +86,7 @@ jobs:
             fi
           done
 
-          echo "Capacity unavailable after ${MAX_ATTEMPTS} attempts. Try again later or change OCI_REGION."
+          echo "Capacity unavailable after ${MAX_ATTEMPTS} attempts. Retry later or change OCI_REGION."
           exit 1
 
       - name: Upload final plan artifact
