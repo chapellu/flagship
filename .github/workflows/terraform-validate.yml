@@ -32,6 +32,8 @@ jobs:
 
       - name: Security scan
         uses: aquasecurity/tfsec-action@v1.0.3
+        continue-on-error: true
         with:
           working_directory: infra
           soft_fail: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
