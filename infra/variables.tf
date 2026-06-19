@@ -46,7 +46,7 @@ variable "availability_domain_index" {
 }
 
 variable "shape" {
-  description = "Compute shape to use. VM.Standard.A2.Flex (paid, Ampere Altra) or VM.Standard.A1.Flex (Always Free, Ampere A1)."
+  description = "Compute shape to use. VM.Standard.A1.Flex (Always Free, Ampere A1) or VM.Standard.A2.Flex (paid, Ampere Altra)."
   type        = string
   default     = "VM.Standard.A1.Flex"
 
@@ -54,4 +54,16 @@ variable "shape" {
     condition     = contains(["VM.Standard.A1.Flex", "VM.Standard.A2.Flex"], var.shape)
     error_message = "shape must be VM.Standard.A1.Flex or VM.Standard.A2.Flex."
   }
+}
+
+variable "ssh_private_key" {
+  description = "Content of the SSH private key used to connect to the VM for post-provisioning bootstrap"
+  type        = string
+  sensitive   = true
+}
+
+variable "github_token" {
+  description = "GitHub PAT (repo scope) used by FluxCD bootstrap to push gotk manifests to the repository"
+  type        = string
+  sensitive   = true
 }
