@@ -9,6 +9,20 @@ terraform {
       version = "~> 3.0"
     }
   }
+
+  backend "s3" {
+    bucket = "tfstate-cucco-team"
+    key    = "infra/terraform.tfstate"
+
+    # OCI Object Storage S3-compatible API
+    skip_region_validation      = true
+    skip_credentials_validation = true
+    skip_metadata_api_check     = true
+    force_path_style            = true
+
+    # region, endpoint, access_key, secret_key injected via
+    # -backend-config flags in CI (see terraform-apply.yml)
+  }
 }
 
 provider "oci" {
