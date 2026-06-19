@@ -19,7 +19,7 @@ terraform {
     skip_credentials_validation = true
     skip_metadata_api_check     = true
     skip_requesting_account_id  = true
-    force_path_style            = true
+    use_path_style              = true
 
     # region, endpoints.s3, access_key, secret_key injected via
     # -backend-config file in CI (see terraform-apply.yml)
