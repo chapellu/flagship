@@ -10,19 +10,19 @@ terraform {
     }
   }
 
-  backend "s3" {
+  # Native OCI Object Storage backend (Terraform >= 1.12). Provides real
+  # state locking via OCI conditional writes (the S3-compat use_lockfile
+  # is broken against OCI buckets — hashicorp/terraform#36742) and reuses
+  # the same OCI API-key credentials as the provider, so no Customer
+  # Secret Key is needed.
+  backend "oci" {
     bucket = "tfstate-cucco-team"
     key    = "infra/terraform.tfstate"
+    auth   = "APIKey"
 
-    # OCI Object Storage S3-compatible API — skip all AWS-specific checks
-    skip_region_validation      = true
-    skip_credentials_validation = true
-    skip_metadata_api_check     = true
-    skip_requesting_account_id  = true
-    use_path_style              = true
-
-    # region, endpoints.s3, access_key, secret_key injected via
-    # -backend-config file in CI (see terraform-apply.yml)
+    # namespace, region, tenancy_ocid, user_ocid, fingerprint,
+    # private_key_path injected via -backend-config file in CI
+    # (see terraform-apply.yml)
   }
 }
 

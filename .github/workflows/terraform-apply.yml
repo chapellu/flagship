@@ -13,10 +13,11 @@ on:
         required: false
         default: ''
 
-# Serialize applies: the retry loop can run for hours, and the S3 backend has
-# no native state locking on OCI Object Storage. This prevents a second run
-# (push + manual dispatch, or overlapping merges) from mutating state
-# concurrently. queued runs wait rather than cancel so no apply is lost.
+# Serialize applies. The native OCI backend locks state, so this is a
+# second line of defence: it stops a redundant run (push + manual dispatch,
+# or overlapping merges) from spinning up a runner only to block for hours
+# on the state lock while the in-progress capacity-retry loop runs. Queued
+# runs wait rather than cancel so no apply is lost.
 concurrency:
   group: terraform-apply
   cancel-in-progress: false
@@ -57,20 +58,21 @@ jobs:
 
       - name: Init
         env:
-          TF_BACKEND_REGION:     ${{ secrets.OCI_REGION }}
-          TF_BACKEND_NAMESPACE:  ${{ secrets.OCI_NAMESPACE }}
-          TF_BACKEND_ACCESS_KEY: ${{ secrets.OCI_BACKEND_ACCESS_KEY }}
-          TF_BACKEND_SECRET_KEY: ${{ secrets.OCI_BACKEND_SECRET_KEY }}
+          TF_BACKEND_NAMESPACE:   ${{ secrets.OCI_NAMESPACE }}
+          TF_BACKEND_REGION:      ${{ secrets.OCI_REGION }}
+          TF_BACKEND_TENANCY:     ${{ secrets.OCI_TENANCY_OCID }}
+          TF_BACKEND_USER:        ${{ secrets.OCI_USER_OCID }}
+          TF_BACKEND_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
         run: |
           touch /tmp/oci_backend.hcl
           chmod 600 /tmp/oci_backend.hcl
           cat > /tmp/oci_backend.hcl <<EOF
-          region     = "${TF_BACKEND_REGION}"
-          access_key = "${TF_BACKEND_ACCESS_KEY}"
-          secret_key = "${TF_BACKEND_SECRET_KEY}"
-          endpoints {
-            s3 = "https://${TF_BACKEND_NAMESPACE}.compat.objectstorage.${TF_BACKEND_REGION}.oraclecloud.com"
-          }
+          namespace        = "${TF_BACKEND_NAMESPACE}"
+          region           = "${TF_BACKEND_REGION}"
+          tenancy_ocid     = "${TF_BACKEND_TENANCY}"
+          user_ocid        = "${TF_BACKEND_USER}"
+          fingerprint      = "${TF_BACKEND_FINGERPRINT}"
+          private_key_path = "/tmp/oci_api_key.pem"
           EOF
           terraform init -backend-config=/tmp/oci_backend.hcl
           rm -f /tmp/oci_backend.hcl
