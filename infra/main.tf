@@ -4,6 +4,10 @@ terraform {
       source  = "oracle/oci"
       version = "~> 6.0"
     }
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.0"
+    }
   }
 }
 
@@ -90,6 +94,30 @@ resource "oci_core_security_list" "public" {
     }
   }
 
+  ingress_security_rules {
+    protocol    = "6" # TCP
+    source      = "0.0.0.0/0"
+    source_type = "CIDR_BLOCK"
+    description = "HTTP"
+
+    tcp_options {
+      min = 80
+      max = 80
+    }
+  }
+
+  ingress_security_rules {
+    protocol    = "6" # TCP
+    source      = "0.0.0.0/0"
+    source_type = "CIDR_BLOCK"
+    description = "HTTPS"
+
+    tcp_options {
+      min = 443
+      max = 443
+    }
+  }
+
   egress_security_rules {
     protocol         = "all"
     destination      = "0.0.0.0/0"
@@ -119,8 +147,8 @@ resource "oci_core_instance" "main" {
   shape               = var.shape
 
   shape_config {
-    ocpus         = 1
-    memory_in_gbs = 6
+    ocpus         = 4
+    memory_in_gbs = 24
   }
 
   source_details {
@@ -138,5 +166,39 @@ resource "oci_core_instance" "main" {
   metadata = {
     ssh_authorized_keys = var.ssh_public_key
     user_data           = base64encode(file("${path.module}/cloud-init.yaml"))
+  }
+}
+
+# ---------------------------------------------------------------------------
+# k3s + FluxCD bootstrap (runs once via SSH after the instance is ready)
+# ---------------------------------------------------------------------------
+
+resource "null_resource" "k3s_flux_bootstrap" {
+  depends_on = [oci_core_instance.main]
+
+  triggers = {
+    instance_id = oci_core_instance.main.id
+  }
+
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = var.ssh_private_key
+    host        = oci_core_instance.main.public_ip
+    timeout     = "15m"
+  }
+
+  provisioner "file" {
+    content = templatefile("${path.module}/bootstrap.sh.tpl", {
+      github_token = var.github_token
+    })
+    destination = "/tmp/k3s_bootstrap.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "bash /tmp/k3s_bootstrap.sh",
+      "rm /tmp/k3s_bootstrap.sh",
+    ]
   }
 }
