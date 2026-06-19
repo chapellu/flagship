@@ -13,6 +13,15 @@ on:
         required: false
         default: ''
 
+# Serialize applies. The native OCI backend locks state, so this is a
+# second line of defence: it stops a redundant run (push + manual dispatch,
+# or overlapping merges) from spinning up a runner only to block for hours
+# on the state lock while the in-progress capacity-retry loop runs. Queued
+# runs wait rather than cancel so no apply is lost.
+concurrency:
+  group: terraform-apply
+  cancel-in-progress: false
+
 jobs:
   apply:
     name: Plan & Apply
@@ -44,16 +53,29 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "~1.9"
+          terraform_version: "1.15.6"
           terraform_wrapper: false
 
       - name: Init
+        env:
+          TF_BACKEND_NAMESPACE:   ${{ secrets.OCI_NAMESPACE }}
+          TF_BACKEND_REGION:      ${{ secrets.OCI_REGION }}
+          TF_BACKEND_TENANCY:     ${{ secrets.OCI_TENANCY_OCID }}
+          TF_BACKEND_USER:        ${{ secrets.OCI_USER_OCID }}
+          TF_BACKEND_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
         run: |
-          terraform init \
-            -backend-config="region=${{ secrets.OCI_REGION }}" \
-            -backend-config="endpoint=https://${{ secrets.OCI_NAMESPACE }}.compat.objectstorage.${{ secrets.OCI_REGION }}.oraclecloud.com" \
-            -backend-config="access_key=${{ secrets.OCI_BACKEND_ACCESS_KEY }}" \
-            -backend-config="secret_key=${{ secrets.OCI_BACKEND_SECRET_KEY }}"
+          touch /tmp/oci_backend.hcl
+          chmod 600 /tmp/oci_backend.hcl
+          cat > /tmp/oci_backend.hcl <<EOF
+          namespace        = "${TF_BACKEND_NAMESPACE}"
+          region           = "${TF_BACKEND_REGION}"
+          tenancy_ocid     = "${TF_BACKEND_TENANCY}"
+          user_ocid        = "${TF_BACKEND_USER}"
+          fingerprint      = "${TF_BACKEND_FINGERPRINT}"
+          private_key_path = "/tmp/oci_api_key.pem"
+          EOF
+          terraform init -backend-config=/tmp/oci_backend.hcl
+          rm -f /tmp/oci_backend.hcl
 
       - name: Plan & Apply (with capacity retry)
         shell: bash
