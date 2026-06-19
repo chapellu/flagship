@@ -14,14 +14,15 @@ terraform {
     bucket = "tfstate-cucco-team"
     key    = "infra/terraform.tfstate"
 
-    # OCI Object Storage S3-compatible API
+    # OCI Object Storage S3-compatible API — skip all AWS-specific checks
     skip_region_validation      = true
     skip_credentials_validation = true
     skip_metadata_api_check     = true
+    skip_requesting_account_id  = true
     force_path_style            = true
 
-    # region, endpoint, access_key, secret_key injected via
-    # -backend-config flags in CI (see terraform-apply.yml)
+    # region, endpoints.s3, access_key, secret_key injected via
+    # -backend-config file in CI (see terraform-apply.yml)
   }
 }
 

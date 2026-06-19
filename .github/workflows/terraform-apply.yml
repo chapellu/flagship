@@ -48,12 +48,21 @@ jobs:
           terraform_wrapper: false
 
       - name: Init
+        env:
+          TF_BACKEND_REGION:     ${{ secrets.OCI_REGION }}
+          TF_BACKEND_NAMESPACE:  ${{ secrets.OCI_NAMESPACE }}
+          TF_BACKEND_ACCESS_KEY: ${{ secrets.OCI_BACKEND_ACCESS_KEY }}
+          TF_BACKEND_SECRET_KEY: ${{ secrets.OCI_BACKEND_SECRET_KEY }}
         run: |
-          terraform init \
-            -backend-config="region=${{ secrets.OCI_REGION }}" \
-            -backend-config="endpoint=https://${{ secrets.OCI_NAMESPACE }}.compat.objectstorage.${{ secrets.OCI_REGION }}.oraclecloud.com" \
-            -backend-config="access_key=${{ secrets.OCI_BACKEND_ACCESS_KEY }}" \
-            -backend-config="secret_key=${{ secrets.OCI_BACKEND_SECRET_KEY }}"
+          cat > /tmp/oci_backend.hcl <<EOF
+          region     = "${TF_BACKEND_REGION}"
+          access_key = "${TF_BACKEND_ACCESS_KEY}"
+          secret_key = "${TF_BACKEND_SECRET_KEY}"
+          endpoints {
+            s3 = "https://${TF_BACKEND_NAMESPACE}.compat.objectstorage.${TF_BACKEND_REGION}.oraclecloud.com"
+          }
+          EOF
+          terraform init -backend-config=/tmp/oci_backend.hcl
 
       - name: Plan & Apply (with capacity retry)
         shell: bash
