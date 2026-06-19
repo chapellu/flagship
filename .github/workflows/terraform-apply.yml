@@ -48,7 +48,12 @@ jobs:
           terraform_wrapper: false
 
       - name: Init
-        run: terraform init
+        run: |
+          terraform init \
+            -backend-config="region=${{ secrets.OCI_REGION }}" \
+            -backend-config="endpoint=https://${{ secrets.OCI_NAMESPACE }}.compat.objectstorage.${{ secrets.OCI_REGION }}.oraclecloud.com" \
+            -backend-config="access_key=${{ secrets.OCI_BACKEND_ACCESS_KEY }}" \
+            -backend-config="secret_key=${{ secrets.OCI_BACKEND_SECRET_KEY }}"
 
       - name: Plan & Apply (with capacity retry)
         shell: bash
