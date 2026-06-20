@@ -1,9 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-# Open ingress ports used by Klipper (k3s servicelb) for Envoy Gateway
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
+# Wait for cloud-init to finish so apt locks are released before k3s installs.
+# OCI Security Lists already control ports 80/443/22, so ufw rules are not needed.
+sudo cloud-init status --wait || true
 
 # Install k3s — Traefik disabled, servicelb (Klipper) kept for LoadBalancer → HostPort
 if ! systemctl is-active --quiet k3s 2>/dev/null; then
