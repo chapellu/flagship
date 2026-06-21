@@ -5,6 +5,10 @@ on:
     paths:
       - "infra/**"
 
+# Least privilege: this workflow only needs to read the repo contents.
+permissions:
+  contents: read
+
 jobs:
   validate:
     name: Lint & Validate
@@ -30,10 +34,16 @@ jobs:
       - name: Validate
         run: terraform validate
 
-      - name: Security scan
-        uses: aquasecurity/tfsec-action@v1.0.3
-        continue-on-error: true
+      # Blocking IaC security scan. tfsec is deprecated and folded into Trivy;
+      # this fails the PR on HIGH/CRITICAL misconfigurations instead of the old
+      # advisory-only (soft_fail + continue-on-error) setup. Triage initial
+      # findings with `trivy config infra` locally and add inline #trivy:ignore
+      # comments (with justification) for any you intentionally accept.
+      - name: Security scan (Trivy IaC)
+        uses: aquasecurity/trivy-action@0.28.0
         with:
-          working_directory: infra
-          soft_fail: true
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          scan-type: config
+          scan-ref: infra
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          format: table
