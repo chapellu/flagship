@@ -24,3 +24,13 @@ ssh_public_key = "ssh-ed25519 AAAA..."
 # your own IP or VPN range instead of the wide-open default. Find your IP with
 # `curl -s ifconfig.me`. Leaving this unset defaults to 0.0.0.0/0 (whole internet).
 # ssh_ingress_cidrs = ["203.0.113.4/32"]
+
+# ------------------------------------------------------------------------------
+# DNS (OCI DNS)
+# The chapellu.eu.org zone is managed by Terraform (imported once — see README).
+# ------------------------------------------------------------------------------
+
+dns_zone_name = "chapellu.eu.org"
+
+# Compartment that holds the DNS zone. Leave empty to reuse compartment_id.
+# dns_compartment_id = "ocid1.compartment.oc1..aaaa..."
