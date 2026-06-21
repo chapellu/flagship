@@ -1,0 +1,98 @@
+name: Terraform Import
+
+# Manually-triggered, idempotent `terraform import` against the shared OCI
+# remote state. Primary use: bring the pre-existing chapellu.eu.org DNS zone
+# under Terraform management BEFORE the first apply that introduces it —
+# otherwise apply would try to *create* a zone that already exists and fail.
+#
+# The OCID is passed as a run input (not stored as a secret), so you can run
+# this from the GitHub mobile/web UI: Actions -> Terraform Import -> Run workflow.
+# Find the zone OCID in the OCI console: Networking -> DNS management -> Zones
+# -> chapellu.eu.org -> copy OCID.
+
+on:
+  workflow_dispatch:
+    inputs:
+      resource_address:
+        description: "Terraform resource address to import"
+        required: true
+        default: "oci_dns_zone.chapellu"
+      ocid:
+        description: "OCID of the existing OCI resource to import"
+        required: true
+
+permissions:
+  contents: read
+
+# Share the apply lock group so an import never races a concurrent apply on
+# the same state.
+concurrency:
+  group: terraform-apply
+  cancel-in-progress: false
+
+jobs:
+  import:
+    name: Import into state
+    runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: infra
+
+    env:
+      TF_VAR_tenancy_ocid:     ${{ secrets.OCI_TENANCY_OCID }}
+      TF_VAR_user_ocid:        ${{ secrets.OCI_USER_OCID }}
+      TF_VAR_fingerprint:      ${{ secrets.OCI_FINGERPRINT }}
+      TF_VAR_private_key_path: /tmp/oci_api_key.pem
+      TF_VAR_region:           ${{ secrets.OCI_REGION }}
+      TF_VAR_compartment_id:   ${{ secrets.OCI_COMPARTMENT_ID }}
+      TF_VAR_ssh_public_key:   ${{ secrets.SSH_PUBLIC_KEY }}
+      TF_VAR_ssh_private_key:  ${{ secrets.SSH_PRIVATE_KEY }}
+      TF_VAR_github_token:     ${{ secrets.GH_PAT }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write OCI private key
+        run: |
+          echo "${{ secrets.OCI_PRIVATE_KEY }}" > /tmp/oci_api_key.pem
+          chmod 600 /tmp/oci_api_key.pem
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.15.6"
+          terraform_wrapper: false
+
+      - name: Init
+        env:
+          TF_BACKEND_NAMESPACE:   ${{ secrets.OCI_NAMESPACE }}
+          TF_BACKEND_REGION:      ${{ secrets.OCI_REGION }}
+          TF_BACKEND_TENANCY:     ${{ secrets.OCI_TENANCY_OCID }}
+          TF_BACKEND_USER:        ${{ secrets.OCI_USER_OCID }}
+          TF_BACKEND_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+        run: |
+          cat > /tmp/oci_backend.hcl <<EOF
+          namespace        = "${TF_BACKEND_NAMESPACE}"
+          region           = "${TF_BACKEND_REGION}"
+          tenancy_ocid     = "${TF_BACKEND_TENANCY}"
+          user_ocid        = "${TF_BACKEND_USER}"
+          fingerprint      = "${TF_BACKEND_FINGERPRINT}"
+          private_key_path = "/tmp/oci_api_key.pem"
+          EOF
+          chmod 600 /tmp/oci_backend.hcl
+          terraform init -backend-config=/tmp/oci_backend.hcl
+          rm -f /tmp/oci_backend.hcl
+
+      - name: Import (idempotent)
+        run: |
+          ADDR='${{ inputs.resource_address }}'
+          OCID='${{ inputs.ocid }}'
+          if terraform state list | grep -qx "$ADDR"; then
+            echo "$ADDR already in state — nothing to import."
+            exit 0
+          fi
+          terraform import "$ADDR" "$OCID"
+
+      - name: Plan (preview only — no apply)
+        run: terraform plan -input=false -var "availability_domain_index=0"
