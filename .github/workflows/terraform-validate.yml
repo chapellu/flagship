@@ -40,7 +40,7 @@ jobs:
       # findings with `trivy config infra` locally and add inline #trivy:ignore
       # comments (with justification) for any you intentionally accept.
       - name: Security scan (Trivy IaC)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
           scan-ref: infra
