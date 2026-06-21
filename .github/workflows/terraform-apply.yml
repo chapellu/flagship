@@ -13,6 +13,11 @@ on:
         required: false
         default: ''
 
+# Least privilege: applies only need to read the repo. All cloud credentials
+# come from environment secrets, not the GITHUB_TOKEN.
+permissions:
+  contents: read
+
 # Serialize applies. The native OCI backend locks state, so this is a
 # second line of defence: it stops a redundant run (push + manual dispatch,
 # or overlapping merges) from spinning up a runner only to block for hours
@@ -118,13 +123,10 @@ jobs:
           echo "Capacity unavailable after ${MAX_ATTEMPTS} attempts. Retry later or change OCI_REGION."
           exit 1
 
-      - name: Upload final plan artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan
-          path: infra/tfplan
-          retention-days: 7
+      # NOTE: the binary plan (infra/tfplan) is intentionally NOT uploaded as an
+      # artifact. A saved plan can embed resolved sensitive variable values
+      # (SSH private key, GitHub PAT) in plaintext, and artifacts are
+      # downloadable by anyone with repo read access.
 
       - name: Show outputs
         run: terraform output
