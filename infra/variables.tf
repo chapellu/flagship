@@ -90,3 +90,15 @@ variable "dns_compartment_id" {
   type        = string
   default     = ""
 }
+
+variable "backup_bucket_name" {
+  description = "Name of the OCI Object Storage bucket that stores Velero backups"
+  type        = string
+  default     = "cucco-team-backups"
+}
+
+variable "backup_retention_days" {
+  description = "Number of days the bucket lifecycle policy keeps backup objects before deleting them"
+  type        = number
+  default     = 7
+}
