@@ -97,15 +97,21 @@ resource "oci_core_security_list" "public" {
   vcn_id         = oci_core_vcn.main.id
   display_name   = "sl-public"
 
-  ingress_security_rules {
-    protocol    = "6" # TCP
-    source      = "0.0.0.0/0"
-    source_type = "CIDR_BLOCK"
-    description = "SSH"
+  # SSH ingress is restricted to var.ssh_ingress_cidrs. Lock this down to your
+  # own IP/VPN range in terraform.tfvars; the default (0.0.0.0/0) exposes SSH
+  # to the whole internet.
+  dynamic "ingress_security_rules" {
+    for_each = var.ssh_ingress_cidrs
+    content {
+      protocol    = "6" # TCP
+      source      = ingress_security_rules.value
+      source_type = "CIDR_BLOCK"
+      description = "SSH"
 
-    tcp_options {
-      min = 22
-      max = 22
+      tcp_options {
+        min = 22
+        max = 22
+      }
     }
   }
 

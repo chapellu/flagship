@@ -34,6 +34,17 @@ variable "ssh_public_key" {
   type        = string
 }
 
+variable "ssh_ingress_cidrs" {
+  description = "CIDR blocks allowed to reach SSH (TCP 22). Restrict to your own IP or VPN range. The default 0.0.0.0/0 exposes SSH to the entire internet and is flagged by IaC security scanners — override it in terraform.tfvars."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+
+  validation {
+    condition     = length(var.ssh_ingress_cidrs) > 0
+    error_message = "ssh_ingress_cidrs must contain at least one CIDR block."
+  }
+}
+
 variable "availability_domain_index" {
   description = "Index of the availability domain to use (0, 1, or 2). Increment if you hit 'Out of host capacity' for A1.Flex."
   type        = number
