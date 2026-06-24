@@ -1,0 +1,23 @@
+# VictoriaTraces datasource for Grafana, provisioned via the Grafana sidecar
+# (label `grafana_datasource`). VictoriaTraces exposes a Jaeger-compatible
+# query API under /select/jaeger, so Grafana's built-in Jaeger datasource is
+# used — no extra plugin needed.
+#
+# Lives in the traces overlay on purpose: removing the traces layer (delete
+# k8s/flux/monitoring-traces.yaml) prunes this datasource with it.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasource-victoriatraces
+  namespace: monitoring
+  labels:
+    grafana_datasource: "1"
+data:
+  victoriatraces.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: VictoriaTraces
+        type: jaeger
+        access: proxy
+        url: http://victoria-traces:10428/select/jaeger
+        editable: false

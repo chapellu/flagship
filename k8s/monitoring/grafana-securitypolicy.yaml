@@ -1,0 +1,37 @@
+# Envoy Gateway OIDC enforcement, applied to the Grafana HTTPRoute.
+#
+# Authentication happens at the gateway (Google OIDC), NOT in Grafana — so
+# every future app gets the same protection by attaching a SecurityPolicy to
+# its own route. Targeting the HTTPRoute (rather than the whole Gateway)
+# deliberately leaves the ACME HTTP-01 challenge path on the :80 listener
+# unauthenticated, so certificate issuance/renewal keeps working.
+#
+# Requires:
+#   - ConfigMap `monitoring-vars` providing ${oidc_google_client_id}
+#     (substituted by Flux postBuild — see k8s/flux/monitoring.yaml).
+#   - Secret `oidc-google` with key `client-secret` (SOPS — see
+#     oidc-google.enc.yaml.example).
+#   - The redirect URL below registered as an authorized redirect URI on the
+#     Google OAuth 2.0 client.
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: grafana-oidc
+  namespace: monitoring
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: grafana
+  oidc:
+    provider:
+      issuer: "https://accounts.google.com"
+    clientID: "${oidc_google_client_id}"
+    clientSecret:
+      name: oidc-google
+    redirectURL: "https://grafana.chapellu.eu.org/oauth2/callback"
+    logoutPath: "/logout"
+    scopes:
+      - openid
+      - email
+      - profile

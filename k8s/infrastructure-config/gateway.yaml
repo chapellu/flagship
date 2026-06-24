@@ -1,0 +1,38 @@
+# Shared edge Gateway for the cluster. All public apps attach their
+# HTTPRoutes here (allowedRoutes: All), so a single TLS cert + a single
+# public IP fronts everything.
+#
+# TLS is automated by cert-manager via the gateway-shim: the
+# `cert-manager.io/cluster-issuer` annotation tells cert-manager to issue a
+# certificate for every hostname declared on a TLS listener and write it to
+# the listener's certificateRefs Secret (here: grafana-tls, in this
+# namespace). The HTTP listener stays plaintext on :80 — it carries the
+# ACME HTTP-01 challenge and (optionally) redirects to HTTPS.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: eg
+  namespace: envoy-gateway-system
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  gatewayClassName: eg
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: https-grafana
+      protocol: HTTPS
+      port: 443
+      hostname: grafana.chapellu.eu.org
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: grafana-tls
+      allowedRoutes:
+        namespaces:
+          from: All

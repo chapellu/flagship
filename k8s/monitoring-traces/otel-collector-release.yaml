@@ -1,0 +1,80 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: otel-collector
+  namespace: monitoring
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: opentelemetry-collector
+      version: ">=0.159.0 <0.170.0"
+      sourceRef:
+        kind: HelmRepository
+        name: open-telemetry
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # OTLP ingestion point for the cluster. Apps send traces here (OTLP
+    # gRPC :4317 / HTTP :4318) and the collector forwards them to
+    # VictoriaTraces over OTLP/HTTP.
+    mode: deployment
+    replicaCount: 1
+    image:
+      repository: otel/opentelemetry-collector-k8s
+    command:
+      name: otelcol-k8s
+
+    # Only OTLP in / OTLP out — disable the other default listeners.
+    ports:
+      jaeger-compact:
+        enabled: false
+      jaeger-thrift:
+        enabled: false
+      jaeger-grpc:
+        enabled: false
+      zipkin:
+        enabled: false
+
+    presets:
+      kubernetesAttributes:
+        enabled: false
+
+    config:
+      receivers:
+        otlp:
+          protocols:
+            grpc:
+              endpoint: 0.0.0.0:4317
+            http:
+              endpoint: 0.0.0.0:4318
+      processors:
+        batch: {}
+      exporters:
+        otlphttp/victoriatraces:
+          # Full ingestion path — VictoriaTraces accepts OTLP/HTTP here.
+          traces_endpoint: http://victoria-traces:10428/insert/opentelemetry/v1/traces
+      service:
+        pipelines:
+          traces:
+            receivers:
+              - otlp
+            processors:
+              - batch
+            exporters:
+              - otlphttp/victoriatraces
+          # This collector handles traces only.
+          metrics: null
+          logs: null
+
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits:
+        memory: 256Mi
