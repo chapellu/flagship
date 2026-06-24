@@ -1,0 +1,11 @@
+
+# Terraform local
+**/.terraform/
+*.tfstate
+*.tfstate.*
+backend.hcl
+terraform.zip
+infra/.terraform.lock.hcl
+
+# Secrets / clés — NE JAMAIS COMMIT
+*.agekey
