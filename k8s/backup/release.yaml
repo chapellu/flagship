@@ -1,0 +1,84 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: velero
+  namespace: velero
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: velero
+      version: ">=12.0.0 <13.0.0"
+      sourceRef:
+        kind: HelmRepository
+        name: velero
+        namespace: flux-system
+  install:
+    crds: Create
+    remediation:
+      retries: 3
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  values:
+    # AWS object-store plugin — Velero talks to OCI through its S3-compatible
+    # API, so the AWS plugin is the right one.
+    initContainers:
+      - name: velero-plugin-for-aws
+        image: velero/velero-plugin-for-aws:v1.13.1
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+          - mountPath: /target
+            name: plugins
+
+    # S3 access key / secret — provided out of band as a SOPS-encrypted secret
+    # (cloud-credentials.enc.yaml), NOT created by the chart.
+    credentials:
+      useSecret: true
+      existingSecret: velero-cloud-credentials
+
+    configuration:
+      # Kopia File System Backup: copies PV file contents into the bucket, so
+      # we don't depend on a CSI snapshot driver (k3s local-path has none).
+      uploaderType: kopia
+      backupStorageLocation:
+        - name: default
+          provider: aws
+          bucket: ${velero_bucket}
+          default: true
+          config:
+            region: ${velero_s3_region}
+            s3Url: ${velero_s3_url}
+            s3ForcePathStyle: "true"
+            # OCI's S3-compat API rejects the newer AWS checksum trailers;
+            # disabling them avoids upload failures.
+            checksumAlgorithm: ""
+      # No cloud volume snapshots — file-system backup handles PV data instead.
+      volumeSnapshotLocation: []
+
+    # Disable CSI/cloud volume snapshotting entirely.
+    snapshotsEnabled: false
+
+    # node-agent runs the Kopia data movement for PV file-system backups.
+    deployNodeAgent: true
+
+    # Back up PV contents by default; opt out per-volume with the
+    # backup.velero.io/backup-volumes-excludes annotation if ever needed.
+    defaultVolumesToFsBackup: true
+
+    schedules:
+      daily:
+        disabled: false
+        # 02:00 every day.
+        schedule: "0 2 * * *"
+        useOwnerReferencesInBackup: false
+        template:
+          # 7-day retention (matches the bucket lifecycle backstop).
+          ttl: "168h"
+          storageLocation: default
+          # Monitoring data is short-retention and reproducible — skip it, and
+          # skip Velero's own namespace.
+          excludedNamespaces:
+            - monitoring
+            - velero

@@ -1,0 +1,28 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: backup
+  namespace: flux-system
+spec:
+  interval: 10m
+  retryInterval: 1m
+  timeout: 10m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./k8s/backup
+  prune: true
+  wait: true
+  # Velero's CRDs come from its own HelmRelease; no ordering dep on the gateway.
+  # Decrypt the *.enc.yaml secrets with the cluster's age key.
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
+  # Inject the environment-specific S3 coordinates (bucket / endpoint / region)
+  # from a ConfigMap populated out of Terraform outputs — see k8s/backup/README.md.
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: velero-vars
+        optional: false
