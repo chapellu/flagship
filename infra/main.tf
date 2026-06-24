@@ -198,7 +198,8 @@ resource "null_resource" "k3s_flux_bootstrap" {
   depends_on = [oci_core_instance.main]
 
   triggers = {
-    instance_id = oci_core_instance.main.id
+    instance_id       = oci_core_instance.main.id
+    bootstrap_version = "2"
   }
 
   connection {
