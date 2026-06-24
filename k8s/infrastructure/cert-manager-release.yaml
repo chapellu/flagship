@@ -1,0 +1,46 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cert-manager
+  namespace: cert-manager
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: cert-manager
+      version: ">=1.17.0 <1.21.0"
+      sourceRef:
+        kind: HelmRepository
+        name: jetstack
+        namespace: flux-system
+  install:
+    crds: Skip
+    remediation:
+      retries: 3
+  upgrade:
+    crds: Skip
+    remediation:
+      retries: 3
+  values:
+    # cert-manager installs its own CRDs (the chart's CRD lifecycle is more
+    # robust than Flux's for these large schemas).
+    crds:
+      enabled: true
+      keep: true
+
+    # Enable the Gateway API integration so cert-manager can solve ACME
+    # HTTP-01 challenges through the Envoy Gateway (gateway-shim + the
+    # gatewayHTTPRoute solver). The Gateway API CRDs are already present in
+    # the cluster (installed by Envoy Gateway), so the controller finds them
+    # at start-up.
+    config:
+      apiVersion: controller.config.cert-manager.io/v1alpha1
+      kind: ControllerConfiguration
+      enableGatewayAPI: true
+
+    # Single-node cluster — keep the footprint small.
+    replicaCount: 1
+    webhook:
+      replicaCount: 1
+    cainjector:
+      replicaCount: 1

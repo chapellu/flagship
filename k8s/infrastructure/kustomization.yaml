@@ -4,3 +4,7 @@ resources:
   - namespace.yaml
   - repository.yaml
   - release.yaml
+  # cert-manager — issues the Let's Encrypt certificate consumed by the
+  # shared Gateway (see ../infrastructure-config).
+  - cert-manager-repository.yaml
+  - cert-manager-release.yaml

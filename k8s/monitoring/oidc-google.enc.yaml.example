@@ -1,0 +1,24 @@
+# TEMPLATE — do NOT commit this filled in as plaintext.
+#
+# Holds the Google OAuth 2.0 *client secret* consumed by the Grafana OIDC
+# SecurityPolicy. The client *ID* is not secret and is injected separately
+# via the monitoring-vars ConfigMap (see README.md).
+#
+# 1. Create an OAuth 2.0 Client ID (type: Web application) in Google Cloud
+#    Console → APIs & Services → Credentials. Authorized redirect URI:
+#      https://grafana.chapellu.eu.org/oauth2/callback
+# 2. Copy to oidc-google.enc.yaml
+# 3. Paste the client secret below.
+# 4. Encrypt in place:
+#      sops --encrypt --in-place k8s/monitoring/oidc-google.enc.yaml
+# 5. Commit the encrypted file.
+#
+# Envoy Gateway requires the key to be named exactly `client-secret`.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: oidc-google
+  namespace: monitoring
+type: Opaque
+stringData:
+  client-secret: "REPLACE_WITH_GOOGLE_OAUTH_CLIENT_SECRET"
