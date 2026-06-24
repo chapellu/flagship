@@ -78,3 +78,27 @@ variable "github_token" {
   type        = string
   sensitive   = true
 }
+
+variable "dns_zone_name" {
+  description = "Name of the OCI DNS zone managed by Terraform"
+  type        = string
+  default     = "chapellu.eu.org"
+}
+
+variable "dns_compartment_id" {
+  description = "OCID of the compartment hosting the DNS zone. Falls back to compartment_id when left empty."
+  type        = string
+  default     = ""
+}
+
+variable "backup_bucket_name" {
+  description = "Name of the OCI Object Storage bucket that stores Velero backups"
+  type        = string
+  default     = "cucco-team-backups"
+}
+
+variable "backup_retention_days" {
+  description = "Number of days the bucket lifecycle policy keeps backup objects before deleting them"
+  type        = number
+  default     = 7
+}
