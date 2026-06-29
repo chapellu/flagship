@@ -97,7 +97,7 @@ datasource URLs are wrong, reconcile the actual Service names from
 ## Notes / decisions
 
 - **Access control**: the gateway denies by default and allows only
-  `ludovic.chapelet@socotec.com` (matched on the Google ID token `email`
+  `owner@example.invalid` (matched on the Google ID token `email`
   claim in `grafana-securitypolicy.yaml`). Any other Google account that logs
   in gets a 403. Grant more accounts by adding addresses under
   `spec.authorization.rules[].principal.jwt.claims[].values`.

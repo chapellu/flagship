@@ -70,4 +70,4 @@ spec:
               - name: email
                 valueType: String
                 values:
-                  - ludovic.chapelet@socotec.com
+                  - owner@example.invalid
