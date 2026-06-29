@@ -47,6 +47,13 @@ spec:
 
     config:
       receivers:
+        # Traces-only collector: drop the chart's default non-OTLP receivers
+        # so they don't linger in the rendered pipeline (see open-telemetry/
+        # opentelemetry-helm-charts#223 — nulling the pipelines alone isn't
+        # enough, the receivers must be nulled too).
+        jaeger: null
+        prometheus: null
+        zipkin: null
         otlp:
           protocols:
             grpc:
