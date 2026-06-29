@@ -10,7 +10,7 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: ludovic.chapelet@socotec.com
+    email: ludovic.chapelet@outllook.com
     privateKeySecretRef:
       name: letsencrypt-prod-account-key
     solvers:
