@@ -4,5 +4,9 @@ metadata:
   name: envoy-gateway
   namespace: flux-system
 spec:
+  # Envoy Gateway is distributed as an OCI chart on Docker Hub
+  # (oci://docker.io/envoyproxy/gateway-helm); there is no classic
+  # charts.envoyproxy.io Helm repo (it does not resolve / NXDOMAIN).
+  type: oci
   interval: 1h
-  url: https://charts.envoyproxy.io
+  url: oci://docker.io/envoyproxy
