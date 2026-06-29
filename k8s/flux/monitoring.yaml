@@ -1,0 +1,26 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: monitoring
+  namespace: flux-system
+spec:
+  interval: 10m
+  retryInterval: 1m
+  timeout: 10m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./k8s/monitoring
+  prune: true
+  wait: true
+  # Needs the shared Gateway + ClusterIssuer (and, transitively, Envoy
+  # Gateway + cert-manager) to exist before the HTTPRoute / SecurityPolicy
+  # can be programmed.
+  dependsOn:
+    - name: infrastructure-config
+  # Decrypt the *.enc.yaml secrets (Google OIDC client secret) with the
+  # cluster's age key.
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age

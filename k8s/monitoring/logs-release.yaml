@@ -1,0 +1,51 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: victoria-logs
+  namespace: monitoring
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: victoria-logs-single
+      version: ">=0.13.0 <0.14.0"
+      sourceRef:
+        kind: HelmRepository
+        name: victoriametrics
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    server:
+      # Stable, short service name → http://victoria-logs:9428
+      fullnameOverride: victoria-logs
+      retentionPeriod: 7d
+      # Hard disk cap so logs can never blow the monitoring budget, whatever
+      # the ingest rate. Whichever limit (time or size) is hit first wins.
+      retentionDiskSpaceUsage: 8GiB
+      persistentVolume:
+        enabled: true
+        size: 10Gi
+      resources:
+        requests:
+          cpu: 50m
+          memory: 256Mi
+        limits:
+          memory: 1Gi
+
+    # Log collection: Vector as a DaemonSet (bundled subchart). It tails all
+    # container logs on the node, enriches them with Kubernetes metadata and
+    # ships them to VictoriaLogs over the Elasticsearch-compatible API. The
+    # chart wires the sink to the server automatically.
+    vector:
+      enabled: true
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          memory: 384Mi

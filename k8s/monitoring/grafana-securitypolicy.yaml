@@ -1,0 +1,74 @@
+# Envoy Gateway OIDC + authorization, applied to the Grafana HTTPRoute.
+#
+# Authentication AND authorization happen at the gateway (not in Grafana), so
+# every future app gets the same protection by attaching a SecurityPolicy to
+# its own route. Targeting the HTTPRoute (rather than the whole Gateway)
+# deliberately leaves the ACME HTTP-01 challenge path on the :80 listener
+# unauthenticated, so certificate issuance/renewal keeps working.
+#
+# Access is restricted to a single Google account:
+#   - `oidc` runs the Google login flow and stores the ID token in a cookie.
+#   - `jwt` validates that ID token (Google's JWKS) and pulls it FROM the
+#     cookie (Google's *access* token is opaque, so the ID token is the only
+#     JWT carrying the `email` claim).
+#   - `authorization` denies everything by default and allows only the owner's
+#     verified email. To grant another account, add its address under
+#     rules[].principal.jwt.claims[].values.
+#
+# Requires:
+#   - Secret `oidc-google` with key `client-secret` (SOPS — see
+#     oidc-google.enc.yaml.example).
+#   - The redirect URL below registered as an authorized redirect URI on the
+#     Google OAuth 2.0 client.
+#
+# The clientID below is not a secret (it is exposed in the browser consent
+# flow), so it lives in Git directly — only the client secret is encrypted.
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: grafana-oidc
+  namespace: monitoring
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: grafana
+  oidc:
+    provider:
+      issuer: "https://accounts.google.com"
+    clientID: "95800983069-n5fq0hfquou312q84o8oq60icn1nbval.apps.googleusercontent.com"
+    clientSecret:
+      name: oidc-google
+    redirectURL: "https://grafana.chapellu.eu.org/oauth2/callback"
+    logoutPath: "/logout"
+    scopes:
+      - openid
+      - email
+      - profile
+    # Stable cookie name so the JWT provider below can extract the ID token.
+    cookieNames:
+      idToken: "grafana-id-token"
+  # Validate the Google ID token coming from the OIDC cookie.
+  jwt:
+    providers:
+      - name: google
+        issuer: "https://accounts.google.com"
+        remoteJWKS:
+          uri: https://www.googleapis.com/oauth2/v3/certs
+        extractFrom:
+          cookies:
+            - "grafana-id-token"
+  # Deny-by-default; allow only the owner account.
+  authorization:
+    defaultAction: Deny
+    rules:
+      - name: allow-owner
+        action: Allow
+        principal:
+          jwt:
+            provider: google
+            claims:
+              - name: email
+                valueType: String
+                values:
+                  - civ.odul74@gmail.com

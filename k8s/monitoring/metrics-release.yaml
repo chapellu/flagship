@@ -1,0 +1,146 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: vm-k8s-stack
+  namespace: monitoring
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: victoria-metrics-k8s-stack
+      version: ">=0.85.0 <0.86.0"
+      sourceRef:
+        kind: HelmRepository
+        name: victoriametrics
+        namespace: flux-system
+  install:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  values:
+    # ------------------------------------------------------------------
+    # Metrics backend — VictoriaMetrics single-node. Short retention; a
+    # storage request well under the self-imposed monitoring disk budget.
+    # ------------------------------------------------------------------
+    vmsingle:
+      enabled: true
+      spec:
+        retentionPeriod: "15d"
+        storage:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 20Gi
+        resources:
+          requests:
+            cpu: 100m
+            memory: 512Mi
+          limits:
+            memory: 2Gi
+    # No clustered VM on a single node.
+    vmcluster:
+      enabled: false
+
+    # Scraper.
+    vmagent:
+      enabled: true
+      spec:
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            memory: 512Mi
+
+    # Rule evaluator. Alerts are evaluated and exposed (visible in Grafana),
+    # but never sent anywhere — no external notifications per the design.
+    vmalert:
+      enabled: true
+      spec:
+        # Empty notifier list = evaluate + record alert state, deliver nothing.
+        notifiers: []
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            memory: 256Mi
+
+    # vmalert recording/alerting rules (node, k8s, VM self-monitoring).
+    defaultRules:
+      create: true
+
+    # No Alertmanager — keeps the footprint down and avoids an unused
+    # notification path. (Also drops the Alertmanager Grafana datasource.)
+    alertmanager:
+      enabled: false
+
+    # Cluster metrics sources.
+    kube-state-metrics:
+      enabled: true
+    prometheus-node-exporter:
+      enabled: true
+
+    # k3s does not expose etcd / scheduler / controller-manager / kube-proxy
+    # metrics endpoints the way a kubeadm cluster does — disable those
+    # scrape targets so vmagent doesn't spam "connection refused".
+    kubeEtcd:
+      enabled: false
+    kubeScheduler:
+      enabled: false
+    kubeControllerManager:
+      enabled: false
+    kubeProxy:
+      enabled: false
+
+    # ------------------------------------------------------------------
+    # Grafana — bundled subchart. No login form; access is gated upstream
+    # at the Gateway by the OIDC SecurityPolicy, so anyone who gets through
+    # is an anonymous Admin (see grafana-securitypolicy.yaml).
+    # ------------------------------------------------------------------
+    grafana:
+      enabled: true
+      fullnameOverride: grafana
+      # VictoriaLogs datasource plugin (logs are queried through it).
+      plugins:
+        - victoriametrics-logs-datasource
+      grafana.ini:
+        server:
+          root_url: https://grafana.chapellu.eu.org
+        auth:
+          disable_login_form: true
+        auth.anonymous:
+          enabled: true
+          org_name: Main Org.
+          org_role: Admin
+        users:
+          allow_sign_up: false
+      service:
+        type: ClusterIP
+      # We expose Grafana through the Gateway API (HTTPRoute), not an Ingress.
+      ingress:
+        enabled: false
+      # Pick up datasource ConfigMaps labelled `grafana_datasource` (the
+      # VictoriaLogs and VictoriaTraces datasources are provisioned that way,
+      # from their own overlays).
+      sidecar:
+        datasources:
+          enabled: true
+          label: grafana_datasource
+        dashboards:
+          enabled: true
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          memory: 512Mi
+
+    # Bundled Kubernetes dashboards.
+    defaultDashboards:
+      enabled: true
