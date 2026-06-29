@@ -1,10 +1,19 @@
-# Envoy Gateway OIDC enforcement, applied to the Grafana HTTPRoute.
+# Envoy Gateway OIDC + authorization, applied to the Grafana HTTPRoute.
 #
-# Authentication happens at the gateway (Google OIDC), NOT in Grafana — so
+# Authentication AND authorization happen at the gateway (not in Grafana), so
 # every future app gets the same protection by attaching a SecurityPolicy to
 # its own route. Targeting the HTTPRoute (rather than the whole Gateway)
 # deliberately leaves the ACME HTTP-01 challenge path on the :80 listener
 # unauthenticated, so certificate issuance/renewal keeps working.
+#
+# Access is restricted to a single Google account:
+#   - `oidc` runs the Google login flow and stores the ID token in a cookie.
+#   - `jwt` validates that ID token (Google's JWKS) and pulls it FROM the
+#     cookie (Google's *access* token is opaque, so the ID token is the only
+#     JWT carrying the `email` claim).
+#   - `authorization` denies everything by default and allows only the owner's
+#     verified email. To grant another account, add its address under
+#     rules[].principal.jwt.claims[].values.
 #
 # Requires:
 #   - ConfigMap `monitoring-vars` providing ${oidc_google_client_id}
@@ -35,3 +44,30 @@ spec:
       - openid
       - email
       - profile
+    # Stable cookie name so the JWT provider below can extract the ID token.
+    cookieNames:
+      idToken: "grafana-id-token"
+  # Validate the Google ID token coming from the OIDC cookie.
+  jwt:
+    providers:
+      - name: google
+        issuer: "https://accounts.google.com"
+        remoteJWKS:
+          uri: https://www.googleapis.com/oauth2/v3/certs
+        extractFrom:
+          cookies:
+            - "grafana-id-token"
+  # Deny-by-default; allow only the owner account.
+  authorization:
+    defaultAction: Deny
+    rules:
+      - name: allow-owner
+        action: Allow
+        principal:
+          jwt:
+            provider: google
+            claims:
+              - name: email
+                valueType: String
+                values:
+                  - ludovic.chapelet@socotec.com
