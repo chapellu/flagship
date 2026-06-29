@@ -1,8 +1,8 @@
 # TEMPLATE — do NOT commit this filled in as plaintext.
 #
 # Holds the Google OAuth 2.0 *client secret* consumed by the Grafana OIDC
-# SecurityPolicy. The client *ID* is not secret and is injected separately
-# via the monitoring-vars ConfigMap (see README.md).
+# SecurityPolicy. The client *ID* is not secret and is hardcoded directly in
+# grafana-securitypolicy.yaml (spec.oidc.clientID).
 #
 # 1. Create an OAuth 2.0 Client ID (type: Web application) in Google Cloud
 #    Console → APIs & Services → Credentials. Authorized redirect URI:

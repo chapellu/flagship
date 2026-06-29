@@ -43,21 +43,11 @@ ID* → **Web application**.
 - Authorized redirect URI: `https://grafana.chapellu.eu.org/oauth2/callback`
 - Note the **Client ID** and **Client secret**.
 
-### 2. Non-secret client ID — `monitoring-vars` ConfigMap
+The **Client ID** is not sensitive — it is hardcoded directly in
+`grafana-securitypolicy.yaml` (`spec.oidc.clientID`). To use a different
+OAuth client, edit that field. Only the client secret needs encrypting.
 
-The client ID is not sensitive; it is injected via Flux `postBuild`
-substitution. Create it once in the cluster:
-
-```bash
-kubectl -n flux-system create configmap monitoring-vars \
-  --from-literal=oidc_google_client_id='<YOUR_GOOGLE_CLIENT_ID>'
-```
-
-(To change it later: `kubectl -n flux-system create configmap monitoring-vars
---from-literal=oidc_google_client_id='...' --dry-run=client -o yaml | kubectl
-apply -f -`.)
-
-### 3. Secret client secret — SOPS
+### 2. Secret client secret — SOPS
 
 ```bash
 cp k8s/monitoring/oidc-google.enc.yaml.example k8s/monitoring/oidc-google.enc.yaml
@@ -72,7 +62,7 @@ Until this encrypted file exists, the `monitoring` Kustomization will not
 reconcile (it references `oidc-google.enc.yaml`) — so nothing is exposed
 without auth. That gate is intentional.
 
-### 4. Reconcile
+### 3. Reconcile
 
 ```bash
 flux reconcile kustomization flux-system --with-source
