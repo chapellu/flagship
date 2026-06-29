@@ -16,12 +16,13 @@
 #     rules[].principal.jwt.claims[].values.
 #
 # Requires:
-#   - ConfigMap `monitoring-vars` providing ${oidc_google_client_id}
-#     (substituted by Flux postBuild — see k8s/flux/monitoring.yaml).
 #   - Secret `oidc-google` with key `client-secret` (SOPS — see
 #     oidc-google.enc.yaml.example).
 #   - The redirect URL below registered as an authorized redirect URI on the
 #     Google OAuth 2.0 client.
+#
+# The clientID below is not a secret (it is exposed in the browser consent
+# flow), so it lives in Git directly — only the client secret is encrypted.
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: SecurityPolicy
 metadata:
@@ -35,7 +36,7 @@ spec:
   oidc:
     provider:
       issuer: "https://accounts.google.com"
-    clientID: "${oidc_google_client_id}"
+    clientID: "95800983069-n5fq0hfquou312q84o8oq60icn1nbval.apps.googleusercontent.com"
     clientSecret:
       name: oidc-google
     redirectURL: "https://grafana.chapellu.eu.org/oauth2/callback"

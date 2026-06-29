@@ -24,10 +24,3 @@ spec:
     provider: sops
     secretRef:
       name: sops-age
-  # Inject the non-secret Google OIDC client ID from a ConfigMap created out
-  # of band (see k8s/monitoring/README.md).
-  postBuild:
-    substituteFrom:
-      - kind: ConfigMap
-        name: monitoring-vars
-        optional: false
