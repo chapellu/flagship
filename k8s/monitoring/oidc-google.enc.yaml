@@ -1,0 +1,44 @@
+# TEMPLATE — do NOT commit this filled in as plaintext.
+#
+# Holds the Google OAuth 2.0 *client secret* consumed by the Grafana OIDC
+# SecurityPolicy. The client *ID* is not secret and is injected separately
+# via the monitoring-vars ConfigMap (see README.md).
+#
+# 1. Create an OAuth 2.0 Client ID (type: Web application) in Google Cloud
+#    Console → APIs & Services → Credentials. Authorized redirect URI:
+#      https://grafana.chapellu.eu.org/oauth2/callback
+# 2. Copy to oidc-google.enc.yaml
+# 3. Paste the client secret below.
+# 4. Encrypt in place:
+#      sops --encrypt --in-place k8s/monitoring/oidc-google.enc.yaml
+# 5. Commit the encrypted file.
+#
+# Envoy Gateway requires the key to be named exactly `client-secret`.
+apiVersion: v1
+kind: Secret
+metadata:
+    name: oidc-google
+    namespace: monitoring
+type: Opaque
+stringData:
+    client-secret: ENC[AES256_GCM,data:Zu4/wnJAY4vG1GCctLJvDvJXLItVYNCnG9fSMK3F4/qoxSo=,iv:9cuCY7vU+AFWeUznDpO0Q9IZsJf06L2U+YOCpceZaqk=,tag:1pnwnMZmLkpIrVAPYfAu4g==,type:str]
+sops:
+    kms: []
+    gcp_kms: []
+    azure_kv: []
+    hc_vault: []
+    age:
+        - recipient: age146qdcn0v66z6mylvdrnucy5g3zencx8wqlga78jd2zwvzknklctqkgpdkz
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBUYlQzRHB4SDRCdWNoamFv
+            Wjc0cVJ3TlJpL2w2MHVLZ1czSDBiSmdsdWh3ClRLTGRUUUdEWWJzSU5CYjJpSEwv
+            REo1eDEvbHEvc0xOM3IzZ0F0b21WcTQKLS0tIE5Lak1yL2RadVdBaVhNNUpUbzNa
+            MUlwK1FMZ29vM1B5N24wUVc2YURET1UKc4VdSXw1e/h+pKv6fmRE2SNkR+U6d6AA
+            dRsb8+M1s2NDQTMFyEfxH39iay2MaqvckdPqOvt0MMwj4g2tWxpZNA==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-06-29T14:08:52Z"
+    mac: ENC[AES256_GCM,data:bNJNp7y0Q0wlKL2NC7qD0eYO440lgZrAm5YzIqJdBF1HUDYnQhx8MS25fd7o0kb2JsM7N4dJnnRLj411B4mkfI2Ncnp6wIXRsvJ7CjCB40PLKJJO6E/R1ZH71YGMhn/6tGAAFJKZnZU7+A2f/icD/E5rOnNrChw1+uGQ3xUc4l8=,iv:E8JGHTTIvxtD5/gvuoMuPctDo7cDtJoTv6HIXQhT6SM=,tag:Fv0Dku9wDWUDxSZvDNYDMw==,type:str]
+    pgp: []
+    encrypted_regex: ^(data|stringData)$
+    version: 3.9.4

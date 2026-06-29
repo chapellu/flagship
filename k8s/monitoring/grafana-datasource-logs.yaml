@@ -1,0 +1,19 @@
+# VictoriaLogs datasource, provisioned into Grafana via the sidecar (matched
+# by the `grafana_datasource` label). Uses the victoriametrics-logs-datasource
+# plugin declared in the Grafana values.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasource-victorialogs
+  namespace: monitoring
+  labels:
+    grafana_datasource: "1"
+data:
+  victorialogs.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: VictoriaLogs
+        type: victoriametrics-logs-datasource
+        access: proxy
+        url: http://victoria-logs:9428
+        editable: false
