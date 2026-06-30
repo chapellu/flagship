@@ -62,8 +62,12 @@ spec:
     vmalert:
       enabled: true
       spec:
-        # Empty notifier list = evaluate + record alert state, deliver nothing.
-        notifiers: []
+        # No external notifier: run vmalert in blackhole mode — rules are
+        # evaluated and alert state stays queryable (visible in Grafana), but
+        # nothing is ever sent. The chart rejects an empty notifier config, so
+        # use the documented notifier.blackhole arg instead of notifiers: [].
+        extraArgs:
+          notifier.blackhole: "true"
         resources:
           requests:
             cpu: 25m
