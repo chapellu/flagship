@@ -179,6 +179,7 @@ resource "oci_core_instance" "main" {
   source_details {
     source_type = "image"
     source_id   = data.oci_core_images.ubuntu_24_04_arm64.images[0].id
+
     # Max boot volume that still fits the Always Free 200 GB total Block
     # Volume allotment. Consumes the entire free storage quota (fine for a
     # single-node setup where everything lives on the boot disk).
@@ -186,6 +187,7 @@ resource "oci_core_instance" "main" {
     # online but NOT the OS partition — reboot, or run
     # `sudo growpart /dev/sda 1 && sudo resize2fs /dev/sda1` afterwards.
     boot_volume_size_in_gbs = 200
+    preserve_boot_volume    = false
   }
 
   create_vnic_details {
