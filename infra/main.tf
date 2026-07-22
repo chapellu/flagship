@@ -171,6 +171,10 @@ resource "oci_core_instance" "main" {
   display_name        = "vm-main"
   shape               = var.shape
 
+  # Destroy the boot volume together with the instance instead of leaving it
+  # orphaned (which would keep consuming the Always Free block-volume quota).
+  preserve_boot_volume = false
+
   shape_config {
     ocpus         = 4
     memory_in_gbs = 24
@@ -187,7 +191,6 @@ resource "oci_core_instance" "main" {
     # online but NOT the OS partition — reboot, or run
     # `sudo growpart /dev/sda 1 && sudo resize2fs /dev/sda1` afterwards.
     boot_volume_size_in_gbs = 200
-    preserve_boot_volume    = false
   }
 
   create_vnic_details {
