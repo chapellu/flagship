@@ -1,9 +1,11 @@
 # ---------------------------------------------------------------------------
-# DNS (OCI DNS) — full management of the chapellu.eu.org zone
+# DNS (OCI DNS) — full management of the chapellu.fr zone
 #
-# The zone pre-exists in OCI and is imported into Terraform state (see the
-# README for the `terraform import` command). From then on Terraform is the
-# source of truth for the zone.
+# For a brand-new domain, Terraform creates the zone on first apply. If the
+# zone was already created in the OCI console (to grab the OCI nameservers and
+# set them at the OVH registrar before applying), import it into state first
+# instead — see the README / terraform-import workflow. Either way, from then
+# on Terraform is the source of truth for the zone.
 #
 # System records (SOA, apex NS delegation, DNSKEY) are generated and managed
 # by OCI itself and are intentionally NOT declared as rrsets here — they are
