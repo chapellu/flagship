@@ -11,7 +11,7 @@ publicly behind the shared Envoy Gateway with TLS and Google OIDC.
 | Viz     | Grafana (anonymous Admin, login form disabled)           | — (ephemeral)            |
 
 Edge: **cert-manager** (Let's Encrypt, HTTP-01 via Gateway API) issues the TLS
-cert for `grafana.chapellu.eu.org`; **Envoy Gateway `SecurityPolicy`** enforces
+cert for `grafana.chapellu.fr`; **Envoy Gateway `SecurityPolicy`** enforces
 Google OIDC *at the gateway* — Grafana itself trusts the gateway and runs as
 anonymous Admin. Future apps get the same protection by attaching their own
 `SecurityPolicy` to their route.
@@ -32,7 +32,7 @@ Reconcile order (via Flux `dependsOn`):
 
 ## One-time setup
 
-DNS is already handled: `grafana.chapellu.eu.org` → VM public IP is managed in
+DNS is already handled: `grafana.chapellu.fr` → VM public IP is managed in
 `infra/dns.tf`. The OCI security list already allows 80/443.
 
 ### 1. Google OAuth 2.0 client
@@ -40,7 +40,7 @@ DNS is already handled: `grafana.chapellu.eu.org` → VM public IP is managed in
 Google Cloud Console → *APIs & Services* → *Credentials* → *Create OAuth client
 ID* → **Web application**.
 
-- Authorized redirect URI: `https://grafana.chapellu.eu.org/oauth2/callback`
+- Authorized redirect URI: `https://grafana.chapellu.fr/oauth2/callback`
 - Note the **Client ID** and **Client secret**.
 
 The **Client ID** is not sensitive — it is hardcoded directly in
@@ -76,7 +76,7 @@ flux get helmreleases -n monitoring
 kubectl -n monitoring get pods
 kubectl -n monitoring get svc                 # confirm victoria-logs / victoria-traces names
 kubectl -n envoy-gateway-system get certificate,gateway
-# Browse https://grafana.chapellu.eu.org → Google login → Grafana as Admin.
+# Browse https://grafana.chapellu.fr → Google login → Grafana as Admin.
 ```
 
 In Grafana, *Connections → Data sources* should list **VictoriaMetrics**

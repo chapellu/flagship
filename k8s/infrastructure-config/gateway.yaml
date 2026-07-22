@@ -27,7 +27,7 @@ spec:
     - name: https-grafana
       protocol: HTTPS
       port: 443
-      hostname: grafana.chapellu.eu.org
+      hostname: grafana.chapellu.fr
       tls:
         mode: Terminate
         certificateRefs:

@@ -1,14 +1,16 @@
 name: Terraform Import
 
 # Manually-triggered, idempotent `terraform import` against the shared OCI
-# remote state. Primary use: bring the pre-existing chapellu.eu.org DNS zone
+# remote state. Primary use: bring a pre-existing chapellu.fr DNS zone
 # under Terraform management BEFORE the first apply that introduces it —
 # otherwise apply would try to *create* a zone that already exists and fail.
+# (Only needed if the zone was created in the console first; a brand-new zone
+# left for Terraform to create does not need this.)
 #
 # The OCID is passed as a run input (not stored as a secret), so you can run
 # this from the GitHub mobile/web UI: Actions -> Terraform Import -> Run workflow.
 # Find the zone OCID in the OCI console: Networking -> DNS management -> Zones
-# -> chapellu.eu.org -> copy OCID.
+# -> chapellu.fr -> copy OCID.
 
 on:
   workflow_dispatch:

@@ -27,10 +27,11 @@ ssh_public_key = "ssh-ed25519 AAAA..."
 
 # ------------------------------------------------------------------------------
 # DNS (OCI DNS)
-# The chapellu.eu.org zone is managed by Terraform (imported once — see README).
+# The chapellu.fr zone is managed by Terraform (created on first apply, or
+# imported once if pre-created in the console — see README).
 # ------------------------------------------------------------------------------
 
-dns_zone_name = "chapellu.eu.org"
+dns_zone_name = "chapellu.fr"
 
 # Compartment that holds the DNS zone. Leave empty to reuse compartment_id.
 # dns_compartment_id = "ocid1.compartment.oc1..aaaa..."
