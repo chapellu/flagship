@@ -39,7 +39,7 @@ spec:
     clientID: "95800983069-n5fq0hfquou312q84o8oq60icn1nbval.apps.googleusercontent.com"
     clientSecret:
       name: oidc-google
-    redirectURL: "https://grafana.chapellu.eu.org/oauth2/callback"
+    redirectURL: "https://grafana.chapellu.fr/oauth2/callback"
     logoutPath: "/logout"
     scopes:
       - openid

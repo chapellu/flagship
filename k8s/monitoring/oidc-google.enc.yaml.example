@@ -6,7 +6,7 @@
 #
 # 1. Create an OAuth 2.0 Client ID (type: Web application) in Google Cloud
 #    Console → APIs & Services → Credentials. Authorized redirect URI:
-#      https://grafana.chapellu.eu.org/oauth2/callback
+#      https://grafana.chapellu.fr/oauth2/callback
 # 2. Copy to oidc-google.enc.yaml
 # 3. Paste the client secret below.
 # 4. Encrypt in place:
