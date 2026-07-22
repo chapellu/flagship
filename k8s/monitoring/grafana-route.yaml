@@ -13,7 +13,7 @@ spec:
       namespace: envoy-gateway-system
       sectionName: https-grafana
   hostnames:
-    - grafana.chapellu.eu.org
+    - grafana.chapellu.fr
   rules:
     - backendRefs:
         - name: grafana
