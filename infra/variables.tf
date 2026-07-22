@@ -82,7 +82,7 @@ variable "github_token" {
 variable "dns_zone_name" {
   description = "Name of the OCI DNS zone managed by Terraform"
   type        = string
-  default     = "chapellu.eu.org"
+  default     = "chapellu.fr"
 }
 
 variable "dns_compartment_id" {
