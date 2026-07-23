@@ -1,5 +1,11 @@
 #cloud-config
 
+# Rendered by Terraform via templatefile() with the github_token variable.
+# cloud-init runs this on the instance's first boot, so k3s + Flux are part
+# of provisioning — no SSH remote-exec provisioner needed. A boot-volume
+# re-image counts as a fresh first boot, so the cluster is reinstalled
+# automatically instead of silently going missing.
+
 package_update: true
 package_upgrade: true
 
@@ -9,7 +15,62 @@ packages:
   - ca-certificates
   - unattended-upgrades
 
+write_files:
+  - path: /usr/local/bin/k3s-flux-bootstrap.sh
+    permissions: "0700"
+    owner: root:root
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+
+      # Install k3s — Traefik disabled, servicelb (Klipper) kept for
+      # LoadBalancer -> HostPort. kubeconfig is root-only (0600).
+      if ! systemctl is-active --quiet k3s 2>/dev/null; then
+        curl -sfL https://get.k3s.io \
+          | INSTALL_K3S_EXEC='server --disable traefik --write-kubeconfig-mode 600' sh -
+      fi
+
+      # Copy kubeconfig for the ubuntu user (restricted perms).
+      install -d -o ubuntu -g ubuntu -m 0700 /home/ubuntu/.kube
+      cp /etc/rancher/k3s/k3s.yaml /home/ubuntu/.kube/config
+      chown ubuntu:ubuntu /home/ubuntu/.kube/config
+      chmod 600 /home/ubuntu/.kube/config
+
+      export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+
+      # Bounded wait for the API server / node to come up (no infinite loop).
+      for _ in $(seq 1 60); do
+        k3s kubectl get nodes >/dev/null 2>&1 && break
+        sleep 5
+      done
+      k3s kubectl wait --for=condition=Ready nodes --all --timeout=180s
+
+      # Install flux CLI.
+      if ! command -v flux >/dev/null 2>&1; then
+        curl -s https://fluxcd.io/install.sh | bash
+      fi
+
+      # Bootstrap FluxCD — idempotent, safe to re-run.
+      export GITHUB_TOKEN='${github_token}'
+      flux bootstrap github \
+        --owner=chapellu \
+        --repository=cucco-team \
+        --branch=main \
+        --path=k8s/flux \
+        --personal \
+        --token-auth
+
 runcmd:
+  # Host firewall (defence-in-depth on top of the OCI Security Lists).
+  # 'default allow routed' lets the k3s CNI forward pod/service traffic —
+  # without it ufw's default-deny FORWARD chain drops cluster ingress on
+  # 80/443 even though those ports are allowed inbound.
+  - ufw default deny incoming
+  - ufw default allow outgoing
+  - ufw default allow routed
   - ufw allow 22/tcp
+  - ufw allow 80/tcp
+  - ufw allow 443/tcp
   - ufw --force enable
   - systemctl enable unattended-upgrades
+  - /usr/local/bin/k3s-flux-bootstrap.sh
