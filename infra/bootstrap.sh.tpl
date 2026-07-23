@@ -2,8 +2,14 @@
 set -euo pipefail
 
 # Wait for cloud-init to finish so apt locks are released before k3s installs.
-# OCI Security Lists already control ports 80/443/22, so ufw rules are not needed.
 sudo cloud-init status --wait || true
+
+# cloud-init enables ufw allowing only 22/tcp. ufw is the *host* firewall
+# (distinct from the OCI Security Lists, which are the cloud-network firewall):
+# with its default deny-incoming policy it would drop k3s ingress on 80/443
+# once the cluster is up. Open them explicitly. Idempotent — safe to re-run.
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
 
 # Install k3s — Traefik disabled, servicelb (Klipper) kept for LoadBalancer → HostPort
 if ! systemctl is-active --quiet k3s 2>/dev/null; then

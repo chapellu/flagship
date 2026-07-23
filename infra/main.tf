@@ -213,8 +213,11 @@ resource "null_resource" "k3s_flux_bootstrap" {
   depends_on = [oci_core_instance.main]
 
   triggers = {
-    instance_id       = oci_core_instance.main.id
-    bootstrap_version = "2"
+    instance_id = oci_core_instance.main.id
+    # Bumped 2 -> 3 to force a re-run: a boot-volume re-image keeps the same
+    # instance_id but wipes k3s, so the bootstrap never re-triggered on its own
+    # and the VM was left with cloud-init done but no k3s/Flux installed.
+    bootstrap_version = "3"
   }
 
   connection {
