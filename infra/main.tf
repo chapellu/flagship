@@ -4,10 +4,6 @@ terraform {
       source  = "oracle/oci"
       version = "~> 6.0"
     }
-    null = {
-      source  = "hashicorp/null"
-      version = "~> 3.0"
-    }
     time = {
       source  = "hashicorp/time"
       version = "~> 0.12"
@@ -201,44 +197,14 @@ resource "oci_core_instance" "main" {
 
   metadata = {
     ssh_authorized_keys = var.ssh_public_key
-    user_data           = base64encode(file("${path.module}/cloud-init.yaml"))
-  }
-}
-
-# ---------------------------------------------------------------------------
-# k3s + FluxCD bootstrap (runs once via SSH after the instance is ready)
-# ---------------------------------------------------------------------------
-
-resource "null_resource" "k3s_flux_bootstrap" {
-  depends_on = [oci_core_instance.main]
-
-  triggers = {
-    instance_id = oci_core_instance.main.id
-    # Bumped 2 -> 3 to force a re-run: a boot-volume re-image keeps the same
-    # instance_id but wipes k3s, so the bootstrap never re-triggered on its own
-    # and the VM was left with cloud-init done but no k3s/Flux installed.
-    bootstrap_version = "3"
-  }
-
-  connection {
-    type        = "ssh"
-    user        = "ubuntu"
-    private_key = var.ssh_private_key
-    host        = oci_core_instance.main.public_ip
-    timeout     = "15m"
-  }
-
-  provisioner "file" {
-    content = templatefile("${path.module}/bootstrap.sh.tpl", {
+    user_data = base64encode(templatefile("${path.module}/cloud-init.yaml", {
       github_token = var.github_token
-    })
-    destination = "/tmp/k3s_bootstrap.sh"
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "bash /tmp/k3s_bootstrap.sh",
-      "rm /tmp/k3s_bootstrap.sh",
-    ]
+    }))
   }
 }
+
+# k3s + FluxCD are bootstrapped by cloud-init on the instance's first boot
+# (see cloud-init.yaml, rendered with the GitHub token via user_data). The
+# previous SSH remote-exec provisioner was removed: it depended on runner ->
+# VM SSH reachability, had no per-command timeout (a failed k3s start hung the
+# apply for hours), and never re-ran after a boot-volume re-image.
