@@ -67,12 +67,6 @@ variable "shape" {
   }
 }
 
-variable "ssh_private_key" {
-  description = "Content of the SSH private key used to connect to the VM for post-provisioning bootstrap"
-  type        = string
-  sensitive   = true
-}
-
 variable "github_token" {
   description = "GitHub PAT (repo scope) used by FluxCD bootstrap to push gotk manifests to the repository"
   type        = string
