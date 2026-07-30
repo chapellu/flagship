@@ -1,0 +1,108 @@
+# blog.chapellu.fr — Astro SSR server plus a git-sync sidecar that keeps the
+# article repo (chapellu/blog-content, public) in a shared emptyDir.
+#
+# One replica on purpose: the two containers share the content volume, so a
+# second pod would need either RWX storage or its own clone. The traffic of a
+# personal blog does not justify either.
+#
+# The image tag is pinned by CI (.github/workflows/blog-image.yml), which
+# commits the new SHA here after publishing to GHCR — Flux performs the
+# rollout, nothing applies out of band.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blog
+  namespace: blog
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate # single node, shared volume — no point overlapping pods
+  selector:
+    matchLabels:
+      app: blog
+  template:
+    metadata:
+      labels:
+        app: blog
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        # git-sync's uid; makes the shared emptyDir group-writable for it and
+        # readable by the Astro container.
+        fsGroup: 65533
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: astro
+          image: ghcr.io/chapellu/blog:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 4321
+          env:
+            - name: CONTENT_DIR
+              value: /content/current/content
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 192Mi
+            limits:
+              # Higher than the 256Mi first sketched: MDX is compiled per
+              # article at request time, not at build time.
+              cpu: 500m
+              memory: 384Mi
+          securityContext:
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: content
+              mountPath: /content
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+
+        - name: git-sync
+          image: registry.k8s.io/git-sync/git-sync:v4.4.0
+          args:
+            - --repo=https://github.com/chapellu/blog-content.git
+            - --ref=main
+            - --root=/content
+            - --link=current
+            - --depth=1
+            - --period=60s
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            runAsUser: 65533
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: content
+              mountPath: /content
+      volumes:
+        - name: content
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}

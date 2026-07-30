@@ -36,3 +36,15 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
+    - name: https-blog
+      protocol: HTTPS
+      port: 443
+      hostname: blog.chapellu.fr
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: blog-tls
+      allowedRoutes:
+        namespaces:
+          from: All

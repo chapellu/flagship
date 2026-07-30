@@ -1,0 +1,65 @@
+---
+import Base from '../layouts/Base.astro';
+import BrandMarks from '../components/BrandMarks.astro';
+import Terminal from '../components/Terminal.astro';
+import { listArticles, formatDate, PILLARS } from '../lib/content.js';
+
+const articles = await listArticles();
+---
+
+<Base title="chapellu — platform engineering & career">
+  <header class="masthead">
+    <BrandMarks kind="contour" uid="hero" color="#C8942A" count={11} baseOpacity={0.32} class="contour" />
+    <div class="masthead-in">
+      <div class="masthead-text">
+        <div class="wordmark on-dark">
+          <BrandMarks kind="shield" size={30} uid="wordmark" />
+          <span>chapellu</span>
+        </div>
+        <div class="kicker">Personal blog · platform engineering &amp; career</div>
+        <h1>Building thoughtful platforms — and the career around them.</h1>
+        <p class="dek">
+          First-person notes from running k3s, Flux and a shared Gateway in
+          production — documented, not hyped.
+        </p>
+        <nav class="pillar-nav">
+          {Object.values(PILLARS).map((p) => <span>{p.label}</span>)}
+        </nav>
+      </div>
+      <Terminal />
+    </div>
+  </header>
+
+  <main class="wrap feed">
+    {articles.length === 0 && (
+      <p class="dek" style="color:var(--muted)">
+        Nothing published yet. The content volume is empty — git-sync has not
+        landed an article here.
+      </p>
+    )}
+
+    {articles.map((a) => {
+      const pillar = a.pillar ? PILLARS[a.pillar] : null;
+      return (
+        <article class="article-row">
+          {pillar && <div class="pillar" style={`color:${pillar.accent}`}>{pillar.label}</div>}
+          <h2><a href={`/${a.slug}`}>{a.title}</a></h2>
+          {a.description && <p class="dek">{a.description}</p>}
+          <div class="meta">
+            {formatDate(a.publishDate)} · {a.readingTime} min read
+            {a.series && (
+              <span class="series-tag">
+                {' '}· {a.series}{a.seriesOrder !== null ? ` · part ${a.seriesOrder}` : ''}
+              </span>
+            )}
+          </div>
+        </article>
+      );
+    })}
+
+    <div class="colophon">
+      <a class="handle" href="https://github.com/chapellu">@chapellu</a>
+      <a href="/rss.xml">RSS</a>
+    </div>
+  </main>
+</Base>

@@ -1,0 +1,91 @@
+---
+import Base from '../layouts/Base.astro';
+import BrandMarks from '../components/BrandMarks.astro';
+import { getArticle, formatDate, PILLARS } from '../lib/content.js';
+import { renderArticle, usesMermaid } from '../lib/mdx.js';
+
+const { slug } = Astro.params;
+const article = await getArticle(slug);
+
+if (!article || article.draft) {
+  return new Response(null, { status: 404, statusText: 'Not found' });
+}
+
+let html;
+try {
+  html = await renderArticle(article);
+} catch (err) {
+  // A malformed article must not take the whole site down with it.
+  console.error(`[blog] failed to render ${slug}:`, err);
+  return new Response('This article failed to render.', { status: 500 });
+}
+
+const pillar = article.pillar ? PILLARS[article.pillar] : null;
+const mermaid = usesMermaid(article);
+// A drop cap needs a paragraph tall enough to sit in.
+const lede = article.body.trimStart().split('\n\n')[0] ?? '';
+const dropcap = lede.length > 140;
+---
+
+<Base
+  title={`${article.title} — chapellu`}
+  description={article.description}
+  type="article"
+  publishDate={article.publishDate}
+>
+  <main class="wrap-narrow article">
+    <div class="wordmark on-light">
+      <BrandMarks kind="shield" size={30} uid="article" />
+      <span>chapellu</span>
+    </div>
+
+    <div class="crumb">
+      <a href="/">chapellu</a> / {article.pillar ?? 'writing'} / {article.slug}
+    </div>
+
+    {pillar && <span class="pillar-chip" style={`border-color:${pillar.accent};color:${pillar.accent}`}>{pillar.label}</span>}
+
+    <h1>{article.title}</h1>
+
+    <div class="byline">
+      @chapellu · {formatDate(article.publishDate)} · {article.readingTime} min read
+      {article.series && (
+        <span> · {article.series}{article.seriesOrder !== null ? ` · part ${article.seriesOrder}` : ''}</span>
+      )}
+    </div>
+
+    <div class={dropcap ? 'prose dropcap' : 'prose'} set:html={html} />
+
+    <div class="article-foot">
+      <a href="/">← All posts</a>
+      <span>·</span>
+      <a href="/rss.xml">RSS</a>
+    </div>
+  </main>
+
+  {mermaid && (
+    <script>
+      const blocks = document.querySelectorAll('pre.mermaid');
+      if (blocks.length) {
+        const { default: mermaid } = await import('mermaid');
+        mermaid.initialize({
+          startOnLoad: false,
+          securityLevel: 'strict',
+          theme: 'base',
+          fontFamily: '"Space Mono", ui-monospace, monospace',
+          themeVariables: {
+            background: '#0E211C',
+            primaryColor: '#13241F',
+            primaryTextColor: '#ECE2C8',
+            primaryBorderColor: '#1E72B8',
+            lineColor: 'rgba(230,220,194,0.62)',
+            secondaryColor: '#13241F',
+            tertiaryColor: '#13241F',
+            fontSize: '13px',
+          },
+        });
+        await mermaid.run({ nodes: blocks });
+      }
+    </script>
+  )}
+</Base>
