@@ -1,0 +1,51 @@
+---
+// Brand primitives, ported verbatim from the prototype's brand-system.jsx:
+// the shield mark and the contour field (topographic curves — the signature
+// motif of the chapellu identity). Rendered server-side as plain SVG.
+const { kind = 'shield', size = 30, uid = 'a', color = '#C8942A', count = 10, baseOpacity = 0.5, strokeWidth = 1.5, class: className } = Astro.props;
+
+const COVE_BLOB = 'M300,96 C392,84 470,132 506,224 C540,312 528,408 452,468 C372,532 252,520 176,456 C104,396 78,300 118,206 C154,120 214,106 300,96 Z';
+const BLOB_CX = 300, BLOB_CY = 296;
+const SHIELD = 'M46 5 L83 20 V52 C83 70 66 82 46 88 C26 82 9 70 9 52 V20 Z';
+
+const contours = kind === 'contour'
+  ? Array.from({ length: count }, (_, i) => {
+      const s = 0.3 + (i / (count - 1)) * 1.32;
+      return {
+        scale: s,
+        width: strokeWidth / s,
+        opacity: baseOpacity * (1 - i / (count + 2)),
+      };
+    })
+  : [];
+---
+
+{kind === 'shield' && (
+  <svg width={size} height={size} viewBox="0 0 92 92" fill="none" style="flex-shrink:0;display:block" aria-hidden="true">
+    <defs>
+      <clipPath id={`shield-${uid}`}><path d={SHIELD} /></clipPath>
+    </defs>
+    <path d={SHIELD} fill="#14463B" stroke="#C8942A" stroke-width="2.5" />
+    <g clip-path={`url(#shield-${uid})`}>
+      <path d="M2 66 Q18 56 34 66 T66 66 T98 66 V92 H2 Z" fill="#C8942A" opacity="0.92" />
+      <path d="M-2 60 Q16 50 34 60 T68 60 T98 60 V92 H-2 Z" fill="#E8D9A8" opacity="0.5" />
+    </g>
+    <path d={SHIELD} fill="none" stroke="#C8942A" stroke-width="2.5" stroke-opacity="0.35" transform="scale(0.86) translate(7.5 7.5)" />
+    <text x="46" y="52" text-anchor="middle" font-family="Spectral, serif" font-size="44" font-weight="600" fill="#E8D9A8">c</text>
+  </svg>
+)}
+
+{kind === 'contour' && (
+  <svg viewBox="0 0 600 600" class={className} aria-hidden="true">
+    {contours.map((c) => (
+      <path
+        d={COVE_BLOB}
+        fill="none"
+        stroke={color}
+        stroke-width={c.width}
+        opacity={c.opacity}
+        transform={`translate(${BLOB_CX} ${BLOB_CY}) scale(${c.scale}) translate(${-BLOB_CX} ${-BLOB_CY})`}
+      />
+    ))}
+  </svg>
+)}
