@@ -3,6 +3,10 @@
 // git-sync, live — rather than a decorative prompt. It renders the full
 // transcript server-side, so it reads fine without JS and for reduced motion;
 // the script only re-types it.
+//
+// Two copies on purpose: a hidden one holds the finished transcript and fixes
+// the box height, the animated one sits on top of it. Otherwise the hero grows
+// and shrinks on every loop and shoves the page around.
 const LINES = [
   { t: 'cmd', s: '$ chapellu draft "every homelab i built died in a cardboard box"' },
   { t: 'out', s: '→ hermes opened chapellu/blog-content#4' },
@@ -15,7 +19,8 @@ const staticText = LINES.map((l) => (l.t === 'gap' ? '' : l.s)).join('\n');
 ---
 
 <div class="term">
-  <pre id="term-body" data-lines={JSON.stringify(LINES)}>{staticText}</pre>
+  <pre class="term-ghost" aria-hidden="true">{staticText}</pre>
+  <pre class="term-live" id="term-body" data-lines={JSON.stringify(LINES)}>{staticText}</pre>
 </div>
 
 <script>
