@@ -387,8 +387,20 @@ a { color: inherit; }
       max(22px, env(safe-area-inset-left));
     border-radius: 0 0 16px 16px;
   }
+  .masthead .contour {
+    top: auto;
+    bottom: -150px;
+    right: -140px;
+    width: 340px;
+    height: 340px;
+    opacity: 0.5;
+    transform: none;
+    animation: none;
+  }
   .masthead-in { grid-template-columns: 1fr; gap: 28px; }
   .masthead h1 { font-size: 28px; }
+  .pillar-nav { gap: 10px 14px; }
+  .pillar-nav span { font-size: 10.5px; }
   .masthead .dek { font-size: 16px; }
   .term { padding: 14px 16px; }
   .term pre { font-size: 11.5px; }
