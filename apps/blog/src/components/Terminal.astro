@@ -19,7 +19,7 @@ const staticText = LINES.map((l) => (l.t === 'gap' ? '' : l.s)).join('\n');
 ---
 
 <div class="term">
-  <pre class="term-ghost" aria-hidden="true">{staticText}</pre>
+  <pre class="term-ghost" aria-hidden="true">{staticText}<span class="cursor"></span></pre>
   <pre class="term-live" id="term-body" data-lines={JSON.stringify(LINES)}>{staticText}</pre>
 </div>
 
@@ -40,7 +40,7 @@ const staticText = LINES.map((l) => (l.t === 'gap' ? '' : l.s)).join('\n');
         if (i >= lines.length) { timer = setTimeout(run, 2600); return; }
         const line = lines[i++];
         if (line.t === 'gap') {
-          el.insertBefore(document.createTextNode('\n\n'), cursor);
+          el.insertBefore(document.createTextNode('\n'), cursor);
           nextLine();
           return;
         }
@@ -49,7 +49,7 @@ const staticText = LINES.map((l) => (l.t === 'gap' ? '' : l.s)).join('\n');
           span.className = 'out';
           span.textContent = line.s;
           el.insertBefore(span, cursor);
-          el.insertBefore(document.createTextNode('\n'), cursor);
+          if (i < lines.length) el.insertBefore(document.createTextNode('\n'), cursor);
           timer = setTimeout(nextLine, 260);
           return;
         }
@@ -63,7 +63,7 @@ const staticText = LINES.map((l) => (l.t === 'gap' ? '' : l.s)).join('\n');
             cmd.textContent += chars[ci++];
             timer = setTimeout(type, 24 + Math.random() * 26);
           } else {
-            el.insertBefore(document.createTextNode('\n'), cursor);
+            if (i < lines.length) el.insertBefore(document.createTextNode('\n'), cursor);
             timer = setTimeout(nextLine, 220);
           }
         };
