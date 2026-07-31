@@ -348,16 +348,20 @@ a { color: inherit; }
   color: var(--muted-dark);
 }
 .prose pre.mermaid svg { max-width: 100%; height: auto; }
-/* Emphasised caption line under a figure/diagram. */
-.prose > p > em:only-child {
-  display: block;
+/* Caption line under a diagram: an italic paragraph immediately following a
+   mermaid plate. It has to be anchored to the diagram — an earlier version
+   matched `p > em:only-child` anywhere, and since :only-child ignores text
+   nodes, every single emphasised word in a paragraph turned into a centred
+   monospace caption in the middle of a sentence. */
+.prose pre.mermaid + p:has(> em:only-child) {
   font-family: var(--mono);
   font-size: 11.5px;
-  font-style: normal;
   letter-spacing: 0.01em;
   color: var(--muted);
   text-align: center;
+  margin-top: -18px;
 }
+.prose pre.mermaid + p:has(> em:only-child) em { font-style: normal; }
 
 .article-foot {
   margin-top: 44px;
