@@ -1,0 +1,73 @@
+name: Blog Image
+
+# Builds the Astro app image and pins the new digest tag into the deployment
+# manifest, so Git stays the source of truth and Flux does the rolling update.
+# Content changes never come through here — articles live in blog-content and
+# reach the pod via git-sync.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/blog/**"
+      - ".github/workflows/blog-image.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write # commits the new image tag back to main
+  packages: write # pushes to GHCR
+
+concurrency:
+  group: blog-image
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/blog
+
+jobs:
+  build:
+    name: Build & publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      # The cluster is a single Ampere A1 node, so the image has to be arm64.
+      # GitHub's free runners are amd64; QEMU emulation is slower than a native
+      # ARM runner but costs nothing, and this builds a handful of times a year.
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/blog
+          platforms: linux/arm64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Pin the new tag in the deployment manifest
+        run: |
+          set -euo pipefail
+          manifest=k8s/blog/deployment.yaml
+          sed -i -E "s|(image: ${IMAGE}:).*|\1${GITHUB_SHA}|" "$manifest"
+          if git diff --quiet -- "$manifest"; then
+            echo "Image tag unchanged, nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "$manifest"
+          git commit -m "blog: roll image to ${GITHUB_SHA}"
+          # Pushes made with GITHUB_TOKEN do not trigger workflows, so this
+          # cannot loop back into this job.
+          git push
