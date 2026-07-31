@@ -9,3 +9,8 @@ infra/.terraform.lock.hcl
 
 # Secrets / clés — NE JAMAIS COMMIT
 *.agekey
+
+# Astro app build artefacts
+apps/blog/node_modules/
+apps/blog/dist/
+apps/blog/.astro/

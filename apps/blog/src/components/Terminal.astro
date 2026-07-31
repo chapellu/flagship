@@ -1,0 +1,73 @@
+---
+// The hero terminal replays the real editorial pipeline — draft, PR, merge,
+// git-sync, live — rather than a decorative prompt. It renders the full
+// transcript server-side, so it reads fine without JS and for reduced motion;
+// the script only re-types it.
+const LINES = [
+  { t: 'cmd', s: '$ chapellu draft "every homelab i built died in a cardboard box"' },
+  { t: 'out', s: '→ hermes opened chapellu/blog-content#4' },
+  { t: 'gap' },
+  { t: 'cmd', s: '$ gh pr merge 4 --squash' },
+  { t: 'out', s: '→ git-sync: content updated (60s poll)' },
+  { t: 'out', s: '→ blog.chapellu.fr: Every Homelab I Built Died in a Cardboard Box — live' },
+];
+const staticText = LINES.map((l) => (l.t === 'gap' ? '' : l.s)).join('\n');
+---
+
+<div class="term">
+  <pre id="term-body" data-lines={JSON.stringify(LINES)}>{staticText}</pre>
+</div>
+
+<script>
+  const el = document.getElementById('term-body');
+  if (el && window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+    const lines = JSON.parse(el.dataset.lines);
+    const cursor = document.createElement('span');
+    cursor.className = 'cursor';
+    let timer;
+
+    const run = () => {
+      el.textContent = '';
+      el.appendChild(cursor);
+      let i = 0;
+
+      const nextLine = () => {
+        if (i >= lines.length) { timer = setTimeout(run, 2600); return; }
+        const line = lines[i++];
+        if (line.t === 'gap') {
+          el.insertBefore(document.createTextNode('\n\n'), cursor);
+          nextLine();
+          return;
+        }
+        if (line.t === 'out') {
+          const span = document.createElement('span');
+          span.className = 'out';
+          span.textContent = line.s;
+          el.insertBefore(span, cursor);
+          el.insertBefore(document.createTextNode('\n'), cursor);
+          timer = setTimeout(nextLine, 260);
+          return;
+        }
+        const cmd = document.createElement('span');
+        cmd.className = 'cmd';
+        el.insertBefore(cmd, cursor);
+        const chars = [...line.s];
+        let ci = 0;
+        const type = () => {
+          if (ci < chars.length) {
+            cmd.textContent += chars[ci++];
+            timer = setTimeout(type, 24 + Math.random() * 26);
+          } else {
+            el.insertBefore(document.createTextNode('\n'), cursor);
+            timer = setTimeout(nextLine, 220);
+          }
+        };
+        type();
+      };
+
+      nextLine();
+    };
+
+    run();
+  }
+</script>

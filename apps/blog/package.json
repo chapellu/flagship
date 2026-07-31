@@ -1,0 +1,25 @@
+{
+  "name": "@chapellu/blog",
+  "type": "module",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "node ./dist/server/entry.mjs",
+    "start": "node ./dist/server/entry.mjs"
+  },
+  "dependencies": {
+    "@mdx-js/mdx": "^3.1.0",
+    "gray-matter": "^4.0.3",
+    "preact": "^10.27.2",
+    "preact-render-to-string": "^6.6.1",
+    "rehype-slug": "^6.0.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@astrojs/node": "^9.4.4",
+    "astro": "^5.15.10",
+    "mermaid": "^11.12.0"
+  }
+}
