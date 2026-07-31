@@ -27,6 +27,20 @@ resource "oci_dns_zone" "chapellu" {
 
 # A record for Grafana, pointing at the VM's public IP. This replaces the
 # previously-manual console step.
+resource "oci_dns_rrset" "blog_a" {
+  zone_name_or_id = oci_dns_zone.chapellu.id
+  domain          = "blog.${var.dns_zone_name}"
+  rtype           = "A"
+  compartment_id  = local.dns_compartment_id
+
+  items {
+    domain = "blog.${var.dns_zone_name}"
+    rtype  = "A"
+    ttl    = 300
+    rdata  = oci_core_instance.main.public_ip
+  }
+}
+
 resource "oci_dns_rrset" "grafana_a" {
   zone_name_or_id = oci_dns_zone.chapellu.id
   domain          = "grafana.${var.dns_zone_name}"
