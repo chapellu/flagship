@@ -39,8 +39,18 @@ body {
 
 a { color: inherit; }
 
-.wrap { max-width: 720px; margin: 0 auto; padding: 0 24px; }
-.wrap-narrow { max-width: 680px; margin: 0 auto; padding: 0 24px; }
+/* Containers own the inline padding, sections only ever set block padding —
+   a `padding:` shorthand on .article/.feed used to silently reset it to zero,
+   which is how the text ended up flush against the screen edge on phones.
+   max() keeps clear of the notch/rounded corners on iOS. */
+.wrap, .wrap-narrow {
+  margin: 0 auto;
+  padding-inline:
+    max(22px, env(safe-area-inset-left))
+    max(22px, env(safe-area-inset-right));
+}
+.wrap { max-width: 720px; }
+.wrap-narrow { max-width: 680px; }
 
 /* ---------- header ---------- */
 
@@ -118,6 +128,8 @@ a { color: inherit; }
 .term {
   position: relative;
   z-index: 1;
+  /* A hidden copy of the finished transcript fixes the height; the animated
+     one is absolutely positioned on top, so typing can never move the page. */
   background: var(--code-bg);
   border: 1px solid rgba(230, 220, 194, 0.1);
   border-radius: 12px;
@@ -126,12 +138,22 @@ a { color: inherit; }
 }
 .term pre {
   margin: 0;
+  min-width: 0;
   font-family: var(--mono);
   font-size: 12.5px;
   line-height: 1.85;
   white-space: pre-wrap;
   word-break: break-word;
   color: var(--muted-dark);
+}
+.term-ghost { visibility: hidden; }
+.term-live {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  bottom: 18px;
+  left: 20px;
+  overflow: hidden;
 }
 .term .cmd { color: var(--kicker); }
 .term .out { color: #9fb0a7; }
@@ -146,7 +168,7 @@ a { color: inherit; }
 
 /* ---------- index ---------- */
 
-.feed { padding: 44px 0 140px; }
+.feed { padding-block: 44px 120px; }
 .article-row { padding: 24px 0; border-bottom: 1px solid var(--rule); }
 .article-row .pillar {
   font-family: var(--mono);
@@ -202,8 +224,15 @@ a { color: inherit; }
 
 /* ---------- article ---------- */
 
-.article { padding: 40px 0 140px; }
-.crumb { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 18px; }
+.article { padding-block: 40px 120px; }
+.crumb {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 18px;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
 .crumb a { color: var(--ocean); text-decoration: none; }
 .pillar-chip {
   display: inline-block;
@@ -224,7 +253,10 @@ a { color: inherit; }
 }
 .article .byline { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-bottom: 32px; }
 
-.prose { font-family: var(--serif); font-size: 18px; line-height: 1.7; }
+.prose { font-family: var(--serif); font-size: 18px; line-height: 1.7; overflow-wrap: break-word; }
+.prose img, .prose svg { max-width: 100%; height: auto; }
+.article h1, .prose h2, .prose h3 { text-wrap: balance; }
+.prose p { text-wrap: pretty; }
 .prose > p { margin: 0 0 20px; }
 /* Drop cap only when the opening paragraph is long enough to wrap around it —
    a two-word lede next to a 54px letter looks like a mistake. */
@@ -343,11 +375,38 @@ a { color: inherit; }
 /* ---------- responsive ---------- */
 
 @media (max-width: 760px) {
-  .masthead { padding: 34px 22px 30px; }
+  .masthead {
+    padding:
+      32px
+      max(22px, env(safe-area-inset-right))
+      28px
+      max(22px, env(safe-area-inset-left));
+    border-radius: 0 0 16px 16px;
+  }
   .masthead-in { grid-template-columns: 1fr; gap: 28px; }
-  .masthead h1 { font-size: 30px; }
-  .article h1 { font-size: 27px; }
-  .prose { font-size: 17px; }
+  .masthead h1 { font-size: 28px; }
+  .masthead .dek { font-size: 16px; }
+  .term { padding: 14px 16px; }
+  .term pre { font-size: 11.5px; }
+  .term-live { top: 14px; right: 16px; bottom: 14px; left: 16px; }
+
+  .feed { padding-block: 32px 96px; }
+  .article { padding-block: 28px 96px; }
+  .article h1 { font-size: 26px; line-height: 1.2; }
+  .article .byline { margin-bottom: 26px; }
+  .crumb { font-size: 10.5px; }
+
+  .prose { font-size: 17px; line-height: 1.65; }
+  .prose h2 { font-size: 22px; margin: 32px 0 12px; }
+  .prose h3 { font-size: 18px; margin: 24px 0 8px; }
+  .prose .code-block { font-size: 12px; padding: 14px; border-radius: 8px; }
+  .prose pre.mermaid { padding: 18px 12px; border-radius: 10px; }
+  .prose blockquote { padding-left: 16px; margin: 24px 0; }
+  .prose blockquote.pullquote { font-size: 21px; }
+  .prose .callout { padding: 12px 16px; }
+
+  .article-row h2 { font-size: 21px; }
+  .article-row .dek { font-size: 15px; }
 }
 
 /* ---------- motion ---------- */
