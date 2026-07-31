@@ -101,8 +101,15 @@ spec:
           volumeMounts:
             - name: content
               mountPath: /content
+            # git-sync runs with HOME=/tmp and writes a gitconfig there on
+            # startup, so a read-only root filesystem needs this to be a real
+            # writable mount — it crash-loops otherwise.
+            - name: git-tmp
+              mountPath: /tmp
       volumes:
         - name: content
           emptyDir: {}
         - name: tmp
+          emptyDir: {}
+        - name: git-tmp
           emptyDir: {}
