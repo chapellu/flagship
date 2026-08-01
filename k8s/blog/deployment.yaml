@@ -34,7 +34,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: astro
-          image: ghcr.io/chapellu/blog:c0523e683eab79a5402438367d32d349448d3551
+          image: ghcr.io/chapellu/blog:6cd0d8dfe5c21a8907ff8e310fcd9267669b4e6e
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
