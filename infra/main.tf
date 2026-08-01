@@ -15,6 +15,9 @@ terraform {
   # is broken against OCI buckets — hashicorp/terraform#36742) and reuses
   # the same OCI API-key credentials as the provider, so no Customer
   # Secret Key is needed.
+  # The bucket keeps the repository's former name (cucco-team). Renaming it
+  # would mean migrating live Terraform state for a cosmetic gain — the same
+  # goes for the Velero backup bucket. Names outlive their reasons.
   backend "oci" {
     bucket = "tfstate-cucco-team"
     key    = "infra/terraform.tfstate"
