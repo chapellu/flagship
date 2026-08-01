@@ -1,0 +1,40 @@
+# Encrypted with SOPS (age). See cluster-vars.enc.yaml.example for the template.
+#
+# Cluster-wide values that must not live in Git in the clear. These are not
+# credentials: they are personal data (an email address identifying the owner),
+# which matters because this repository is public. Flux substitutes them into
+# manifests at build time via `postBuild.substituteFrom` — see
+# k8s/flux/monitoring.yaml.
+#
+# The Secret lives in flux-system because substitution reads it from the
+# namespace of the Kustomization object, not of the workload.
+#
+# 1. Copy to cluster-vars.enc.yaml
+# 2. Fill in the values below.
+# 3. Encrypt in place:
+#      sops --encrypt --in-place k8s/infrastructure-config/cluster-vars.enc.yaml
+# 4. Commit the encrypted file.
+apiVersion: v1
+kind: Secret
+metadata:
+    name: cluster-vars
+    namespace: flux-system
+type: Opaque
+stringData:
+    #ENC[AES256_GCM,data:V+CZnht2HSIqHV7uN1FR6+huH8NWh7AEfkkkWVwuigEoGfdOuq62zFau4HM+dJ7/cLzuHF4vaGY=,iv:z3psq0akdDoWu0a8SIiAqCWJIh53/OV0NRmAP/0dHVY=,tag:DM0Mrd+mgMdp0DMiOiC5eQ==,type:comment]
+    OWNER_EMAIL: ENC[AES256_GCM,data:fYoL+Xmj1Vx0GICpaWxZkVpHt4M=,iv:ZhLF/M5y3LXlFN2PGD305TDYmXh0YU5IQNjRvmf6moU=,tag:hRrJ0UJUHqaPWUMYnVmbCw==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBDcldsRUF3cGRxYmJiekNP
+            MDc3dTdnb1Z6K1dDQ3gvdHpoQWJyOFpXb2dFCnpETkw4Vm02VTZRYUR3ZzhSYitW
+            THh5TkZsM1IyUTN1VDZpOXpYdFZLbDgKLS0tIFFLWkw0a2FDa3FhQVBpTnpmTWI1
+            aHhPUTVmSFhpeVVZWnVJaFFCY2x5MUUK8MzyU4tNPIqa774hbdZVhHIMV5iOYNJY
+            vJDEVZRO2lvNCZ/fhqzBDkBHWkFdy4a6A5AeLAzMbbp6wtvV4gCnNQ==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age146qdcn0v66z6mylvdrnucy5g3zencx8wqlga78jd2zwvzknklctqkgpdkz
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-08-01T07:50:57Z"
+    mac: ENC[AES256_GCM,data:bYi8DeI5BRY+hMO5gHA8wrBG+wI8aQQX7U4ccyDVuNk3nsVlXaFkyFaQ7MGPS/2+ImC/h4GCw6A8CdhyHHwdPfgiVc1FyZkaXIL/+u08+Lfl79BG3gy0ap3WewaRNu/0XpLtMK0LRyhszOpoZbiKjZ0rBBkh6chm+Z2yUyUFdAA=,iv:a4VKMo51rYn8RQcRHixL0CZNA/zTsFJ/wYQXpgbDaAY=,tag:60TCtI0+8HrLwWcUK1oo/g==,type:str]
+    version: 3.13.3

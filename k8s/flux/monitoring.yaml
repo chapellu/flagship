@@ -24,3 +24,15 @@ spec:
     provider: sops
     secretRef:
       name: sops-age
+  # Injects OWNER_EMAIL into the Grafana SecurityPolicy. The Secret is applied
+  # by infrastructure-config, which this Kustomization already depends on, so
+  # it always exists by the time substitution runs.
+  #
+  # NOTE: substitution applies to *everything* this Kustomization builds. If a
+  # Grafana dashboard JSON with `${DS_...}` placeholders is ever added under
+  # k8s/monitoring, those get blanked — move the SecurityPolicy to its own
+  # Kustomization before that happens.
+  postBuild:
+    substituteFrom:
+      - kind: Secret
+        name: cluster-vars
