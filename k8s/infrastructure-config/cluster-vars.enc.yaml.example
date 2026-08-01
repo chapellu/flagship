@@ -1,0 +1,25 @@
+# TEMPLATE — do NOT commit this filled in as plaintext.
+#
+# Cluster-wide values that must not live in Git in the clear. These are not
+# credentials: they are personal data (an email address identifying the owner),
+# which matters because this repository is public. Flux substitutes them into
+# manifests at build time via `postBuild.substituteFrom` — see
+# k8s/flux/monitoring.yaml.
+#
+# The Secret lives in flux-system because substitution reads it from the
+# namespace of the Kustomization object, not of the workload.
+#
+# 1. Copy to cluster-vars.enc.yaml
+# 2. Fill in the values below.
+# 3. Encrypt in place:
+#      sops --encrypt --in-place k8s/infrastructure-config/cluster-vars.enc.yaml
+# 4. Commit the encrypted file.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cluster-vars
+  namespace: flux-system
+type: Opaque
+stringData:
+  # Google account allowed through the Grafana OIDC policy.
+  OWNER_EMAIL: "REPLACE_WITH_OWNER_GOOGLE_ACCOUNT"

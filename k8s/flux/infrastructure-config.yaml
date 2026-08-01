@@ -14,3 +14,9 @@ spec:
   prune: true
   dependsOn:
     - name: infrastructure
+  # Decrypt cluster-vars.enc.yaml (owner email — personal data kept out of a
+  # public repo, not a credential) with the cluster's age key.
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age

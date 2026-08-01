@@ -58,7 +58,9 @@ spec:
         extractFrom:
           cookies:
             - "grafana-id-token"
-  # Deny-by-default; allow only the owner account.
+  # Deny-by-default; allow only the owner account. The address itself is
+  # substituted by Flux from the SOPS-encrypted `cluster-vars` Secret — this
+  # repository is public and an email address is personal data.
   authorization:
     defaultAction: Deny
     rules:
@@ -71,4 +73,4 @@ spec:
               - name: email
                 valueType: String
                 values:
-                  - owner@example.invalid
+                  - ${OWNER_EMAIL}
