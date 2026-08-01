@@ -87,9 +87,11 @@ datasource URLs are wrong, reconcile the actual Service names from
 ## Notes / decisions
 
 - **Access control**: the gateway denies by default and allows only
-  `civ.odul74@gmail.com` (matched on the Google ID token `email`
-  claim in `grafana-securitypolicy.yaml`). Any other Google account that logs
-  in gets a 403. Grant more accounts by adding addresses under
+  a single Google account (matched on the ID token `email` claim in
+  `grafana-securitypolicy.yaml`). Any other Google account that logs in gets a
+  403. The address is not in Git: it is substituted by Flux from the
+  SOPS-encrypted `cluster-vars` Secret (`OWNER_EMAIL`), because this repository
+  is public. Grant more accounts by adding entries under
   `spec.authorization.rules[].principal.jwt.claims[].values`.
 - **Alerting**: vmalert evaluates the default rule set; alerts are visible in
   Grafana but no Alertmanager is deployed and no notifications are sent.

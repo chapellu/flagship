@@ -4,3 +4,4 @@ resources:
   - gatewayclass.yaml
   - clusterissuer.yaml
   - gateway.yaml
+  - cluster-vars.enc.yaml
