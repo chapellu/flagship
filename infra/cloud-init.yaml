@@ -144,7 +144,7 @@ write_files:
       # unattended. That is another on-disk copy of a token already readable
       # from the metadata service — see the SECURITY note at the top of this
       # file. Replacing both with a deploy key from OCI Vault fixes them together.
-      WORKSPACE_REPO=chapellu/workspace
+      WORKSPACE_REPO=chapellu/Workspace
       if [ ! -d /home/ubuntu/workspace/.git ]; then
         install -d -o ubuntu -g ubuntu -m 0755 /home/ubuntu/workspace
         sudo -u ubuntu -H git clone -q \
