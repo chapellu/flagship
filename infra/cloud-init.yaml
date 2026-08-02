@@ -130,8 +130,41 @@ write_files:
       sudo -u ubuntu -H "$${CLAUDE_BIN}" plugin install \
         mattpocock-skills@claude-plugins-official --scope user || true
 
+      # Prefer restoring the workspace from GitHub over starting from an empty
+      # scratch directory — anything not pushed is lost on a rebuild, and the
+      # skills config (CLAUDE.md, docs/agents/) lives in this repo.
+      #
+      # Best-effort: ${github_token} is a fine-grained PAT, so this clone only
+      # succeeds while WORKSPACE_REPO is in that token's repository scope. On
+      # any failure the `git init` fallback below still produces a valid
+      # worktree-spawning workspace, so the bootstrap is never blocked on it.
+      #
+      # SECURITY: the token is kept out of .git/config (the remote is rewritten
+      # to a plain URL) but is written to ~/.git-credentials so pushes work
+      # unattended. That is another on-disk copy of a token already readable
+      # from the metadata service — see the SECURITY note at the top of this
+      # file. Replacing both with a deploy key from OCI Vault fixes them together.
+      WORKSPACE_REPO=chapellu/workspace
+      if [ ! -d /home/ubuntu/workspace/.git ]; then
+        install -d -o ubuntu -g ubuntu -m 0755 /home/ubuntu/workspace
+        sudo -u ubuntu -H git clone -q \
+          "https://x-access-token:${github_token}@github.com/$${WORKSPACE_REPO}.git" \
+          /home/ubuntu/workspace || true
+
+        if [ -d /home/ubuntu/workspace/.git ]; then
+          sudo -u ubuntu -H git -C /home/ubuntu/workspace remote set-url origin \
+            "https://github.com/$${WORKSPACE_REPO}.git"
+          printf 'https://x-access-token:%s@github.com\n' '${github_token}' \
+            > /home/ubuntu/.git-credentials
+          chown ubuntu:ubuntu /home/ubuntu/.git-credentials
+          chmod 600 /home/ubuntu/.git-credentials
+          sudo -u ubuntu -H git config --global credential.helper store
+        fi
+      fi
+
       # Remote-control worktree spawning requires the working directory to be a
       # git repository with at least one commit, or every new session fails.
+      # Reached only when the clone above was skipped or failed.
       if [ ! -d /home/ubuntu/workspace/.git ]; then
         install -d -o ubuntu -g ubuntu -m 0755 /home/ubuntu/workspace
         sudo -u ubuntu -H bash -lc '
