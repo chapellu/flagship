@@ -198,12 +198,28 @@ resource "oci_core_instance" "main" {
     hostname_label   = "vm-main"
   }
 
+  # Matches the dynamic group in vault.tf, which is what lets this instance
+  # read its own bootstrap secrets. Without the tag it boots but cannot fetch
+  # the Flux PAT, and the k3s/Flux bootstrap fails loudly.
+  defined_tags = {
+    "ops.instance-role" = "vm-main"
+  }
+
   metadata = {
     ssh_authorized_keys = var.ssh_public_key
+    # Only non-sensitive references go in here now. user-data is served
+    # unauthenticated to any local process by the metadata service, so the
+    # tokens themselves are fetched from Vault at boot instead — see vault.tf.
     user_data = base64encode(templatefile("${path.module}/cloud-init.yaml", {
-      github_token = var.github_token
+      vault_id           = oci_kms_vault.main.id
+      flux_secret_name   = var.flux_secret_name
+      claude_secret_name = var.claude_secret_name
     }))
   }
+
+  # cloud-init fetches from Vault on first boot, so the grant has to be in
+  # place before the instance exists — not merely created alongside it.
+  depends_on = [oci_identity_policy.vm_main_secrets]
 }
 
 # k3s + FluxCD are bootstrapped by cloud-init on the instance's first boot

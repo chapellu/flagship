@@ -67,10 +67,21 @@ variable "shape" {
   }
 }
 
-variable "github_token" {
-  description = "GitHub PAT (repo scope) used by FluxCD bootstrap to push gotk manifests to the repository"
+# The GitHub PAT used to be passed in here as a sensitive variable and rendered
+# into cloud-init user-data. It now lives in OCI Vault and is fetched by the
+# instance itself at boot, so the token no longer flows through CI, Terraform
+# state, or the instance metadata service. Only the secret NAMES are
+# configuration; the values are created out-of-band (see vault.tf).
+variable "flux_secret_name" {
+  description = "Name of the Vault secret holding the GitHub PAT used by the FluxCD bootstrap"
   type        = string
-  sensitive   = true
+  default     = "flux-github-token"
+}
+
+variable "claude_secret_name" {
+  description = "Name of the Vault secret holding the GitHub PAT used by Claude Code on the VM"
+  type        = string
+  default     = "claude-github-pat"
 }
 
 variable "dns_zone_name" {

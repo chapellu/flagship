@@ -43,3 +43,15 @@ output "velero_s3_secret_key" {
   value       = oci_identity_customer_secret_key.velero.key
   sensitive   = true
 }
+
+# Needed for the one-time, out-of-band creation of the secret values — see the
+# header of vault.tf. Neither is sensitive: they are OCIDs, not key material.
+output "vault_id" {
+  description = "OCID of vault-main, for `oci vault secret create-base64 --vault-id`"
+  value       = oci_kms_vault.main.id
+}
+
+output "vault_key_id" {
+  description = "OCID of the software master key that encrypts the secrets in vault-main"
+  value       = oci_kms_key.secrets.id
+}

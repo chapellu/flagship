@@ -1,24 +1,25 @@
 #cloud-config
 
-# Rendered by Terraform via templatefile() with the github_token variable.
-# cloud-init runs this on the instance's first boot, so k3s + Flux are part
-# of provisioning — no SSH remote-exec provisioner needed. A boot-volume
-# re-image counts as a fresh first boot, so the cluster is reinstalled
-# automatically instead of silently going missing.
+# Rendered by Terraform via templatefile(). cloud-init runs this on the
+# instance's first boot, so k3s + Flux are part of provisioning — no SSH
+# remote-exec provisioner needed. A boot-volume re-image counts as a fresh
+# first boot, so the cluster is reinstalled automatically instead of silently
+# going missing.
 #
 # NOTE FOR EDITORS: this file is a Terraform template. Terraform interpolates
 # every dollar-brace reference before cloud-init ever sees it, so shell
 # variables must be written with a doubled dollar sign to survive
-# templatefile(). Only the github_token reference in k3s-flux-bootstrap.sh is
+# templatefile(). Only vault_id, flux_secret_name and claude_secret_name are
 # meant to be substituted by Terraform.
 #
-# SECURITY: the github_token is rendered in plaintext into instance user-data,
-# which the OCI metadata service serves unauthenticated to *any* local process:
+# SECURITY: the OCI metadata service serves this user-data unauthenticated to
+# *any* local process on the instance:
 #   curl -H "Authorization: Bearer Oracle" \
 #     http://169.254.169.254/opc/v2/instance/metadata/user_data | base64 -d
-# File permissions on /var/lib/cloud/ do not mitigate this. Prefer an SSH deploy
-# key pulled from OCI Vault with instance-principal auth, or bootstrapping Flux
-# out-of-band, and rotate this token when you do.
+# File permissions on /var/lib/cloud/ do not mitigate that, so no credential
+# may be rendered in here. Secrets are fetched at run time from OCI Vault
+# instead, with the instance authenticating as itself (instance principal) —
+# a vault OCID and two secret names are not sensitive. See infra/vault.tf.
 
 package_update: true
 package_upgrade: true
@@ -32,8 +33,74 @@ packages:
   # tmux is for attaching to ad-hoc sessions over SSH.
   - git
   - tmux
+  # pipx installs the OCI CLI into its own venv — Ubuntu 24.04 is a PEP 668
+  # "externally managed" environment, so plain `pip install` is refused.
+  - pipx
+  # gh is what Claude Code uses to open pull requests; SSH can push branches
+  # but cannot create them, which needs the GitHub HTTPS API.
+  - gh
 
 write_files:
+  # -------------------------------------------------------------------------
+  # Secret fetching. Every credential this VM needs is read from OCI Vault at
+  # run time using instance-principal auth, so nothing sensitive is stored in
+  # user-data, in Terraform state, or on the boot volume.
+  # -------------------------------------------------------------------------
+  - path: /usr/local/bin/oci-cli-install.sh
+    permissions: "0700"
+    owner: root:root
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+
+      # Kept out of the user's PATH deliberately: this is bootstrap machinery,
+      # not a tool the ubuntu user is expected to reach for.
+      if [ ! -x /opt/pipx/bin/oci ]; then
+        PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/opt/pipx/bin pipx install oci-cli
+      fi
+
+  - path: /usr/local/bin/oci-secret
+    permissions: "0700"
+    owner: root:root
+    content: |
+      #!/bin/bash
+      # Print the current value of an OCI Vault secret. Usage: oci-secret NAME
+      #
+      # Writes to stdout so callers can capture it in a variable without the
+      # value ever touching the disk.
+      set -euo pipefail
+
+      VAULT_ID='${vault_id}'
+      OCI=/opt/pipx/bin/oci
+
+      if [ $# -ne 1 ]; then
+        echo "usage: oci-secret <secret-name>" >&2
+        exit 2
+      fi
+
+      # The instance identity certificate that instance-principal auth relies
+      # on is served by the metadata service, which is not always ready the
+      # moment cloud-init starts. IAM policy changes also take a few seconds to
+      # propagate, so a fresh apply can 404 briefly. Retry rather than fail the
+      # whole bootstrap.
+      err=/run/oci-secret.err
+      for _ in $(seq 1 10); do
+        if content=$("$${OCI}" secrets secret-bundle get-secret-bundle-by-name \
+            --auth instance_principal \
+            --vault-id "$${VAULT_ID}" \
+            --secret-name "$${1}" \
+            --query 'data."secret-bundle-content".content' \
+            --raw-output 2>"$${err}"); then
+          printf '%s' "$${content}" | base64 -d
+          exit 0
+        fi
+        sleep 10
+      done
+
+      echo "oci-secret: could not read '$${1}' from $${VAULT_ID}" >&2
+      cat "$${err}" >&2
+      exit 1
+
   - path: /usr/local/bin/k3s-flux-bootstrap.sh
     permissions: "0700"
     owner: root:root
@@ -69,7 +136,11 @@ write_files:
       fi
 
       # Bootstrap FluxCD — idempotent, safe to re-run.
-      export GITHUB_TOKEN='${github_token}'
+      # The PAT comes from Vault, not from user-data. If this fails the whole
+      # bootstrap fails, which is the intended behaviour: a cluster with no
+      # GitOps is worse than a visibly failed provision.
+      GITHUB_TOKEN="$(/usr/local/bin/oci-secret '${flux_secret_name}')"
+      export GITHUB_TOKEN
       flux bootstrap github \
         --owner=chapellu \
         --repository=flagship \
@@ -138,6 +209,17 @@ write_files:
       # `claude remote-control` refuses to start without it, which would
       # otherwise make the service impossible to start unattended.
       sudo -u ubuntu -H /usr/local/bin/claude-trust-workspace /home/ubuntu/workspace || true
+
+      # GitHub credentials for Claude Code. The PAT is piped straight into gh's
+      # credential store so it is never written to a file of our own and never
+      # appears in a process argument list. Non-fatal: a box that cannot open
+      # pull requests is still a working box, unlike one with no GitOps.
+      if /usr/local/bin/oci-secret '${claude_secret_name}' \
+          | sudo -u ubuntu -H gh auth login --with-token; then
+        sudo -u ubuntu -H gh config set git_protocol ssh
+      else
+        echo "claude-code-bootstrap: no ${claude_secret_name} in Vault, skipping gh login" >&2
+      fi
 
       systemctl daemon-reload
       systemctl enable --now claude-remote-control.path
@@ -336,6 +418,8 @@ runcmd:
   - ufw allow 443/tcp
   - ufw --force enable
   - systemctl enable unattended-upgrades
+  # Must precede both bootstraps: each fetches its credentials from Vault.
+  - /usr/local/bin/oci-cli-install.sh
   - /usr/local/bin/k3s-flux-bootstrap.sh
   - /usr/local/bin/claude-code-bootstrap.sh
 
