@@ -36,6 +36,19 @@ write_files:
       chown ubuntu:ubuntu /home/ubuntu/.kube/config
       chmod 600 /home/ubuntu/.kube/config
 
+      # Make kubectl work for the ubuntu user without exporting KUBECONFIG on
+      # every login (k3s's kubectl otherwise defaults to the root-only
+      # /etc/rancher/k3s/k3s.yaml).
+      #
+      # This goes in .profile, not .bashrc: Ubuntu's stock .bashrc returns early
+      # for non-interactive shells, so an export appended there is skipped by
+      # anything without a TTY -- `ssh vm-main kubectl get nodes`, cron, and any
+      # tooling that shells out. .profile is read by login shells and the value
+      # is inherited by their children either way.
+      grep -qxF 'export KUBECONFIG=$HOME/.kube/config' /home/ubuntu/.profile \
+        || echo 'export KUBECONFIG=$HOME/.kube/config' >> /home/ubuntu/.profile
+      chown ubuntu:ubuntu /home/ubuntu/.profile
+
       export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
       # Bounded wait for the API server / node to come up (no infinite loop).
@@ -59,6 +72,16 @@ write_files:
         --path=k8s/flux \
         --personal \
         --token-auth
+
+      # Wire Velero's S3 coordinates for the 'backup' Kustomization
+      # (postBuild substituteFrom ConfigMap/velero-vars). All values come from
+      # Terraform. The sops-age secret (offline age key) remains the only
+      # manual DR step. Idempotent via apply.
+      k3s kubectl create configmap velero-vars -n flux-system \
+        --from-literal=velero_bucket='${velero_bucket}' \
+        --from-literal=velero_s3_region='${velero_s3_region}' \
+        --from-literal=velero_s3_url='${velero_s3_url}' \
+        --dry-run=client -o yaml | k3s kubectl apply -f -
 
 runcmd:
   # Host firewall (defence-in-depth on top of the OCI Security Lists).
