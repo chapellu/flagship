@@ -313,6 +313,12 @@ write_files:
       EnvironmentFile=/etc/claude-remote-control.env
       Environment=HOME=/home/ubuntu
       Environment=PATH=/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
+      # Agent shells are children of this unit and source neither .profile nor
+      # .bashrc, so a shell-startup export never reaches them. Without this,
+      # every kubectl an agent runs falls back to the root-only
+      # /etc/rancher/k3s/k3s.yaml and fails on permissions. Covers only this
+      # unit; interactive SSH sessions are handled separately in #24.
+      Environment=KUBECONFIG=/home/ubuntu/.kube/config
 
       # Remote Control requires a full-scope claude.ai OAuth login. Without one
       # the process exits immediately, so on a freshly recreated VM this would
