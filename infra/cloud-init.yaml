@@ -39,8 +39,15 @@ write_files:
       # Make kubectl work for the ubuntu user without exporting KUBECONFIG on
       # every login (k3s's kubectl otherwise defaults to the root-only
       # /etc/rancher/k3s/k3s.yaml).
-      grep -qxF 'export KUBECONFIG=$HOME/.kube/config' /home/ubuntu/.bashrc \
-        || echo 'export KUBECONFIG=$HOME/.kube/config' >> /home/ubuntu/.bashrc
+      #
+      # This goes in .profile, not .bashrc: Ubuntu's stock .bashrc returns early
+      # for non-interactive shells, so an export appended there is skipped by
+      # anything without a TTY -- `ssh vm-main kubectl get nodes`, cron, and any
+      # tooling that shells out. .profile is read by login shells and the value
+      # is inherited by their children either way.
+      grep -qxF 'export KUBECONFIG=$HOME/.kube/config' /home/ubuntu/.profile \
+        || echo 'export KUBECONFIG=$HOME/.kube/config' >> /home/ubuntu/.profile
+      chown ubuntu:ubuntu /home/ubuntu/.profile
 
       export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
