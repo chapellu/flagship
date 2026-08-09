@@ -1,0 +1,132 @@
+/* PROTOTYPE — mobile-first, une seule colonne, iPhone d'abord. */
+:root {
+  --vert: #2d5016; --vert-clair: #e8f0e0; --terre: #8a6d3b;
+  --cuisine: #a4501e; --cuisine-clair: #fbeee4;
+  --encre: #1d2417; --gris: #6b7263; --fond: #f7f6f2; --carte: #ffffff;
+  --alerte: #b3541e; --ok: #4a7c2f;
+  --radius: 14px;
+}
+* { box-sizing: border-box; margin: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--fond); color: var(--encre);
+  min-height: 100dvh;
+}
+#app { max-width: 430px; margin: 0 auto; min-height: 100dvh; position: relative; }
+button { font: inherit; border: none; background: none; cursor: pointer; color: inherit; }
+h1 { font-size: 1.3rem; } h2 { font-size: 1.05rem; } h3 { font-size: 0.95rem; }
+.muted { color: var(--gris); font-size: 0.82rem; }
+
+/* ---- barre de commutation du prototype (pas un élément du design) ---- */
+#switcher {
+  position: fixed; bottom: max(10px, env(safe-area-inset-bottom)); left: 50%;
+  transform: translateX(-50%); z-index: 99;
+  display: flex; align-items: center; gap: 4px;
+  background: #14170f; color: #fff; border-radius: 999px;
+  padding: 6px 10px; box-shadow: 0 4px 16px rgba(0,0,0,.35);
+  font-size: 0.85rem; opacity: 0.92;
+}
+#switcher button { color: #fff; padding: 2px 8px; font-size: 1rem; }
+#sw-label { min-width: 110px; text-align: center; font-weight: 600; }
+
+/* ---------------- variante A — Facettes (onglets) ---------------- */
+.va { padding-bottom: 120px; }
+.va-header { background: var(--vert); color: #fff; padding: 18px 16px 14px;
+  padding-top: max(18px, env(safe-area-inset-top)); }
+.va-header .saison { opacity: .85; font-size: .85rem; }
+.va section { padding: 14px 14px 0; }
+.carte {
+  background: var(--carte); border-radius: var(--radius);
+  padding: 12px 14px; margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.carte .titre { font-weight: 600; }
+.chip { display: inline-block; border-radius: 999px; padding: 2px 9px;
+  font-size: .72rem; font-weight: 600; vertical-align: middle; }
+.chip.ouverte { background: var(--vert-clair); color: var(--ok); }
+.chip.nudge { background: #fdeee2; color: var(--alerte); }
+.chip.bientot { background: #f0ede4; color: var(--terre); }
+.chip.alerte { background: #fdeee2; color: var(--alerte); }
+.chip.ok, .chip.plein, .chip.fixe, .chip.libre { background: var(--vert-clair); color: var(--ok); }
+.chip.flag { background: var(--cuisine-clair); color: var(--cuisine); }
+.va-tabs {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 430px; display: flex;
+  background: var(--carte); border-top: 1px solid #e5e3da;
+  padding-bottom: max(4px, env(safe-area-inset-bottom));
+}
+.va-tabs button { flex: 1; padding: 10px 0 8px; text-align: center;
+  color: var(--gris); font-size: .72rem; }
+.va-tabs button .ico { display: block; font-size: 1.3rem; }
+.va-tabs button.actif { color: var(--vert); font-weight: 700; }
+.etape { display: flex; gap: 8px; padding: 6px 0; border-bottom: 1px dashed #eee; }
+.etape:last-child { border-bottom: none; }
+.etape .min { color: var(--gris); font-size: .78rem; white-space: nowrap; }
+.badge-bebe { font-size: .75rem; color: var(--cuisine); }
+
+/* ---------------- variante B — Terrasse (spatial) ---------------- */
+.vb { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+.vb-banner {
+  margin: 10px 12px 0; margin-top: max(10px, env(safe-area-inset-top));
+  background: var(--cuisine-clair); color: var(--cuisine);
+  border-radius: var(--radius); padding: 10px 12px; font-size: .85rem;
+  display: flex; gap: 8px; align-items: center;
+}
+.vb-map { flex: 1; position: relative; margin: 12px;
+  background: linear-gradient(160deg, #ece9df, #dfe4d2);
+  border-radius: 18px; overflow: hidden; }
+.vb-soleil { position: absolute; top: 10px; right: 12px; font-size: .72rem;
+  color: var(--terre); text-align: right; }
+.vb-cell {
+  position: absolute; border-radius: 10px; padding: 6px 8px; text-align: left;
+  background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.12);
+  border-left: 5px solid var(--ok); font-size: .78rem; overflow: hidden;
+}
+.vb-cell.alerte { border-left-color: var(--alerte); }
+.vb-cell.pot { border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; text-align: center; border-left-width: 0;
+  border: 2px solid var(--terre); }
+.vb-cell b { display: block; font-size: .8rem; }
+.vb-chip { position: absolute; top: 10px; left: 12px; background: #14170f;
+  color: #fff; border-radius: 999px; padding: 4px 12px; font-size: .78rem; }
+.vb-sheet {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 430px; background: var(--carte);
+  border-radius: 18px 18px 0 0; box-shadow: 0 -6px 24px rgba(0,0,0,.18);
+  padding: 16px 16px 96px; z-index: 50;
+}
+.vb-sheet .poignee { width: 36px; height: 4px; background: #ddd;
+  border-radius: 2px; margin: 0 auto 12px; }
+.sol-bar { height: 6px; background: #eee; border-radius: 3px; margin: 6px 0 2px; }
+.sol-bar > div { height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, #c9b280, var(--vert)); }
+.vb-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.vb-actions button { background: var(--vert-clair); color: var(--vert);
+  border-radius: 999px; padding: 8px 14px; font-size: .85rem; font-weight: 600; }
+
+/* ---------------- variante C — Journal (flux) ---------------- */
+.vc { padding-bottom: 130px; }
+.vc-header { padding: 16px 16px 8px; padding-top: max(16px, env(safe-area-inset-top));
+  background: var(--fond); position: sticky; top: 0; z-index: 10; }
+.vc-filtres { display: flex; gap: 8px; margin-top: 10px; }
+.vc-filtres button { border-radius: 999px; padding: 5px 14px; font-size: .82rem;
+  background: #ecebe4; color: var(--gris); font-weight: 600; }
+.vc-filtres button.actif { background: var(--encre); color: #fff; }
+.vc-flux { padding: 6px 16px; }
+.vc-item { display: flex; gap: 10px; padding: 10px 0; }
+.vc-rail { display: flex; flex-direction: column; align-items: center; }
+.vc-dot { width: 12px; height: 12px; border-radius: 50%; margin-top: 4px; }
+.vc-item[data-facette="jardin"] .vc-dot { background: var(--vert); }
+.vc-item[data-facette="cuisine"] .vc-dot { background: var(--cuisine); }
+.vc-trait { flex: 1; width: 2px; background: #e2e0d6; margin-top: 2px; }
+.vc-corps { flex: 1; }
+.vc-corps .quand { font-size: .72rem; color: var(--gris); }
+.vc-lien { margin-top: 4px; display: inline-block; background: var(--cuisine-clair);
+  color: var(--cuisine); border-radius: 8px; padding: 3px 8px; font-size: .75rem; }
+.vc-saisie {
+  position: fixed; bottom: 58px; left: 50%; transform: translateX(-50%);
+  width: calc(100% - 24px); max-width: 406px;
+  background: var(--carte); border-radius: 999px; padding: 12px 18px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.12); color: var(--gris); font-size: .9rem;
+}

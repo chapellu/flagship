@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: proto-shell
+  namespace: proto-shell
+spec:
+  selector:
+    app: proto-shell
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

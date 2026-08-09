@@ -1,0 +1,21 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: proto-shell
+  namespace: flux-system
+spec:
+  interval: 10m
+  retryInterval: 1m
+  timeout: 5m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./k8s/proto-shell
+  prune: true
+  # Pas de wait: la première réconciliation précède la première image GHCR
+  # (le CI épingle le SHA après coup) ; wait bloquerait sur l'ImagePull initial.
+  wait: false
+  # Même dépendance que le blog : Gateway + ClusterIssuer d'abord.
+  dependsOn:
+    - name: infrastructure-config
+  # Rien de secret : pas de bloc decryption.
