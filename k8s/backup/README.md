@@ -48,6 +48,57 @@ kubectl create secret generic sops-age \
   --from-file=age.agekey=age.agekey
 ```
 
+The data key **must** end in `.agekey` — kustomize-controller ignores every
+other entry in the Secret.
+
+#### Restoring the key from a password manager
+
+Most password managers store the whole `age-keygen` file as a single value and
+give it back with the newlines collapsed into spaces. The result is one long
+line starting with `#`, which age reads as a single comment: it loads **zero**
+identities and every SOPS decryption fails.
+
+age only needs the private key line — the `# created:` and `# public key:`
+comments are decoration. So rebuild the file from whatever the password manager
+pasted, instead of trusting its line breaks:
+
+```bash
+# clipboard.txt is the raw dump from the password manager, line breaks or not.
+grep -o 'AGE-SECRET-KEY-1[0-9A-Z]*' clipboard.txt > age.agekey
+chmod 600 age.agekey
+
+kubectl create secret generic sops-age \
+  -n flux-system \
+  --from-file=age.agekey=age.agekey
+```
+
+If the malformed Secret is already in the cluster, repair it in place. The key
+never leaves the pipeline, so this is safe to run over a shared terminal:
+
+```bash
+kubectl -n flux-system get secret sops-age -o jsonpath='{.data.age\.agekey}' \
+  | base64 -d \
+  | grep -o 'AGE-SECRET-KEY-1[0-9A-Z]*' \
+  | kubectl -n flux-system create secret generic sops-age \
+      --from-file=age.agekey=/dev/stdin --dry-run=client -o yaml \
+  | kubectl apply -f -
+
+flux reconcile kustomization infrastructure-config --with-source
+```
+
+**Reading the symptom.** Two failures look alike and are not. Both sit under the
+same outer `Failed to get the data key required to decrypt the SOPS file` /
+`Group 0: FAILED` banner, so read the indented line underneath:
+
+| Inner message | Meaning |
+| --- | --- |
+| `failed to load age identities. Did not find keys in locations ...` | The Secret was read but yielded no usable identity — almost always the one-line paste above. |
+| `no identity matched any of the recipients` | An identity loaded fine, but it is not the recipient in `.sops.yaml`. |
+
+The first one says nothing about whether you hold the *right* key. Checking that
+the public key embedded in the file matches `.sops.yaml` will not catch it —
+that comment can be perfectly correct while the file is still unparseable.
+
 ### 3. Encrypt the two secrets
 
 ```bash
