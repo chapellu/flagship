@@ -1,0 +1,1688 @@
+{
+ "foyer": {
+  "nom": "Francheville",
+  "parts": 2.5,
+  "fenetreFrigo": 4,
+  "tiroirs": 3
+ },
+ "plats": [
+  {
+   "id": "sauce-bolognaise",
+   "titre": "Sauce bolognaise",
+   "minutes": 60,
+   "portions": 6,
+   "apports": {
+    "proteine": "viande-rouge",
+    "feculent": "aucun",
+    "legumes": [
+     "solanacee",
+     "allium",
+     "racine"
+    ],
+    "profil": "mijote",
+    "origine": "italien"
+   },
+   "ingredients": [
+    {
+     "id": "boeuf-hache",
+     "nom": "bœuf haché",
+     "qty": 500,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "tomates-pelees",
+     "nom": "tomates pelées en conserve",
+     "qty": 800,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "carottes",
+     "nom": "carottes",
+     "qty": 2,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "oignon",
+     "nom": "oignon",
+     "qty": 2,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "ail",
+     "nom": "ail",
+     "qty": 2,
+     "unit": "gousse",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 2,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "sauce-bolognaise",
+     "kind": "base",
+     "congelo": true
+    }
+   ],
+   "cuisinable": false
+  },
+  {
+   "id": "pates-bolognaise",
+   "titre": "Pâtes à la bolognaise",
+   "minutes": 15,
+   "portions": 4,
+   "apports": {
+    "proteine": "viande-rouge",
+    "feculent": "pates",
+    "legumes": [
+     "solanacee"
+    ],
+    "profil": "rapide",
+    "origine": "italien"
+   },
+   "ingredients": [
+    {
+     "id": "sauce-bolognaise-ing",
+     "nom": "sauce bolognaise",
+     "qty": 500,
+     "unit": "g",
+     "base": true
+    },
+    {
+     "id": "pates",
+     "nom": "pâtes longues (spaghetti, linguine)",
+     "qty": 350,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "fromage-rape",
+     "nom": "parmesan ou comté râpé",
+     "qty": 60,
+     "unit": "g",
+     "base": false
+    }
+   ],
+   "accepts": [
+    {
+     "type": "sauce-bolognaise",
+     "requis": true,
+     "mere": "sauce-bolognaise"
+    }
+   ],
+   "sansReste": {
+    "minutes": 45,
+    "ingredients": [
+     {
+      "id": "boeuf-hache",
+      "nom": "bœuf haché",
+      "qty": 400,
+      "unit": "g"
+     },
+     {
+      "id": "tomates-pelees",
+      "nom": "tomates pelées en conserve",
+      "qty": 400,
+      "unit": "g"
+     },
+     {
+      "id": "oignon",
+      "nom": "oignon",
+      "qty": 1,
+      "unit": "pièce"
+     }
+    ]
+   },
+   "emits": [],
+   "cuisinable": false
+  },
+  {
+   "id": "lasagnes",
+   "titre": "Lasagnes",
+   "minutes": 50,
+   "portions": 6,
+   "apports": {
+    "proteine": "viande-rouge",
+    "feculent": "pates",
+    "legumes": [
+     "solanacee"
+    ],
+    "profil": "four",
+    "origine": "italien"
+   },
+   "ingredients": [
+    {
+     "id": "sauce-bolognaise-ing",
+     "nom": "sauce bolognaise",
+     "qty": 700,
+     "unit": "g",
+     "base": true
+    },
+    {
+     "id": "pates-lasagne",
+     "nom": "plaques à lasagne",
+     "qty": 250,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "lait",
+     "nom": "lait",
+     "qty": 50,
+     "unit": "cl",
+     "base": false
+    },
+    {
+     "id": "farine",
+     "nom": "farine",
+     "qty": 4,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "fromage-rape",
+     "nom": "comté râpé",
+     "qty": 100,
+     "unit": "g",
+     "base": false
+    }
+   ],
+   "accepts": [
+    {
+     "type": "sauce-bolognaise",
+     "requis": true,
+     "mere": "sauce-bolognaise"
+    }
+   ],
+   "sansReste": {
+    "minutes": 45,
+    "ingredients": [
+     {
+      "id": "boeuf-hache",
+      "nom": "bœuf haché",
+      "qty": 500,
+      "unit": "g"
+     },
+     {
+      "id": "tomates-pelees",
+      "nom": "tomates pelées en conserve",
+      "qty": 600,
+      "unit": "g"
+     },
+     {
+      "id": "oignon",
+      "nom": "oignon",
+      "qty": 2,
+      "unit": "pièce"
+     }
+    ]
+   },
+   "emits": [
+    {
+     "type": "lasagnes",
+     "kind": "reste-plat",
+     "congelo": true
+    }
+   ],
+   "cuisinable": false
+  },
+  {
+   "id": "gnocchis-poelees",
+   "titre": "Gnocchis poêlés aux légumes",
+   "minutes": 25,
+   "portions": 4,
+   "apports": {
+    "proteine": "fromage",
+    "feculent": "pommes-de-terre",
+    "legumes": [
+     "cucurbitacee",
+     "allium"
+    ],
+    "profil": "poele",
+    "origine": "italien"
+   },
+   "ingredients": [
+    {
+     "id": "gnocchis",
+     "nom": "gnocchis à poêler",
+     "qty": 500,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "courgettes",
+     "nom": "courgettes",
+     "qty": 2,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "oignon",
+     "nom": "oignon",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "fromage-rape",
+     "nom": "parmesan râpé",
+     "qty": 60,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 2,
+     "unit": "c. à s.",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "sansReste": null,
+   "emits": [],
+   "cuisinable": false
+  },
+  {
+   "id": "poulet-roti",
+   "titre": "Poulet rôti et pommes de terre",
+   "minutes": 80,
+   "portions": 6,
+   "apports": {
+    "proteine": "viande-blanche",
+    "feculent": "pommes-de-terre",
+    "legumes": [
+     "allium",
+     "racine"
+    ],
+    "profil": "four",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "poulet",
+     "nom": "poulet fermier entier",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "pommes-de-terre",
+     "nom": "pommes de terre",
+     "qty": 1,
+     "unit": "kg",
+     "base": false
+    },
+    {
+     "id": "oignon",
+     "nom": "oignon",
+     "qty": 2,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 2,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "thym",
+     "nom": "thym",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "poulet-cuit",
+     "kind": "base",
+     "congelo": true
+    },
+    {
+     "type": "carcasse-volaille",
+     "kind": "base",
+     "congelo": false
+    }
+   ],
+   "cuisinable": false
+  },
+  {
+   "id": "fajitas-poulet",
+   "titre": "Fajitas au poulet",
+   "minutes": 25,
+   "portions": 4,
+   "apports": {
+    "proteine": "viande-blanche",
+    "feculent": "pain",
+    "legumes": [
+     "solanacee",
+     "allium"
+    ],
+    "profil": "poele",
+    "origine": "mexicain"
+   },
+   "ingredients": [
+    {
+     "id": "poulet-cuit-ing",
+     "nom": "poulet cuit effiloché",
+     "qty": 400,
+     "unit": "g",
+     "base": true
+    },
+    {
+     "id": "tortillas",
+     "nom": "tortillas de blé",
+     "qty": 8,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "poivron",
+     "nom": "poivrons",
+     "qty": 2,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "oignon",
+     "nom": "oignon",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "creme",
+     "nom": "crème fraîche",
+     "qty": 10,
+     "unit": "cl",
+     "base": false
+    },
+    {
+     "id": "fromage-rape",
+     "nom": "fromage râpé",
+     "qty": 80,
+     "unit": "g",
+     "base": false
+    }
+   ],
+   "accepts": [
+    {
+     "type": "poulet-cuit",
+     "requis": false,
+     "mere": "poulet-roti"
+    }
+   ],
+   "sansReste": {
+    "minutes": 15,
+    "ingredients": [
+     {
+      "id": "poulet-filets",
+      "nom": "filets de poulet",
+      "qty": 400,
+      "unit": "g"
+     }
+    ]
+   },
+   "emits": [],
+   "cuisinable": false
+  },
+  {
+   "id": "soupe-de-poule",
+   "titre": "Soupe de poule aux vermicelles",
+   "minutes": 45,
+   "portions": 4,
+   "apports": {
+    "proteine": "viande-blanche",
+    "feculent": "pates",
+    "legumes": [
+     "racine",
+     "allium"
+    ],
+    "profil": "soupe",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "carcasse-ing",
+     "nom": "carcasse de volaille",
+     "qty": 1,
+     "unit": "pièce",
+     "base": true
+    },
+    {
+     "id": "carottes",
+     "nom": "carottes",
+     "qty": 3,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "poireau",
+     "nom": "poireau",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "vermicelles",
+     "nom": "vermicelles",
+     "qty": 100,
+     "unit": "g",
+     "base": false
+    }
+   ],
+   "accepts": [
+    {
+     "type": "carcasse-volaille",
+     "requis": true,
+     "mere": "poulet-roti"
+    }
+   ],
+   "sansReste": {
+    "minutes": 10,
+    "ingredients": [
+     {
+      "id": "bouillon-volaille",
+      "nom": "bouillon de volaille",
+      "qty": 1,
+      "unit": "pièce"
+     },
+     {
+      "id": "poulet-filets",
+      "nom": "filets de poulet",
+      "qty": 200,
+      "unit": "g"
+     }
+    ]
+   },
+   "emits": [],
+   "cuisinable": false
+  },
+  {
+   "id": "curry-pois-chiches",
+   "titre": "Curry de pois chiches au lait de coco",
+   "minutes": 30,
+   "portions": 4,
+   "apports": {
+    "proteine": "legumineuse",
+    "feculent": "riz",
+    "legumes": [
+     "solanacee",
+     "allium"
+    ],
+    "profil": "mijote",
+    "origine": "indien"
+   },
+   "ingredients": [
+    {
+     "id": "pois-chiches",
+     "nom": "pois chiches cuits (bocal)",
+     "qty": 500,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "lait-coco",
+     "nom": "lait de coco",
+     "qty": 40,
+     "unit": "cl",
+     "base": false
+    },
+    {
+     "id": "tomates-pelees",
+     "nom": "tomates pelées en conserve",
+     "qty": 400,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "oignon",
+     "nom": "oignon",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "riz",
+     "nom": "riz basmati",
+     "qty": 250,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "curry",
+     "nom": "curry doux en poudre",
+     "qty": 2,
+     "unit": "c. à c.",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "curry-pois-chiches",
+     "kind": "reste-plat",
+     "congelo": true
+    }
+   ],
+   "cuisinable": false
+  },
+  {
+   "id": "saumon-riz-brocoli",
+   "titre": "Pavé de saumon, riz et brocoli",
+   "minutes": 25,
+   "portions": 4,
+   "apports": {
+    "proteine": "poisson",
+    "feculent": "riz",
+    "legumes": [
+     "crucifere"
+    ],
+    "profil": "poele",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "saumon",
+     "nom": "pavés de saumon",
+     "qty": 4,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "riz",
+     "nom": "riz",
+     "qty": 250,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "brocoli",
+     "nom": "brocoli",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "citron",
+     "nom": "citron",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "sansReste": null,
+   "emits": [],
+   "cuisinable": false
+  },
+  {
+   "id": "quiche-poireaux",
+   "titre": "Quiche aux poireaux",
+   "minutes": 55,
+   "portions": 6,
+   "apports": {
+    "proteine": "oeuf",
+    "feculent": "pate-brisee",
+    "legumes": [
+     "allium"
+    ],
+    "profil": "four",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "pate-brisee",
+     "nom": "pâte brisée",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "poireau",
+     "nom": "poireaux",
+     "qty": 3,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "oeufs",
+     "nom": "œufs",
+     "qty": 3,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "creme",
+     "nom": "crème fraîche",
+     "qty": 20,
+     "unit": "cl",
+     "base": false
+    },
+    {
+     "id": "fromage-rape",
+     "nom": "comté râpé",
+     "qty": 80,
+     "unit": "g",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "quiche",
+     "kind": "reste-plat",
+     "congelo": true
+    }
+   ],
+   "cuisinable": false
+  },
+  {
+   "id": "chili-sin-carne",
+   "titre": "Chili sin carne",
+   "minutes": 40,
+   "portions": 6,
+   "apports": {
+    "proteine": "legumineuse",
+    "feculent": "riz",
+    "legumes": [
+     "solanacee",
+     "allium"
+    ],
+    "profil": "mijote",
+    "origine": "mexicain"
+   },
+   "ingredients": [
+    {
+     "id": "haricots-rouges",
+     "nom": "haricots rouges cuits",
+     "qty": 500,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "tomates-pelees",
+     "nom": "tomates pelées en conserve",
+     "qty": 400,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "mais",
+     "nom": "maïs doux",
+     "qty": 150,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "poivron",
+     "nom": "poivron",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "oignon",
+     "nom": "oignon",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "riz",
+     "nom": "riz",
+     "qty": 250,
+     "unit": "g",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "chili",
+     "kind": "reste-plat",
+     "congelo": true
+    }
+   ],
+   "cuisinable": false
+  },
+  {
+   "id": "gratin-courgettes-riz",
+   "titre": "Gratin de courgettes au riz",
+   "minutes": 50,
+   "portions": 4,
+   "apports": {
+    "proteine": "fromage",
+    "feculent": "riz",
+    "legumes": [
+     "cucurbitacee",
+     "allium"
+    ],
+    "profil": "four",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "courgettes",
+     "nom": "courgettes",
+     "qty": 3,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "riz",
+     "nom": "riz",
+     "qty": 200,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "oeufs",
+     "nom": "œufs",
+     "qty": 2,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "fromage-rape",
+     "nom": "comté râpé",
+     "qty": 80,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "oignon",
+     "nom": "oignon",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "sansReste": null,
+   "emits": [],
+   "cuisinable": false
+  },
+  {
+   "id": "salade-lentilles-feta",
+   "titre": "Salade de lentilles à la feta",
+   "minutes": 15,
+   "portions": 4,
+   "apports": {
+    "proteine": "legumineuse",
+    "feculent": "legumineuse",
+    "legumes": [
+     "allium",
+     "solanacee"
+    ],
+    "profil": "cru",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "lentilles-cuites",
+     "nom": "lentilles vertes cuites",
+     "qty": 400,
+     "unit": "g",
+     "base": true
+    },
+    {
+     "id": "feta",
+     "nom": "feta",
+     "qty": 150,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "tomates",
+     "nom": "tomates",
+     "qty": 3,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "oignon-rouge",
+     "nom": "oignon rouge",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 3,
+     "unit": "c. à s.",
+     "base": false
+    }
+   ],
+   "accepts": [
+    {
+     "type": "lentilles-vertes-cuites",
+     "requis": true,
+     "mere": "lentilles-mijotees"
+    }
+   ],
+   "sansReste": {
+    "minutes": 35,
+    "ingredients": [
+     {
+      "id": "lentilles-seches",
+      "nom": "lentilles vertes sèches",
+      "qty": 200,
+      "unit": "g"
+     }
+    ]
+   },
+   "emits": [],
+   "cuisinable": false
+  },
+  {
+   "id": "croque-monsieur-salade",
+   "titre": "Croque-monsieur et salade verte",
+   "minutes": 20,
+   "portions": 4,
+   "apports": {
+    "proteine": "fromage",
+    "feculent": "pain",
+    "legumes": [
+     "feuille"
+    ],
+    "profil": "rapide",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "pain-de-mie",
+     "nom": "pain de mie",
+     "qty": 8,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "jambon",
+     "nom": "jambon blanc",
+     "qty": 4,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "fromage-rape",
+     "nom": "comté râpé",
+     "qty": 100,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "salade-verte",
+     "nom": "salade verte",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "sansReste": null,
+   "emits": [],
+   "cuisinable": false
+  },
+  {
+   "id": "tarte-tomates-moutarde",
+   "titre": "Tarte tomates-moutarde",
+   "minutes": 45,
+   "portions": 4,
+   "apports": {
+    "proteine": "fromage",
+    "feculent": "pate-brisee",
+    "legumes": [
+     "solanacee"
+    ],
+    "profil": "four",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "pate-brisee",
+     "nom": "pâte brisée",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "tomates",
+     "nom": "tomates",
+     "qty": 5,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "moutarde",
+     "nom": "moutarde",
+     "qty": 2,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "fromage-rape",
+     "nom": "comté râpé",
+     "qty": 80,
+     "unit": "g",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "sansReste": null,
+   "emits": [],
+   "cuisinable": false
+  },
+  {
+   "id": "burgers-de-lentilles",
+   "titre": "Petits burgers de lentilles au tofu fumé",
+   "minutes": 30,
+   "portions": 4,
+   "apports": {
+    "proteine": "legumineuse",
+    "feculent": "aucun",
+    "legumes": [
+     "allium"
+    ],
+    "profil": "poele",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "lentilles-cuites",
+     "nom": "lentilles vertes cuites",
+     "qty": 400,
+     "unit": "g",
+     "base": true
+    },
+    {
+     "id": "tofu-fume",
+     "nom": "tofu fumé",
+     "qty": 200,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "oignons",
+     "nom": "oignons",
+     "qty": 3,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 4,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "farine",
+     "nom": "farine complète (blé ou épeautre)",
+     "qty": 3,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "bouillon-miso",
+     "nom": "cube de bouillon de légumes au miso",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "poivre-5-baies",
+     "nom": "poivre 5 baies",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    },
+    {
+     "id": "son-avoine",
+     "nom": "son d'avoine (panure)",
+     "qty": 50,
+     "unit": "g",
+     "base": false
+    }
+   ],
+   "accepts": [
+    {
+     "type": "lentilles-vertes-cuites",
+     "requis": true,
+     "mere": "lentilles-mijotees"
+    }
+   ],
+   "sansReste": {
+    "minutes": 35,
+    "ingredients": [
+     {
+      "id": "lentilles-seches",
+      "nom": "lentilles vertes sèches",
+      "qty": 200,
+      "unit": "g"
+     }
+    ]
+   },
+   "emits": [
+    {
+     "type": "burgers-lentilles",
+     "kind": "reste-plat",
+     "congelo": true
+    }
+   ],
+   "cuisinable": true
+  },
+  {
+   "id": "gratin-de-pates-tomates",
+   "titre": "Gratin de pâtes à la tomate",
+   "minutes": 45,
+   "portions": 4,
+   "apports": {
+    "proteine": "fromage",
+    "feculent": "pates",
+    "legumes": [
+     "solanacee",
+     "allium"
+    ],
+    "profil": "four",
+    "origine": "italien"
+   },
+   "ingredients": [
+    {
+     "id": "pates",
+     "nom": "pâtes courtes (penne, coquillettes)",
+     "qty": 350,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "tomates-pelees",
+     "nom": "tomates pelées en conserve",
+     "qty": 400,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "oignon",
+     "nom": "oignon",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "ail",
+     "nom": "ail",
+     "qty": 2,
+     "unit": "gousse",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 2,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "fromage-rape",
+     "nom": "comté râpé",
+     "qty": 80,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "herbes-provence",
+     "nom": "herbes de Provence",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "gratin-pates",
+     "kind": "reste-plat",
+     "congelo": true
+    }
+   ],
+   "cuisinable": true
+  },
+  {
+   "id": "lentilles-mijotees",
+   "titre": "Lentilles vertes mijotées aux carottes",
+   "minutes": 40,
+   "portions": 4,
+   "apports": {
+    "proteine": "legumineuse",
+    "feculent": "legumineuse",
+    "legumes": [
+     "racine",
+     "allium"
+    ],
+    "profil": "mijote",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "lentilles-seches",
+     "nom": "lentilles vertes sèches",
+     "qty": 300,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "carottes",
+     "nom": "carottes",
+     "qty": 4,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "oignon",
+     "nom": "oignon",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "laurier",
+     "nom": "feuille de laurier",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "lentilles-vertes-cuites",
+     "kind": "base",
+     "congelo": true
+    },
+    {
+     "type": "puree-lentilles-carottes",
+     "kind": "portion-bebe",
+     "congelo": false
+    }
+   ],
+   "cuisinable": true
+  },
+  {
+   "id": "omelette-courgettes",
+   "titre": "Omelette aux courgettes",
+   "minutes": 20,
+   "portions": 4,
+   "apports": {
+    "proteine": "oeuf",
+    "feculent": "aucun",
+    "legumes": [
+     "cucurbitacee",
+     "allium"
+    ],
+    "profil": "rapide",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "oeufs",
+     "nom": "œufs",
+     "qty": 6,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "courgettes",
+     "nom": "courgettes",
+     "qty": 2,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "oignon",
+     "nom": "oignon",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 2,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    },
+    {
+     "id": "poivre-5-baies",
+     "nom": "poivre 5 baies",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "sansReste": null,
+   "emits": [],
+   "cuisinable": true
+  },
+  {
+   "id": "ratatouille-minute",
+   "titre": "Ratatouille minute",
+   "minutes": 35,
+   "portions": 4,
+   "apports": {
+    "proteine": "aucune",
+    "feculent": "aucun",
+    "legumes": [
+     "cucurbitacee",
+     "solanacee",
+     "allium"
+    ],
+    "profil": "mijote",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "courgettes",
+     "nom": "courgettes",
+     "qty": 2,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "aubergine",
+     "nom": "aubergine",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "poivron",
+     "nom": "poivron rouge",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "tomates",
+     "nom": "tomates",
+     "qty": 4,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "oignon",
+     "nom": "oignon",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "ail",
+     "nom": "ail",
+     "qty": 2,
+     "unit": "gousse",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 3,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "thym",
+     "nom": "thym",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "ratatouille",
+     "kind": "reste-plat",
+     "congelo": true
+    }
+   ],
+   "cuisinable": true
+  },
+  {
+   "id": "veloute-de-courgettes",
+   "titre": "Velouté de courgettes",
+   "minutes": 30,
+   "portions": 4,
+   "apports": {
+    "proteine": "aucune",
+    "feculent": "pommes-de-terre",
+    "legumes": [
+     "cucurbitacee",
+     "allium"
+    ],
+    "profil": "soupe",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "courgettes",
+     "nom": "courgettes",
+     "qty": 4,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "pomme-de-terre",
+     "nom": "pomme de terre",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "oignon",
+     "nom": "oignon",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "bouillon-legumes",
+     "nom": "cube de bouillon de légumes",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "creme",
+     "nom": "crème fraîche",
+     "qty": 10,
+     "unit": "cl",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "veloute-courgettes",
+     "kind": "reste-plat",
+     "congelo": true
+    }
+   ],
+   "cuisinable": true
+  }
+ ],
+ "rayons": {
+  "ordre": [
+   "primeur",
+   "boucherie",
+   "poissonnerie",
+   "crèmerie",
+   "frais",
+   "épicerie"
+  ],
+  "aliases": {
+   "oignons": "oignon",
+   "pommes-de-terre": "pomme-de-terre"
+  },
+  "rayons": {
+   "primeur": [
+    "oignon",
+    "oignon-rouge",
+    "ail",
+    "carottes",
+    "courgettes",
+    "aubergine",
+    "poivron",
+    "tomates",
+    "pomme-de-terre",
+    "poireau",
+    "brocoli",
+    "citron",
+    "salade-verte"
+   ],
+   "boucherie": [
+    "boeuf-hache",
+    "poulet",
+    "poulet-filets",
+    "jambon"
+   ],
+   "poissonnerie": [
+    "saumon"
+   ],
+   "crèmerie": [
+    "oeufs",
+    "fromage-rape",
+    "creme",
+    "lait",
+    "feta"
+   ],
+   "frais": [
+    "tofu-fume",
+    "gnocchis",
+    "pate-brisee"
+   ],
+   "épicerie": [
+    "lentilles-seches",
+    "pates",
+    "pates-lasagne",
+    "vermicelles",
+    "riz",
+    "tomates-pelees",
+    "pois-chiches",
+    "haricots-rouges",
+    "mais",
+    "lait-coco",
+    "tortillas",
+    "pain-de-mie"
+   ]
+  },
+  "placard": [
+   "huile-olive",
+   "sel",
+   "poivre-5-baies",
+   "laurier",
+   "thym",
+   "herbes-provence",
+   "bouillon-miso",
+   "bouillon-legumes",
+   "bouillon-volaille",
+   "farine",
+   "son-avoine",
+   "curry",
+   "moutarde"
+  ]
+ },
+ "equilibre": {
+  "cibles": {
+   "proteine": {
+    "legumineuse": {
+     "min": 2
+    },
+    "poisson": {
+     "min": 1
+    },
+    "oeuf": {
+     "min": 1
+    },
+    "viande-rouge": {
+     "max": 1
+    },
+    "viande-blanche": {
+     "max": 2
+    },
+    "fromage": {
+     "max": 2
+    },
+    "tofu-soja": {
+     "min": 0
+    }
+   },
+   "familles_legumes_min": 5,
+   "repetition_max": {
+    "feculent": 2,
+    "profil": 2
+   }
+  },
+  "poids": {
+   "proteine_manquante": 6,
+   "proteine_saturee": -5,
+   "famille_legume_neuve": 2,
+   "repetition_feculent": -3,
+   "repetition_profil": -4,
+   "chaine_couverte": 4,
+   "ecoule_frigo": 5,
+   "ecoule_congelo": 3,
+   "chaine_manquante": -8,
+   "hors_budget": -4,
+   "article_marginal": -0.4
+  },
+  "congelateur": {
+   "portions_par_tiroir": 6,
+   "reste_ne_compte_pas_dans_les_plafonds": true
+  },
+  "main": {
+   "taille": 5,
+   "cooldown_jours": 10,
+   "garantir": [
+    "express",
+    "souche",
+    "derive"
+   ]
+  }
+ },
+ "conservation": [
+  {
+   "id": "frigo",
+   "label": "au frigo",
+   "acquis": true,
+   "manque": null,
+   "noeud": null,
+   "acideSeulement": false
+  },
+  {
+   "id": "congeler",
+   "label": "au congélateur",
+   "acquis": true,
+   "manque": "congeler",
+   "noeud": "Congeler en portions utiles",
+   "acideSeulement": false
+  },
+  {
+   "id": "sous-vide-frigo",
+   "label": "sous vide, au frigo",
+   "acquis": false,
+   "manque": "machine à mise sous vide (à cloche ou à aspiration)",
+   "noeud": "Mettre sous vide",
+   "acideSeulement": false
+  },
+  {
+   "id": "bocal-bain-marie",
+   "label": "en bocal, bain-marie",
+   "acquis": true,
+   "manque": "sterilisation-bain-marie",
+   "noeud": "Stériliser les acides au bain-marie",
+   "acideSeulement": true
+  },
+  {
+   "id": "bocal-sous-pression",
+   "label": "en bocal, sous pression",
+   "acquis": false,
+   "manque": "autocuiseur/stérilisateur avec manomètre",
+   "noeud": "Stériliser sous pression",
+   "acideSeulement": false
+  },
+  {
+   "id": "lacto-fermentation",
+   "label": "en lacto-fermentation",
+   "acquis": false,
+   "manque": "bocaux à joint caoutchouc",
+   "noeud": "Lacto-fermenter un légume",
+   "acideSeulement": false
+  },
+  {
+   "id": "sechage",
+   "label": "séché",
+   "acquis": false,
+   "manque": "déshydrateur (ou four à très basse température)",
+   "noeud": "Sécher herbes et légumes",
+   "acideSeulement": false
+  }
+ ],
+ "stock": [
+  {
+   "type": "lentilles-vertes-cuites",
+   "kind": "base",
+   "qty_band": "2-repas",
+   "born": "2026-08-06",
+   "location": "frigo"
+  },
+  {
+   "type": "sauce-bolognaise",
+   "kind": "base",
+   "qty_band": "2-repas",
+   "born": "2026-07-20",
+   "location": "congelo",
+   "note": "en bocaux — portion d'urgence"
+  }
+ ]
+}
