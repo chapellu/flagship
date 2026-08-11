@@ -41,6 +41,23 @@ resource "oci_dns_rrset" "blog_a" {
   }
 }
 
+# A record for the throwaway UI prototype (apps/proto-shell). Deliberately a
+# separate rrset rather than a CNAME onto blog: the prototype is meant to be
+# deleted, and a distinct resource is a clean single-line removal.
+resource "oci_dns_rrset" "proto_a" {
+  zone_name_or_id = oci_dns_zone.chapellu.id
+  domain          = "proto.${var.dns_zone_name}"
+  rtype           = "A"
+  compartment_id  = local.dns_compartment_id
+
+  items {
+    domain = "proto.${var.dns_zone_name}"
+    rtype  = "A"
+    ttl    = 300
+    rdata  = oci_core_instance.main.public_ip
+  }
+}
+
 resource "oci_dns_rrset" "grafana_a" {
   zone_name_or_id = oci_dns_zone.chapellu.id
   domain          = "grafana.${var.dns_zone_name}"
