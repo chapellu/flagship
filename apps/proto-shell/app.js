@@ -38,31 +38,10 @@ function rendreA() {
           </div>`).join("")}
       </section>`;
   } else if (t === "cuisine") {
-    corps = `
-      <section>
-        <h2>Ce soir</h2><br>
-        <div class="carte">
-          <span class="titre">${dinerCeSoir.nom}</span>
-          <div class="muted">${dinerCeSoir.source} · ${dinerCeSoir.duree} min</div>
-          <div class="muted">✔ ${dinerCeSoir.reste}</div>
-          <br>
-          ${dinerCeSoir.etapes.map((e, i) => `
-            <div class="etape">
-              <span>${i + 1}. ${e.txt}${e.bebe ? ' <span class="badge-bebe">🍼 avant d’assaisonner</span>' : ""}${e.kid ? ` <span class="badge-bebe">👶 ${e.kid}</span>` : ""}</span>
-              <span class="min">⏱ ${e.min} min</span>
-            </div>`).join("")}
-          <br><div class="muted">↪ En sortie : ${dinerCeSoir.emet}</div>
-        </div>
-      </section>
-      <section>
-        <h2>Stock</h2><br>
-        ${stock.map(s => `
-          <div class="carte">
-            <span class="titre">${s.nom}</span>
-            ${s.flag ? '<span class="chip flag">vu, disponible — récolte</span>' : ""}
-            <div class="muted">${s.detail}</div>
-          </div>`).join("")}
-      </section>`;
+    // Le constructeur de semaine est monté ici, dans l'onglet gagnant (variante
+    // A). Il tire ses plats de cuisine-data.json, exporté du vrai catalogue
+    // Python — rien n'est inventé côté écran.
+    corps = `<div id="sem-hote"><div class="muted" style="padding:16px">chargement…</div></div>`;
   } else {
     corps = `
       <section>
@@ -91,6 +70,16 @@ function rendreA() {
     </div>`;
   app.querySelectorAll("[data-onglet]").forEach(b =>
     b.addEventListener("click", () => { etat.ongletA = b.dataset.onglet; rendreA(); }));
+  const hote = app.querySelector("#sem-hote");
+  if (hote) {
+    // Le message d'erreur est affiché : sans navigateur sur la VM, c'est la
+    // seule façon de diagnostiquer depuis un téléphone.
+    import("./semaine-vue.js")
+      .then(m => m.monter(hote, rendreA))
+      .catch(e => { hote.innerHTML =
+        `<div class="carte" style="margin:14px"><span class="titre">Erreur de chargement</span>
+         <div class="muted">${e}</div></div>`; });
+  }
 }
 
 /* ---------------- variante B — plan spatial de la terrasse ---------------- */
