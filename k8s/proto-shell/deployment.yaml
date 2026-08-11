@@ -1,0 +1,65 @@
+# proto.chapellu.fr — prototype UI jetable du shell multi-facettes
+# (apps/proto-shell). Statique, nginx-unprivileged, aucun état.
+#
+# Le tag d'image est épinglé par le CI (.github/workflows/proto-shell-image.yml)
+# qui committe le nouveau SHA ici après publication sur GHCR — même flux que le
+# blog : Flux déploie, rien ne s'applique hors bande.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proto-shell
+  namespace: proto-shell
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: proto-shell
+  template:
+    metadata:
+      labels:
+        app: proto-shell
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: nginx
+          image: ghcr.io/chapellu/proto-shell:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          securityContext:
+            # uid de nginx-unprivileged
+            runAsUser: 101
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            # nginx-unprivileged met pid et caches sous /tmp
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

@@ -1,0 +1,10 @@
+{
+  "name": "proto-shell — prototype UI",
+  "short_name": "proto-shell",
+  "id": "/",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f6f2",
+  "theme_color": "#2d5016",
+  "icons": []
+}

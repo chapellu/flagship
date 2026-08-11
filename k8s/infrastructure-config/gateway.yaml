@@ -48,3 +48,15 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
+    - name: https-proto
+      protocol: HTTPS
+      port: 443
+      hostname: proto.chapellu.fr
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: proto-tls
+      allowedRoutes:
+        namespaces:
+          from: All
