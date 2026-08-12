@@ -29,6 +29,14 @@ h1 { font-size: 1.3rem; } h2 { font-size: 1.05rem; } h3 { font-size: 0.95rem; }
 }
 #switcher button { color: #fff; padding: 2px 8px; font-size: 1rem; }
 #sw-label { min-width: 110px; text-align: center; font-weight: 600; }
+/* La variante A a une barre d'onglets fixe en bas (~59 px). Centré et à
+   `bottom: 10px`, le commutateur se posait exactement sur l'onglet du milieu
+   et interceptait le tap : « Cuisine » était injoignable en son centre sur
+   tous les gabarits testés, desktop compris. On le remonte au-dessus de la
+   barre. Réservé à A : B et C n'ont pas d'onglets et ont déjà été jugées. */
+body[data-variant="A"] #switcher {
+  bottom: calc(68px + env(safe-area-inset-bottom));
+}
 
 /* ---------------- variante A — Facettes (onglets) ---------------- */
 .va { padding-bottom: 120px; }

@@ -172,6 +172,9 @@ function aller(delta) {
 }
 function rendre() {
   const v = varianteCourante();
+  // Le CSS a besoin de connaître la variante : seule A a une barre d'onglets
+  // fixe sous laquelle le commutateur ne doit pas se poser.
+  document.body.dataset.variant = v.cle;
   document.getElementById("sw-label").textContent = `${v.cle} — ${v.nom}`;
   v.rendre();
 }
