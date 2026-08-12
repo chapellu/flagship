@@ -74,6 +74,11 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [
     {
@@ -124,10 +129,16 @@
    "accepts": [
     {
      "type": "sauce-bolognaise",
+     "kind": null,
      "requis": true,
      "mere": "sauce-bolognaise"
     }
    ],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": {
     "minutes": 45,
     "ingredients": [
@@ -208,10 +219,16 @@
    "accepts": [
     {
      "type": "sauce-bolognaise",
+     "kind": null,
      "requis": true,
      "mere": "sauce-bolognaise"
     }
    ],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": {
     "minutes": 45,
     "ingredients": [
@@ -297,6 +314,11 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [],
    "cuisinable": false
@@ -354,6 +376,11 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [
     {
@@ -431,10 +458,16 @@
    "accepts": [
     {
      "type": "poulet-cuit",
+     "kind": null,
      "requis": false,
      "mere": "poulet-roti"
     }
    ],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": {
     "minutes": 15,
     "ingredients": [
@@ -497,10 +530,16 @@
    "accepts": [
     {
      "type": "carcasse-volaille",
+     "kind": null,
      "requis": true,
      "mere": "poulet-roti"
     }
    ],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": {
     "minutes": 10,
     "ingredients": [
@@ -581,6 +620,11 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [
     {
@@ -636,6 +680,11 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [],
    "cuisinable": false
@@ -692,6 +741,11 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [
     {
@@ -762,6 +816,11 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [
     {
@@ -825,6 +884,11 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [],
    "cuisinable": false
@@ -884,10 +948,16 @@
    "accepts": [
     {
      "type": "lentilles-vertes-cuites",
+     "kind": null,
      "requis": true,
      "mere": "lentilles-mijotees"
     }
    ],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": {
     "minutes": 35,
     "ingredients": [
@@ -947,6 +1017,11 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [],
    "cuisinable": false
@@ -996,6 +1071,11 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [],
    "cuisinable": false
@@ -1075,10 +1155,16 @@
    "accepts": [
     {
      "type": "lentilles-vertes-cuites",
+     "kind": null,
      "requis": true,
      "mere": "lentilles-mijotees"
     }
    ],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": {
     "minutes": 35,
     "ingredients": [
@@ -1173,6 +1259,11 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [
     {
@@ -1236,6 +1327,11 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [
     {
@@ -1311,6 +1407,11 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [],
    "cuisinable": true
@@ -1397,6 +1498,11 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [
     {
@@ -1405,6 +1511,34 @@
      "congelo": true
     }
    ],
+   "cuisinable": true
+  },
+  {
+   "id": "reste-de-la-veille",
+   "titre": "Reste réchauffé",
+   "minutes": 10,
+   "portions": 2.5,
+   "apports": {
+    "proteine": "aucune",
+    "feculent": "aucun",
+    "legumes": [],
+    "profil": "reste"
+   },
+   "ingredients": [],
+   "accepts": [
+    {
+     "type": null,
+     "kind": "reste-plat",
+     "requis": true,
+     "mere": null
+    }
+   ],
+   "creneaux": [
+    "dejeuner"
+   ],
+   "transportable": true,
+   "sansReste": null,
+   "emits": [],
    "cuisinable": true
   },
   {
@@ -1460,6 +1594,11 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [
     {
@@ -1471,6 +1610,55 @@
    "cuisinable": true
   }
  ],
+ "creneaux": {
+  "repas": {
+   "petit-dejeuner": {
+    "label": "petit-déj",
+    "nature": "routine",
+    "minutes": 10
+   },
+   "dejeuner": {
+    "label": "déjeuner",
+    "nature": "choisi",
+    "minutes": 30
+   },
+   "diner": {
+    "label": "dîner",
+    "nature": "choisi",
+    "minutes": 40
+   },
+   "gouter": {
+    "label": "goûter",
+    "nature": "routine",
+    "minutes": 10
+   }
+  },
+  "jours": {
+   "defaut": [
+    "petit-dejeuner",
+    "dejeuner",
+    "diner"
+   ],
+   "exceptions": {
+    "mercredi": [
+     "petit-dejeuner",
+     "dejeuner",
+     "gouter",
+     "diner"
+    ]
+   }
+  },
+  "emporte": {
+   "dejeuner": [
+    "mardi",
+    "jeudi"
+   ]
+  },
+  "equilibre_sur": [
+   "dejeuner",
+   "diner"
+  ]
+ },
  "rayons": {
   "ordre": [
    "primeur",
@@ -1594,10 +1782,13 @@
    "ecoule_congelo": 3,
    "chaine_manquante": -8,
    "hors_budget": -4,
+   "plancher_congelo": 4,
+   "mal_transporte": -6,
    "article_marginal": -0.4
   },
   "congelateur": {
    "portions_par_tiroir": 6,
+   "plancher": 4,
    "reste_ne_compte_pas_dans_les_plafonds": true
   },
   "main": {

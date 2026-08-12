@@ -1,4 +1,16 @@
 // PROTOTYPE — rendu du constructeur de semaine. Jetable.
+//
+// LE CHOIX D'UX, PUISQU'IL A CHANGÉ
+// Avec un plat par jour, un ruban horizontal de 6 cartes suffisait. Avec trois
+// repas, la semaine fait 22 créneaux : le ruban devient une frise illisible où
+// l'on perd la notion de journée. On passe donc à une **liste verticale de
+// journées**, chacune portant ses créneaux choisis côte à côte (midi | soir).
+// Toute la semaine tient sans défilement horizontal, et la journée redevient
+// l'unité qu'elle est dans la vraie vie.
+//
+// Chaque journée affiche aussi son **total de minutes** : c'est la découverte du
+// modèle Python — chaque repas tient dans son budget, la journée non.
+
 import * as S from "./semaine.js";
 
 const SUITS = {
@@ -14,7 +26,7 @@ let vue = "main";
 
 export async function monter(hote, rendreParent) {
   if (!jeu) {
-    const data = await fetch("cuisine-data.json").then((r) => r.json());
+    const data = await fetch("cuisine-data.json").then(r => r.json());
     jeu = S.creerJeu(data);
   }
   rendre(hote, rendreParent);
@@ -27,32 +39,33 @@ function rendre(hote, rendreParent) {
 
   hote.innerHTML = `
     ${bandeauSemaine(calc)}
-    ${bandeauApports(cov, arts, calc)}
+    ${bandeauApports(cov, arts)}
     ${vue === "courses" ? listeCourses(calc, arts) : mainDeCartes()}
   `;
 
-  hote.querySelectorAll("[data-jour]").forEach((b) =>
+  hote.querySelectorAll("[data-slot]").forEach(b =>
     b.addEventListener("click", () => {
-      jeu.jour = +b.dataset.jour;
+      jeu.slot = +b.dataset.slot;
       vue = "main";
       rendre(hote, rendreParent);
     }));
-  hote.querySelectorAll("[data-jouer]").forEach((b) =>
+  hote.querySelectorAll("[data-jouer]").forEach(b =>
     b.addEventListener("click", () => {
-      jeu.choix[jeu.jour] = b.dataset.jouer;
-      const suivant = jeu.choix.findIndex((c) => !c);
-      if (suivant >= 0) jeu.jour = suivant;
+      jeu.choix[jeu.slot] = b.dataset.jouer;
+      const suivant = jeu.choix.findIndex(
+        (c, i) => !c && jeu.creneaux[i].nature === "choisi");
+      if (suivant >= 0) jeu.slot = suivant;
       rendre(hote, rendreParent);
     }));
-  hote.querySelectorAll("[data-vider]").forEach((b) =>
-    b.addEventListener("click", (e) => {
+  hote.querySelectorAll("[data-vider]").forEach(b =>
+    b.addEventListener("click", e => {
       e.stopPropagation();
       jeu.choix[+b.dataset.vider] = null;
       rendre(hote, rendreParent);
     }));
   const rp = hote.querySelector("#repiocher");
   if (rp) rp.addEventListener("click", () => {
-    jeu.repioches[jeu.jour]++;
+    jeu.repioches[jeu.slot]++;
     rendre(hote, rendreParent);
   });
   const bc = hote.querySelector("#bascule-courses");
@@ -63,25 +76,46 @@ function rendre(hote, rendreParent) {
 }
 
 function bandeauSemaine(calc) {
-  return `<section class="sem-jours">
-    ${jeu.jours.map((j, i) => {
-      const rid = jeu.choix[i];
-      const p = rid ? jeu.plats[rid] : null;
-      const chaine = calc.chaine.some((c) => c.jour === i);
-      return `<button class="sem-jour ${i === jeu.jour ? "actif" : ""} ${p ? "rempli" : ""}"
-                data-jour="${i}">
-        <span class="j">${j.nom.slice(0, 3)}</span>
-        <span class="d">${j.date.getDate()}/${j.date.getMonth() + 1}</span>
-        ${p ? `<span class="t">${p.titre}</span>
-               ${chaine ? '<span class="lien">↪</span>' : ""}
-               <span class="vider" data-vider="${i}">×</span>`
-            : '<span class="vide">+</span>'}
-      </button>`;
+  const minutes = S.minutesParJour(jeu, jeu.choix);
+  return `<section class="sem-semaine">
+    ${jeu.jours.map((j, ij) => {
+      const slots = jeu.creneaux
+        .map((c, i) => ({ ...c, i }))
+        .filter(c => c.jour === ij);
+      const choisis = slots.filter(c => c.nature === "choisi");
+      const routines = slots.filter(c => c.nature === "routine");
+      const m = minutes[ij];
+      return `<div class="sem-journee">
+        <div class="jour-tete">
+          <span class="nom">${j.nom}</span>
+          <span class="date">${j.date.getDate()}/${j.date.getMonth() + 1}</span>
+          ${m ? `<span class="min ${m > 90 ? "lourd" : ""}">${m} min</span>` : ""}
+        </div>
+        <div class="jour-slots">
+          ${choisis.map(c => creneau(c, calc)).join("")}
+        </div>
+        ${routines.length ? `<div class="jour-routine">${
+          routines.map(c => c.label).join(" · ")} <em>— routine</em></div>` : ""}
+      </div>`;
     }).join("")}
   </section>`;
 }
 
-function bandeauApports(cov, arts, calc) {
+function creneau(c, calc) {
+  const rid = jeu.choix[c.i];
+  const p = rid ? jeu.plats[rid] : null;
+  const chaine = calc.chaine.some(x => x.creneau === c.i);
+  return `<button class="sem-slot ${c.i === jeu.slot ? "actif" : ""} ${p ? "rempli" : ""}"
+            data-slot="${c.i}">
+    <span class="lab">${c.label}${c.emporte ? " 🥡" : ""}</span>
+    ${p ? `<span class="t">${p.titre}</span>
+           <span class="pied">${p.minutes} min${chaine ? ' <b class="lien">↪</b>' : ""}</span>
+           <span class="vider" data-vider="${c.i}">×</span>`
+        : '<span class="vide">+</span>'}
+  </button>`;
+}
+
+function bandeauApports(cov, arts) {
   const prot = Object.entries(cov.servi);
   const manque = [
     ...Object.entries(cov.manques).map(([p, n]) => `${p} ×${n}`),
@@ -90,7 +124,7 @@ function bandeauApports(cov, arts, calc) {
   return `<section class="sem-apports">
     <div class="ligne">
       <div>
-        <div class="lab">Protéines</div>
+        <div class="lab">Protéines <em>— repas principaux</em></div>
         <div class="chips">${prot.length
           ? prot.map(([p, n]) => `<span class="chip ok">${p}${n > 1 ? " ×" + n : ""}</span>`).join("")
           : '<span class="chip vide">rien encore</span>'}</div>
@@ -102,7 +136,7 @@ function bandeauApports(cov, arts, calc) {
       </div>
     </div>
     <div class="lab">Légumes — ${cov.familles.size} famille(s)</div>
-    <div class="chips">${[...cov.familles].map((f) => `<span class="chip veg">${f}</span>`).join("")
+    <div class="chips">${[...cov.familles].map(f => `<span class="chip veg">${f}</span>`).join("")
       || '<span class="chip vide">—</span>'}</div>
     ${manque.length ? `<div class="manque">manque : ${manque.join(" · ")}</div>`
       : (jeu.choix.some(Boolean) ? '<div class="atteint">cibles de la semaine atteintes</div>' : "")}
@@ -111,14 +145,16 @@ function bandeauApports(cov, arts, calc) {
 
 function mainDeCartes() {
   const main = S.main(jeu);
-  const jour = jeu.jours[jeu.jour];
+  const c = jeu.creneaux[jeu.slot];
+  const j = jeu.jours[c.jour];
   return `<section class="sem-main">
     <div class="entete">
-      <h2>${jour.nom} ${jour.date.getDate()}/${jour.date.getMonth() + 1}</h2>
+      <h2>${j.nom} ${c.label}${c.emporte ? " 🥡" : ""}</h2>
       <button id="repiocher">repiocher ⟳</button>
     </div>
+    ${c.emporte ? '<div class="sem-note">déjeuner de coworking — il doit voyager</div>' : ""}
     ${main.length ? main.map(carte).join("")
-      : '<div class="carte-vide">plus de cartes — la semaine est pleine</div>'}
+      : '<div class="carte-vide">plus de cartes pour ce créneau</div>'}
   </section>`;
 }
 
@@ -131,8 +167,10 @@ function carte(l) {
   const marques = [];
   if (l.chaine) marques.push(`<span class="m lien">↪ base déjà cuite</span>`);
   if (l.plein) marques.push(`<span class="m plein">plein tarif</span>`);
+  if (l.malTransporte) marques.push(`<span class="m alerte">voyage mal</span>`);
+  if (l.manque) marques.push(`<span class="m alerte">demande un reste</span>`);
   if (l.plat.emits.length)
-    marques.push(`<span class="m sortie">→ ${l.plat.emits.map((e) => e.type).join(", ")}</span>`);
+    marques.push(`<span class="m sortie">→ ${l.plat.emits.map(e => e.type).join(", ")}</span>`);
   return `<button class="carte ${l.categorie}" data-jouer="${l.plat.id}">
     <div class="carte-haut"><span class="pic">${s.pic}</span>${s.nom}</div>
     <div class="carte-titre">${l.plat.titre}</div>
@@ -154,7 +192,7 @@ function listeCourses(calc, arts) {
       <button id="bascule-courses">retour aux cartes</button></div>
     ${groupes.map(([rayon, items]) => `
       <div class="rayon"><h3>${rayon}</h3>
-        ${items.map((a) => `<label class="art-l"><input type="checkbox">
+        ${items.map(a => `<label class="art-l"><input type="checkbox">
           <span>${a.qty} ${a.unit} — ${a.nom}${a.n > 1 ? ` <em>(${a.n} plats)</em>` : ""}</span>
         </label>`).join("")}
       </div>`).join("")}
