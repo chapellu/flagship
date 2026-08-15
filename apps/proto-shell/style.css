@@ -299,3 +299,76 @@ body[data-variant="A"] #switcher {
 .chip.prov.chaine { background: var(--vert-clair); color: var(--ok); }
 .chip.prov.frigo { background: #e7eef4; color: #35668c; }
 .chip.prov.absent { background: #fdeee2; color: var(--alerte); }
+
+/* ---- réglages du créneau : les parts, et le repas sauté -----------------
+   Les parts se règlent PAR REPAS. Un dîner avec des amis et un midi tout seul
+   n'ont pas la même taille, et c'est la taille qui commande le panier. */
+.reglages { display: flex; align-items: center; gap: 8px; margin: 0 2px 9px; }
+.parts-ctl { display: flex; align-items: center; gap: 2px; background: var(--carte);
+  border-radius: 999px; padding: 3px 4px; box-shadow: 0 1px 3px rgba(0,0,0,.09); }
+.parts-ctl button { width: 30px; height: 26px; font-size: 1.05rem; line-height: 1;
+  color: var(--cuisine); font-weight: 700; }
+.parts-ctl span { font-size: .74rem; color: var(--gris); padding: 0 5px; }
+.parts-ctl b { color: var(--encre); font-size: .84rem; }
+.sauter { margin-left: auto; font-size: .74rem; background: #ecebe4; color: var(--gris);
+  border-radius: 999px; padding: 6px 12px; font-weight: 600; }
+.sauter.on { background: var(--encre); color: #fff; }
+.sem-slot.saute { border-style: solid; border-color: #d8d5c9; background: #f2f1ec; }
+.sem-slot.saute .t.muet { color: #a9a89e; font-style: italic; }
+.sem-slot .pied .parts { margin-left: 5px; color: var(--cuisine); }
+
+/* ---- gamelles, dans le bandeau « à prévoir » --------------------------- */
+.of-l.gamelle { background: #eef2f6; }
+.of-l.gamelle .of-p { color: #35668c; }
+.of-l.gamelle.vide { background: #f2f1ec; }
+.of-l.gamelle.vide .of-p { color: var(--gris); }
+.ga-b { margin-top: 6px; font-size: .72rem; font-weight: 700; background: #35668c;
+  color: #fff; border-radius: 999px; padding: 5px 12px; }
+.of-plus { font-size: .68rem; color: var(--gris); padding: 1px 2px; }
+
+/* ---- la fiche recette : ce que la carte ne dit pas --------------------- */
+.fiche-fond { position: fixed; inset: 0; background: rgba(20,24,18,.45); z-index: 100; }
+.fiche { position: fixed; left: 50%; transform: translateX(-50%); bottom: 0;
+  width: 100%; max-width: 430px; max-height: 88dvh; overflow-y: auto; z-index: 101;
+  background: var(--fond); border-radius: 18px 18px 0 0; padding: 0 16px 40px;
+  box-shadow: 0 -3px 20px rgba(0,0,0,.2); }
+.fiche-tete { position: sticky; top: 0; background: var(--fond); padding: 14px 0 8px;
+  display: flex; align-items: flex-start; gap: 10px; }
+.fiche-tete h2 { font-size: 1.05rem; line-height: 1.2; }
+.fiche .fermer { margin-left: auto; font-size: 1.5rem; line-height: 1; color: var(--gris);
+  padding: 0 4px; }
+.fiche-meta { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: .72rem;
+  color: var(--gris); padding-bottom: 10px; border-bottom: 1px solid #e6e4dc; }
+.fiche-meta em { font-style: normal; color: #a9a89e; }
+.fiche-bloc { padding: 11px 0 3px; border-bottom: 1px solid #e6e4dc; }
+.fiche-bloc:last-child { border-bottom: none; }
+.fiche-bloc h3 { font-size: .68rem; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--gris); margin-bottom: 6px; }
+.fi-l { font-size: .84rem; padding: 3px 0; line-height: 1.3; }
+.fi-l em { font-style: normal; color: var(--gris); font-size: .74rem; }
+.fi-l.assai { color: var(--gris); }
+.fi-s { font-size: .84rem; padding: 5px 0; line-height: 1.35; }
+.fi-s b { color: var(--cuisine); }
+.fi-min { display: block; font-size: .7rem; color: var(--gris); }
+.fi-kid { font-size: .74rem; color: #6b4f9e; margin-top: 2px; }
+.fi-note { font-size: .72rem; color: var(--gris); margin-top: 5px; line-height: 1.35; }
+.carte-haut .loupe { float: right; color: var(--cuisine); font-weight: 700;
+  letter-spacing: 0; text-transform: none; font-size: .68rem; padding: 0 0 6px 10px; }
+
+/* ---- le stock, en détail ---------------------------------------------- */
+.sem-stock .st-l { padding: 6px 2px; border-bottom: 1px solid #f0efe9; }
+.sem-stock .st-l.mange { opacity: .5; }
+.st-t { font-size: .88rem; font-weight: 600; }
+.st-q { float: right; font-size: .8rem; color: var(--gris);
+  font-variant-numeric: tabular-nums; }
+.st-d { font-size: .72rem; color: var(--gris); margin-top: 1px; }
+.st-d em { font-style: normal; color: var(--ok); font-weight: 600; }
+#rentrer { display: block; width: 100%; margin-top: 6px; background: var(--cuisine);
+  color: #fff; border-radius: 12px; padding: 11px; font-weight: 700; font-size: .84rem; }
+#rentrer[disabled] { background: #e4e2da; color: #a9a89e; }
+.art-l.rentre { opacity: .45; text-decoration: line-through; }
+.compteur { display: flex; gap: 5px; }
+.compte.creux { background: #ecebe4; color: var(--gris); }
+.compte.creux b { color: var(--encre); }
+.fiche-meta .ecart { color: var(--cuisine); font-weight: 600; }
+.fiche-meta .ecart em { color: var(--gris); font-weight: 400; }

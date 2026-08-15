@@ -53,7 +53,7 @@ for (const v of ["A", "B", "C"]) {
     await p.waitForTimeout(300);
     check("un seul créneau rempli", await p.locator(".sem-slot.rempli").count() === 1);
 
-    await p.click("#bascule-courses");
+    await p.click('[data-vue="courses"]');
     await p.waitForTimeout(300);
     check("la liste de courses sort", await p.locator(".sem-courses .art-l").count() > 0);
 
@@ -135,6 +135,72 @@ for (const v of ["A", "B", "C"]) {
     check("le congélo a un plafond et la semaine y range",
       q.congelo.limite === 18 && q.congelo.entre > 0 && q.congelo.sort > 0,
       `${q.congelo.debut} +${q.congelo.entre} −${q.congelo.sort} / ${q.congelo.limite}`);
+
+    // Sauter un repas, régler les parts, prévoir la gamelle de la veille.
+    const w = await p.evaluate(async () => {
+      const S = await import("./semaine.js");
+      const data = await fetch("cuisine-data.json").then(r => r.json());
+      const jeu = S.creerJeu(data);
+      const slot = (j, r) => jeu.creneaux.findIndex(c => c.jour === j && c.repas === r);
+      const vide = Array(jeu.creneaux.length).fill(null);
+
+      // Un repas sauté ne coûte rien : ni courses, ni minutes.
+      const plein = [...vide]; plein[slot(0, "diner")] = "gratin-de-pates-tomates";
+      const saute = [...vide]; saute[slot(0, "diner")] = S.SAUTE;
+      const cp = S.calculer(jeu, plein), cs = S.calculer(jeu, saute);
+
+      // Les parts commandent le panier : plus de monde, plus de courses.
+      const p2 = [...jeu.parts]; p2[slot(0, "diner")] = jeu.parts[slot(0, "diner")] * 3;
+      const cg = S.calculer(jeu, plein, [], p2);
+      const qte = c => [...c.panier.values()].reduce((a, s) => a + s.qty, 0);
+
+      // La gamelle du jour de coworking se cuisine la veille au soir.
+      const iEmporte = jeu.creneaux.findIndex(c => c.emporte && c.nature === "choisi");
+      const veille = jeu.creneaux.reduce(
+        (acc, c, i) => (i < iEmporte && c.repas === "diner" ? i : acc), -1);
+      const avecVeille = [...vide]; avecVeille[veille] = "gratin-de-pates-tomates";
+      const g = S.gamelles(jeu, avecVeille).find(x => x.i === iEmporte);
+
+      return {
+        panierSaute: cs.panier.size, minutesSaute: S.minutesParJour(jeu, saute)[0],
+        panierPlein: cp.panier.size, minutesPlein: S.minutesParJour(jeu, plein)[0],
+        qteSimple: qte(cp), qteTriple: qte(cg),
+        gamelle: g && { veille: g.veille === veille, total: g.total, ok: g.actionnable },
+      };
+    });
+    check("un repas sauté ne coûte ni courses ni minutes",
+      w.panierSaute === 0 && w.minutesSaute === 0 && w.panierPlein > 0 && w.minutesPlein > 0,
+      `sauté ${w.panierSaute} art. / ${w.minutesSaute} min`);
+    check("les parts commandent le panier",
+      w.qteTriple > w.qteSimple, `${w.qteSimple} → ${w.qteTriple}`);
+    check("la gamelle se cuisine au dîner de la veille",
+      w.gamelle?.veille === true && w.gamelle.ok === true && w.gamelle.total === 5,
+      JSON.stringify(w.gamelle));
+
+    // La fiche recette : ce que la carte ne dit pas.
+    await p.click('[data-vue="courses"]');       // referme la liste de courses
+    await p.waitForTimeout(200);
+    await p.locator("[data-detail]").first().click();
+    await p.waitForTimeout(200);
+    check("la fiche donne la marche à suivre",
+      await p.locator(".fiche .fi-s").count() > 0);
+    await p.click(".fiche .fermer");
+    await p.waitForTimeout(150);
+    check("la fiche se referme", await p.locator(".fiche").count() === 0);
+
+    // Le stock, et les courses qu'on rentre.
+    await p.click('[data-vue="stock"]');
+    await p.waitForTimeout(200);
+    check("le stock se détaille", await p.locator(".sem-stock .st-l").count() > 0);
+    await p.click('[data-vue="courses"]');
+    await p.waitForTimeout(250);
+    await p.locator("[data-cocher]").first().check();
+    await p.waitForTimeout(150);
+    await p.click("#rentrer");
+    await p.waitForTimeout(250);
+    // `innerText` rend le texte VU : le titre passe en capitales par la CSS.
+    check("une course rentrée se retrouve en stock",
+      (await p.locator(".sem-stock").innerText()).toLowerCase().includes("rentré des courses"));
   }
 
   check("aucune erreur JS", errs.length === 0, errs.join(" | "));

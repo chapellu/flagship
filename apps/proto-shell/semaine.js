@@ -43,12 +43,23 @@ export function creerJeu(data, nJours = 7) {
     jours, creneaux,
     equilibreSur: cfg.equilibre_sur || ["dejeuner", "diner"],
     choix: Array(creneaux.length).fill(null),
+    // Les parts se règlent PAR REPAS, pas une fois pour la semaine. Un dîner
+    // avec des amis, un midi tout seul et une gamelle à prévoir n'ont pas la
+    // même taille, et c'est la taille qui commande le panier et les restes.
+    parts: Array(creneaux.length).fill(data.foyer.parts),
     // On démarre sur le premier créneau réellement choisi : personne ne pioche
     // une carte pour son petit-déjeuner.
     slot: creneaux.findIndex(c => c.nature === "choisi"),
     repioches: Array(creneaux.length).fill(0),
   };
 }
+
+// UN REPAS SAUTÉ N'EST PAS UN REPAS VIDE. « On ne mange pas là » (restaurant,
+// chez des amis, week-end nomade — #29 dit les week-ends nomades) est une
+// DÉCISION, et un créneau vide est une décision qui n'a pas encore été prise.
+// Les confondre laissait la semaine se plaindre de trous qu'on avait choisis.
+export const SAUTE = "__saute";
+export const joue = rid => !!rid && rid !== SAUTE;
 
 const alias = (data, id) => data.rayons.aliases?.[id] ?? id;
 const placard = (data, id) => (data.rayons.placard || []).includes(id);
@@ -210,6 +221,13 @@ function facteur(plat, besoin) {
   return facteurLot(plat, garde && besoin < plat.portions ? 1 : besoin / plat.portions);
 }
 
+// Le facteur d'un plat pour un nombre de parts donné, et une ligne
+// d'ingrédient mise à l'échelle. Exposés pour la fiche recette : elle doit
+// pouvoir montrer les vraies quantités d'un plat qui n'est pas encore joué.
+export const facteurAffiche = (plat, parts) => facteur(plat, parts);
+export const echelleTexte = (ing, f) =>
+  `${String(echelle(ing.qty, ing.unit, f)).replace(".", ",")} ${ing.unit}`;
+
 function echelle(qty, unit, f) {
   const v = qty * f;
   if (unit === "g") return Math.round(v / 10) * 10;
@@ -220,9 +238,8 @@ function echelle(qty, unit, f) {
 
 // Le cœur : panier, chaînage, plein tarif, provenance et rangement — pour une
 // semaine partielle.
-export function calculer(jeu, choix, jetes = []) {
+export function calculer(jeu, choix, jetes = [], parts = jeu.parts) {
   const { data } = jeu;
-  const besoin = data.foyer.parts;
   const depot = new Stock(
     data.stock.filter(o => !jetes.includes(o.type)).map(o => ({ ...o, born: new Date(o.born) })),
     data.foyer.fenetreFrigo);
@@ -232,7 +249,7 @@ export function calculer(jeu, choix, jetes = []) {
   const facteurs = choix.map(() => 1);
 
   choix.forEach((rid, i) => {
-    if (!rid) return;
+    if (!joue(rid)) return;
     const p = jeu.plats[rid];
     const date = dateDe(jeu, i);
     let plein = false;
@@ -255,7 +272,7 @@ export function calculer(jeu, choix, jetes = []) {
       if (p.sansReste) { plein = true; pleinTarif.push({ creneau: i, minutes: p.sansReste.minutes }); }
     }
 
-    const f = facteur(p, besoin);
+    const f = facteur(p, parts[i] ?? data.foyer.parts);
     facteurs[i] = f;
     const lignes = [...p.ingredients];
     if (plein) lignes.push(...p.sansReste.ingredients);
@@ -302,7 +319,7 @@ export function bilanStockage(jeu, choix, jetes, facteurs, depot) {
     add(debut, o.location === "congelo" ? "congelo" : "frigo", bandRepas(o.qty_band));
   }
   choix.forEach((rid, i) => {
-    if (!rid) return;
+    if (!joue(rid)) return;
     for (const e of jeu.plats[rid].emits) add(entre, e.espace, bandRepas(e.band) * facteurs[i]);
   });
   // Ce que la semaine MANGE rend sa place ET son contenant. Sans ce terme, le
@@ -405,7 +422,7 @@ export function offresSurproduction(jeu, choix, manques, facteurs, stockage) {
     // chose : c'est celui qu'il coûte le moins cher d'agrandir, il est déjà au
     // menu, déjà allumé, déjà payé en temps.
     for (let j = m.i - 1; j >= 0; j--) {
-      const p = choix[j] && jeu.plats[choix[j]];
+      const p = joue(choix[j]) && jeu.plats[choix[j]];
       if (!p) continue;
       const e = p.emits.find(x => {
         const [amount, unit] = qteDe(x);
@@ -441,12 +458,55 @@ export function offresSurproduction(jeu, choix, manques, facteurs, stockage) {
   return [...offres.values()];
 }
 
+// ──────────────────────────────────── la gamelle se cuisine la veille au soir
+//
+// #29 : « coworking days need lunchbox outputs ». Le modèle savait déjà qu'un
+// déjeuner de coworking doit VOYAGER — un plat qui se transporte mal y était
+// mal noté. Il ne savait pas d'où sort la gamelle : on ne cuisine pas une
+// lunchbox le matin même, on la prélève sur le dîner de la veille. Ce qui
+// manquait n'est donc pas une contrainte de plus, c'est un DIMENSIONNEMENT :
+// le dîner de mercredi doit être cuisiné pour le mercredi soir ET le jeudi midi.
+//
+// C'est le même geste que « faire plus, plus tôt », mais commandé par le
+// calendrier au lieu d'un manque constaté.
+const dinerDeLaVeille = (jeu, i) => {
+  for (let j = i - 1; j >= 0; j--) if (jeu.creneaux[j].repas === "diner") return j;
+  return -1;
+};
+
+export function gamelles(jeu, choix, parts = jeu.parts) {
+  const out = [];
+  jeu.creneaux.forEach((c, i) => {
+    if (!c.emporte || c.nature !== "choisi") return;
+    const veille = dinerDeLaVeille(jeu, i);
+    if (veille < 0) return;
+    const p = joue(choix[veille]) ? jeu.plats[choix[veille]] : null;
+    const dejaPris = joue(choix[i]);
+    const total = parts[veille] + parts[i];
+    const g = {
+      i, veille, jour: jeu.jours[c.jour].nom,
+      jourVeille: jeu.jours[jeu.creneaux[veille].jour].nom,
+      plat: p, partsVeille: parts[veille], partsGamelle: parts[i], total,
+      // Trois choses peuvent clocher, et ce ne sont pas les mêmes gestes :
+      // le plat ne voyage pas, il ne laisse rien à emporter, ou le lot ne
+      // tient pas dans le récipient une fois agrandi.
+      transportable: p ? p.transportable !== false : null,
+      laisseReste: p ? p.emits.some(e => e.kind === "reste-plat") : null,
+      tientVaisselle: p?.vaisselle ? total / p.portions <= p.vaisselle.facteurMax + 1e-9 : true,
+      fait: dejaPris,
+    };
+    g.actionnable = !!p && !dejaPris && g.transportable && g.laisseReste;
+    out.push(g);
+  });
+  return out;
+}
+
 export function couverture(jeu, choix) {
   const { data } = jeu;
   const servi = {}, achete = {}, feculent = {}, profil = {};
   const familles = new Set();
   choix.forEach((rid, i) => {
-    if (!rid) return;
+    if (!joue(rid)) return;
     // Les cibles se mesurent sur les repas principaux. Les plafonds ont été
     // posés contre six dîners ; les étaler sur 21 créneaux les diviserait par
     // deux sans que personne l'ait décidé.
@@ -493,6 +553,10 @@ export function offre(jeu, choix, slot) {
   const poids = jeu.data.equilibre.poids;
   const rep = jeu.data.equilibre.cibles.repetition_max;
   const cr = jeu.creneaux[slot];
+  // Ce créneau est-il le dîner qui précède un déjeuner de coworking encore vide ?
+  const gamelleDemain = cr.repas === "diner"
+    ? (gamelles(jeu, choix).find(g => g.veille === slot && !g.fait) || {}).jour
+    : null;
 
   return jeu.data.plats
     .filter(p => !deja.has(p.id) && convient(jeu, p, slot))
@@ -533,6 +597,14 @@ export function offre(jeu, choix, slot) {
       if (malTransporte) {
         score += poids.mal_transporte ?? -6;
         pourquoi.push("voyage mal en gamelle");
+      }
+      // Le dîner de la veille d'un jour de coworking a un second métier : il
+      // fabrique la gamelle. Un plat qui voyage et laisse un reste vaut mieux
+      // là qu'ailleurs — même poids que le chaînage, parce que c'en est un.
+      if (gamelleDemain && p.transportable !== false &&
+          p.emits.some(e => e.kind === "reste-plat")) {
+        score += poids.chaine_couverte;
+        pourquoi.push(`laisse la gamelle de ${gamelleDemain}`);
       }
       // Un `accepts` requis que rien ne couvre reste une mauvaise idée.
       const requisNonCouvert = p.accepts.some(acc => acc.requis) &&
@@ -623,7 +695,7 @@ export function parRayon(data, panier) {
 export function minutesParJour(jeu, choix) {
   const parJour = jeu.jours.map(() => 0);
   choix.forEach((rid, i) => {
-    if (rid) parJour[jeu.creneaux[i].jour] += jeu.plats[rid].minutes;
+    if (joue(rid)) parJour[jeu.creneaux[i].jour] += jeu.plats[rid].minutes;
   });
   return parJour;
 }

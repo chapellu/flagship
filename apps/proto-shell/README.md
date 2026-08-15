@@ -34,6 +34,12 @@ absence produisait un mensonge à l'écran :
 | **Où ça se range** — frigo / congélo / placard | la cuisine était infinie ; elle a deux plafonds par espace, les étagères et les **contenants** |
 | **Faire plus, plus tôt** | un manque en aval se répare en agrandissant un lot amont — une offre, jamais une correction automatique |
 | **Hors liste** (placard · déjà cuisiné · à cuisiner d'avance) | on n'achète pas ce qu'on a déjà, et on n'achète nulle part 250 g de lentilles *cuites* |
+| **Sauter ce repas** | un créneau vide était une décision non prise ; « on ne mange pas là » en est une (week-ends nomades, #29) |
+| Les **parts, par repas** | la semaine entière était dimensionnée sur un seul chiffre. Des amis à dîner, un midi tout seul et une gamelle à prévoir n'ont pas la même taille |
+| **Fiche recette** | la carte dit ce qu'un plat coûte, jamais comment on le fait. Les quantités y sont à l'échelle des parts du créneau |
+| **En stock** | le stock n'était qu'un compteur ; il se détaille, avec ce que la semaine y prend et ce qu'il en reste |
+| **Rentrer les courses** | cocher, c'est dans le magasin ; rentrer, c'est à la maison. Et la case cochée ne s'efface plus au premier re-rendu |
+| 🥡 **Gamelles** | on ne cuisine pas une lunchbox le matin même : le dîner de la veille doit être cuisiné plus grand |
 
 ## Règles du prototype
 
@@ -42,7 +48,9 @@ absence produisait un mensonge à l'écran :
   du recipe-compiler par `export_json.py` — rien n'est inventé ici, et le
   régénérer est la seule façon de mettre l'écran à jour.
 - Aucune persistance, aucun backend, pas de service worker. Un seul filet :
-  `e2e/smoke.mjs`, qui a déjà trouvé trois vrais bugs.
+  `e2e/smoke.mjs`, qui a déjà trouvé trois vrais bugs. Les courses rentrées et
+  les parts réglées vivent **en mémoire** : recharger la page les efface, et
+  c'est voulu — un proto qui gagne une persistance devient une app par la bande.
 - Pas de build : HTML/CSS/JS vanilla servis par nginx. La vraie app suivra la
   stack décidée (#6 : Vite + React + TS + Dexie) — ce code ne sera **pas** promu.
 - La barre de commutation reste visible en prod : le déploiement entier est le
