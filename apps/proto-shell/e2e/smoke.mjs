@@ -79,6 +79,62 @@ for (const v of ["A", "B", "C"]) {
       m.apres?.chaine === true && m.apres?.marginal === 0,
       `score ${m.apres?.score}, +${m.apres?.marginal} art.`);
     check("jamais proposée au dîner", m.auDiner === false);
+
+    // Le cadran du rangement : la cuisine est finie, et ça se voit à l'écran.
+    check("les trois espaces sont affichés",
+      await p.locator(".sem-rangement .rg-c").count() === 3);
+
+    // LA QUANTITÉ, qui n'était lue par personne. Un bocal qui couvre deux plats
+    // sans jamais baisser était le bug de fond : on le vérifie de face.
+    const q = await p.evaluate(async () => {
+      const S = await import("./semaine.js");
+      const data = await fetch("cuisine-data.json").then(r => r.json());
+      const jeu = S.creerJeu(data);
+      const slot = (j, r) => jeu.creneaux.findIndex(c => c.jour === j && c.repas === r);
+      const vide = Array(jeu.creneaux.length).fill(null);
+
+      // 700 g au congélo, 500 g réclamés lundi puis 700 g mardi : le second
+      // plat ne peut pas retrouver le bocal plein.
+      const deux = [...vide];
+      deux[slot(0, "diner")] = "pates-bolognaise";
+      deux[slot(1, "diner")] = "lasagnes";
+      const cd = S.calculer(jeu, deux);
+
+      // Une base attendue mais absente ne s'ACHÈTE pas : elle se cuisine.
+      const seule = [...vide];
+      seule[slot(0, "dejeuner")] = "salade-lentilles-feta";
+      const cs = S.calculer(jeu, seule);
+
+      // Un manque en aval devient une offre d'agrandir le lot en amont.
+      const off = [...vide];
+      off[slot(0, "diner")] = "lentilles-mijotees";
+      off[slot(1, "dejeuner")] = "salade-lentilles-feta";
+      off[slot(2, "dejeuner")] = "burgers-de-lentilles";
+      const co = S.calculer(jeu, off);
+
+      return {
+        pris: cd.chaine.map(c => c.pris),
+        manque: cd.manques.reduce((a, m) => a + m.manque, 0),
+        recit: cd.chaine.at(-1)?.recit,
+        absent: cs.provenances.absent || 0,
+        achete: [...cs.panier.keys()].some(k => k.startsWith("lentilles-vertes-cuites")),
+        offres: co.offres.map(o => [o.rid, o.facteurPropose, o.manque]),
+        congelo: co.stockage.congelo,
+      };
+    });
+    check("le bocal se vide au lieu de se dupliquer",
+      q.pris[0] === 500 && q.pris[1] === 200 && q.manque === 500,
+      `pris ${q.pris.join("+")}, manque ${q.manque}`);
+    check("la prise se raconte morceau par morceau",
+      /^200 g du congélo$/.test(q.recit || ""), q.recit);
+    check("une base absente ne part pas aux courses",
+      q.absent > 0 && q.achete === false, `absent ${q.absent}`);
+    check("le manque devient une offre d'agrandir le lot amont",
+      q.offres.length === 1 && q.offres[0][0] === "lentilles-mijotees" &&
+      q.offres[0][1] === 2, JSON.stringify(q.offres));
+    check("le congélo a un plafond et la semaine y range",
+      q.congelo.limite === 18 && q.congelo.entre > 0 && q.congelo.sort > 0,
+      `${q.congelo.debut} +${q.congelo.entre} −${q.congelo.sort} / ${q.congelo.limite}`);
   }
 
   check("aucune erreur JS", errs.length === 0, errs.join(" | "));

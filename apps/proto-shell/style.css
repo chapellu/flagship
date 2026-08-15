@@ -147,8 +147,11 @@ body[data-variant="A"] #switcher {
    ~700 px : sans ce plafond, les apports et la main passent sous la ligne de
    flottaison, ce qui tue la thèse du prototype — voir le coût PENDANT qu'on
    choisit, pas après avoir fait défiler. */
+/* 36vh, pas 42 : la semaine a gagné deux cadrans en dessous (le rangement et
+   les offres), et c'est la première CARTE qui doit rester visible — le ruban,
+   lui, défile. */
 .sem-semaine { padding: 8px 12px 2px; display: flex; flex-direction: column; gap: 5px;
-  max-height: 42vh; overflow-y: auto; overscroll-behavior: contain;
+  max-height: 36vh; overflow-y: auto; overscroll-behavior: contain;
   scrollbar-width: none; }
 .sem-semaine::-webkit-scrollbar { display: none; }
 .sem-journee { border-bottom: 1px solid #edebe3; padding-bottom: 5px; }
@@ -250,3 +253,49 @@ body[data-variant="A"] #switcher {
 .art-l input { width: 19px; height: 19px; accent-color: var(--cuisine); }
 .art-l em { color: var(--gris); font-size: .76rem; font-style: normal; }
 .sem-courses .placard p { font-size: .78rem; color: var(--gris); line-height: 1.4; }
+
+/* ---- où ça se range : la cuisine est finie -------------------------------
+   Deux plafonds par espace, les étagères et les boîtes. La jauge montre le
+   plus bas des deux ; la note dit lequel c'est, quand ce n'est pas la place —
+   dégager une étagère et laver des boîtes ne sont pas le même geste. */
+.sem-rangement { padding: 2px 14px 6px; }
+.sem-rangement .lab { font-size: .68rem; text-transform: uppercase; color: var(--gris);
+  letter-spacing: .05em; margin: 6px 0 4px; font-weight: 700; }
+.sem-rangement .lab em { font-style: normal; color: #a9a89e; font-weight: 400;
+  text-transform: none; letter-spacing: 0; }
+.rg-cols { display: flex; gap: 8px; }
+.rg-c { flex: 1 1 0; min-width: 0; }
+.rg-t { display: flex; align-items: baseline; gap: 4px; font-size: .66rem;
+  color: var(--gris); text-transform: uppercase; letter-spacing: .03em; }
+.rg-t b { margin-left: auto; font-size: .82rem; color: var(--encre);
+  font-variant-numeric: tabular-nums; }
+.rg-t span { font-size: .64rem; }
+.rg-jauge { height: 5px; border-radius: 999px; background: #eae8e0; margin: 3px 0 2px;
+  overflow: hidden; }
+.rg-jauge i { display: block; height: 100%; background: var(--ok); border-radius: 999px; }
+.rg-c.boites .rg-jauge i { background: #3f7fb3; }
+.rg-c.deborde .rg-jauge i { background: var(--alerte); }
+.rg-p { font-size: .64rem; color: #a9a89e; font-variant-numeric: tabular-nums; }
+.rg-c.deborde .rg-t b { color: var(--alerte); }
+.rg-note { font-size: .68rem; color: var(--gris); margin-top: 4px; }
+
+/* ---- faire plus, plus tôt : une offre, jamais une correction ----------
+   Deux lignes maximum : ce bandeau s'insère entre le cadran et les cartes, et
+   la thèse du proto tient à ce que la première carte reste au-dessus du pli. */
+.sem-offres { padding: 2px 14px 6px; }
+.sem-offres .lab { font-size: .68rem; text-transform: uppercase; color: var(--gris);
+  letter-spacing: .05em; margin: 6px 0 4px; font-weight: 700; }
+.of-l { background: var(--cuisine-clair); border-radius: 10px; padding: 6px 10px;
+  margin-bottom: 5px; }
+.of-p { font-size: .76rem; line-height: 1.25; color: var(--cuisine); }
+.of-p b { font-weight: 700; }
+.of-d { font-size: .68rem; color: var(--gris); margin-top: 2px; line-height: 1.25; }
+.of-r { font-size: .68rem; color: var(--alerte); margin-top: 3px; line-height: 1.25; }
+
+/* ---- provenance : ce qui ne s'achète pas ------------------------------ */
+.sem-courses .hors-liste .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip.prov { border-radius: 999px; padding: 2px 9px; font-size: .72rem;
+  font-weight: 600; background: #efeee8; color: var(--gris); }
+.chip.prov.chaine { background: var(--vert-clair); color: var(--ok); }
+.chip.prov.frigo { background: #e7eef4; color: #35668c; }
+.chip.prov.absent { background: #fdeee2; color: var(--alerte); }

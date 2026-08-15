@@ -32,6 +32,37 @@ export async function monter(hote, rendreParent) {
   rendre(hote, rendreParent);
 }
 
+// L'onglet Foyer, côté cuisine : les deux plafonds physiques, ceux qui décident
+// si une proposition d'agrandir un lot est réalisable. La contenance des
+// récipients est l'analogue exact de la RAM d'un CPU de craft — un lot qui n'y
+// entre pas ne part pas, quels que soient les ingrédients disponibles.
+export async function encartCuisine(hote) {
+  const data = await fetch("cuisine-data.json").then(r => r.json());
+  const f = data.foyer;
+  const esp = Object.entries(f.espaces)
+    .map(([id, s]) => `${ESPACES[id].toLowerCase()} ${s.limite}${
+      s.cause === "contenant" ? " (contenants)" : ""}`).join(" · ");
+  hote.innerHTML = `
+    <div class="carte"><span class="titre">Ce qui tient dans une casserole</span>
+      <div class="muted">${f.vaisselle.map(v =>
+        `${v.label} — ${v.contenance} portions${v.exemplaires > 1 ? ` ×${v.exemplaires}` : ""}`)
+        .join("<br>")}</div>
+      <div class="muted"><em>Un lot qui n'entre pas dans le récipient ne se cuisine pas,
+        quels que soient les ingrédients.</em></div>
+    </div>
+    <div class="carte"><span class="titre">Contenants — un pool qui tourne</span>
+      <div class="muted">${f.contenants.map(c =>
+        `${c.nombre} × ${c.label} (${c.portions} portion${c.portions > 1 ? "s" : ""})
+         → ${c.espaces.join(", ") || "aucun espace ouvert"}${c.consommable ? " · consommable" : ""}`)
+        .join("<br>")}</div>
+      <div class="muted"><em>Un contenant plein est indisponible jusqu'à ce qu'on
+        en mange le contenu.</em></div>
+    </div>
+    <div class="carte"><span class="titre">Places de rangement</span>
+      <div class="muted">${esp}</div>
+    </div>`;
+}
+
 function rendre(hote, rendreParent) {
   const calc = S.calculer(jeu, jeu.choix);
   const cov = S.couverture(jeu, jeu.choix);
@@ -40,6 +71,8 @@ function rendre(hote, rendreParent) {
   hote.innerHTML = `
     ${bandeauSemaine(calc)}
     ${bandeauApports(cov, arts)}
+    ${bandeauRangement(calc)}
+    ${bandeauOffres(calc)}
     ${vue === "courses" ? listeCourses(calc, arts) : mainDeCartes()}
   `;
 
@@ -143,6 +176,57 @@ function bandeauApports(cov, arts) {
   </section>`;
 }
 
+// LA CUISINE EST FINIE, et c'est la moitié du modèle qui manquait à l'écran.
+// Chaque espace a DEUX plafonds, les étagères et les boîtes ; le plus bas
+// commande. On affiche lequel mord, parce que dégager une étagère et laver des
+// boîtes ne sont pas le même geste.
+const ESPACES = { frigo: "Frigo", congelo: "Congélo", placard: "Placard" };
+
+function bandeauRangement(calc) {
+  const g = n => +n.toFixed(1);
+  // Trois colonnes, pas trois lignes : ce bandeau est un CADRAN qu'on lit en
+  // choisissant, et la thèse du proto est que le coût reste au-dessus du pli.
+  // Le détail ne s'écrit que quand il change quelque chose.
+  const cols = Object.entries(calc.stockage).map(([id, s]) => {
+    const pct = Math.min(100, (s.fin / s.limite) * 100);
+    return `<div class="rg-c ${s.deborde ? "deborde" : ""} ${s.cause === "contenant" ? "boites" : ""}">
+      <div class="rg-t">${ESPACES[id]}<b>${g(s.fin)}</b><span>/ ${g(s.limite)}</span></div>
+      <div class="rg-jauge"><i style="width:${pct}%"></i></div>
+      <div class="rg-p">${s.debut ? `${g(s.debut)} ` : ""}+${g(s.entre)}${
+        s.sort ? ` −${g(s.sort)}` : ""}</div>
+    </div>`;
+  });
+  // Ce qui mérite une phrase : un espace qui déborde, ou un espace dont ce sont
+  // les BOÎTES qui commandent et pas les étagères — deux gestes différents.
+  const notes = Object.entries(calc.stockage)
+    .filter(([, s]) => s.deborde || s.cause === "contenant")
+    .map(([id, s]) => s.deborde
+      ? `⚠ le ${ESPACES[id].toLowerCase()} déborde`
+      : `${ESPACES[id].toLowerCase()} : limité par les contenants (${g(s.limite)}), pas par la place (${s.places})`);
+  return `<section class="sem-rangement">
+    <div class="lab">Où ça se range <em>— la cuisine n'est pas infinie</em></div>
+    <div class="rg-cols">${cols.join("")}</div>
+    ${notes.map(n => `<div class="rg-note">${n}</div>`).join("")}
+  </section>`;
+}
+
+// « Tu n'as plus de bolognaise d'avance : en faire plus lundi, et le gratin de
+// jeudi est déjà payé. » Une OFFRE, jamais une correction automatique — le
+// prototype ne redimensionne rien tout seul.
+function bandeauOffres(calc) {
+  if (!calc.offres.length) return "";
+  return `<section class="sem-offres">
+    <div class="lab">Faire plus, plus tôt</div>
+    ${calc.offres.map(o => `<div class="of-l">
+      <div class="of-p"><b>${o.titre}</b> — ${o.combien}</div>
+      <div class="of-d">${o.deQuoi} · ${
+        o.pour.map(([j]) => j).join(" et ")} ne coûte plus rien${
+        o.gainMin ? ` · ${o.gainMin} min gagnées` : ""}</div>
+      ${o.reserves().map(r => `<div class="of-r">${r}</div>`).join("")}
+    </div>`).join("")}
+  </section>`;
+}
+
 function mainDeCartes() {
   const main = S.main(jeu);
   const c = jeu.creneaux[jeu.slot];
@@ -165,7 +249,10 @@ function carte(l) {
     ? '<span class="gratuit">+0 article</span>'
     : `+${l.marginal} article${l.marginal > 1 ? "s" : ""}`;
   const marques = [];
-  if (l.chaine) marques.push(`<span class="m lien">↪ base déjà cuite</span>`);
+  // On dit COMBIEN et D'OÙ, pas « il y en a » : une prise qui traverse deux
+  // bocaux se raconte en deux morceaux, et « pas assez » est un troisième cas.
+  if (l.chaine) marques.push(`<span class="m lien">↪ ${l.recit || "base déjà cuite"}</span>`);
+  if (l.partiel) marques.push(`<span class="m alerte">il en manque</span>`);
   if (l.plein) marques.push(`<span class="m plein">plein tarif</span>`);
   if (l.malTransporte) marques.push(`<span class="m alerte">voyage mal</span>`);
   if (l.manque) marques.push(`<span class="m alerte">demande un reste</span>`);
@@ -185,6 +272,20 @@ function carte(l) {
   </button>`;
 }
 
+// Toute ligne d'ingrédient a une PROVENANCE, décidée une fois : c'est ce qui
+// fait qu'on n'achète pas ce qu'on a déjà. « À cuisiner d'avance » est le cas
+// contre-intuitif : une base manquante ne s'achète nulle part — on n'achète pas
+// 250 g de lentilles *cuites*.
+function provenanceEnPied(calc) {
+  const lab = jeu.data.provenances;
+  const lignes = Object.entries(calc.provenances)
+    .filter(([p]) => p !== "courses")
+    .map(([p, n]) => `<span class="chip prov ${p}">${lab[p]} : ${n}</span>`);
+  if (!lignes.length) return "";
+  return `<div class="rayon hors-liste"><h3>hors liste</h3>
+    <div class="chips">${lignes.join("")}</div></div>`;
+}
+
 function listeCourses(calc, arts) {
   const groupes = S.parRayon(jeu.data, calc.panier);
   return `<section class="sem-courses">
@@ -198,5 +299,6 @@ function listeCourses(calc, arts) {
       </div>`).join("")}
     ${calc.aVerifier.size ? `<div class="rayon placard"><h3>à vérifier au placard</h3>
       <p>${[...calc.aVerifier.values()].join(" · ")}</p></div>` : ""}
+    ${provenanceEnPied(calc)}
   </section>`;
 }
