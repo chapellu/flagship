@@ -3,7 +3,99 @@
   "nom": "Francheville",
   "parts": 2.5,
   "fenetreFrigo": 4,
-  "tiroirs": 3
+  "tiroirs": 3,
+  "espaces": {
+   "frigo": {
+    "places": 10,
+    "contenants": 32.0,
+    "limite": 10,
+    "cause": "place"
+   },
+   "congelo": {
+    "places": 18,
+    "contenants": 28.0,
+    "limite": 18,
+    "cause": "place"
+   },
+   "placard": {
+    "places": 20,
+    "contenants": 24.0,
+    "limite": 20,
+    "cause": "place"
+   }
+  },
+  "contenants": [
+   {
+    "id": "boites-hermetiques",
+    "label": "boîtes hermétiques 0,5 / 1 L",
+    "nombre": 8,
+    "portions": 1,
+    "espaces": [
+     "frigo",
+     "congelo"
+    ],
+    "consommable": false
+   },
+   {
+    "id": "bocaux-le-parfait",
+    "label": "bocaux Le Parfait 0,75 L",
+    "nombre": 12,
+    "portions": 2,
+    "espaces": [
+     "frigo",
+     "placard"
+    ],
+    "consommable": false
+   },
+   {
+    "id": "sacs-congelation",
+    "label": "sacs congélation",
+    "nombre": 20,
+    "portions": 1,
+    "espaces": [
+     "congelo"
+    ],
+    "consommable": true
+   }
+  ],
+  "vaisselle": [
+   {
+    "id": "cocotte-7.5l",
+    "label": "cocotte 7,5 L",
+    "contenance": 12,
+    "exemplaires": 1
+   },
+   {
+    "id": "sauteuse-28",
+    "label": "sauteuse 28 cm",
+    "contenance": 6,
+    "exemplaires": 1
+   },
+   {
+    "id": "poele-inox-30",
+    "label": "poêle inox 30 cm",
+    "contenance": 5,
+    "exemplaires": 1
+   },
+   {
+    "id": "poeles-ingenio",
+    "label": "poêles Ingenio 30/26 cm (poignées amovibles)",
+    "contenance": 5,
+    "exemplaires": 1
+   },
+   {
+    "id": "casseroles",
+    "label": "casseroles 2,6 L / 1,6 L",
+    "contenance": 5,
+    "exemplaires": 1
+   },
+   {
+    "id": "plats-a-gratin",
+    "label": "plats à gratin 35×18 / 32×20",
+    "contenance": 6,
+    "exemplaires": 2
+   }
+  ]
  },
  "plats": [
   {
@@ -74,14 +166,29 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [
     {
      "type": "sauce-bolognaise",
      "kind": "base",
+     "qty": {
+      "amount": 1400.0,
+      "unit": "g"
+     },
+     "band": "2-repas",
+     "espace": "congelo",
      "congelo": true
     }
    ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
    "cuisinable": false
   },
   {
@@ -124,10 +231,20 @@
    "accepts": [
     {
      "type": "sauce-bolognaise",
+     "kind": null,
      "requis": true,
+     "qty": {
+      "amount": 500.0,
+      "unit": "g"
+     },
      "mere": "sauce-bolognaise"
     }
    ],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": {
     "minutes": 45,
     "ingredients": [
@@ -152,6 +269,10 @@
     ]
    },
    "emits": [],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 30,
    "cuisinable": false
   },
   {
@@ -208,10 +329,20 @@
    "accepts": [
     {
      "type": "sauce-bolognaise",
+     "kind": null,
      "requis": true,
+     "qty": {
+      "amount": 700.0,
+      "unit": "g"
+     },
      "mere": "sauce-bolognaise"
     }
    ],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": {
     "minutes": 45,
     "ingredients": [
@@ -239,9 +370,16 @@
     {
      "type": "lasagnes",
      "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "congelo",
      "congelo": true
     }
    ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
    "cuisinable": false
   },
   {
@@ -297,8 +435,17 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
    "cuisinable": false
   },
   {
@@ -354,19 +501,40 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [
     {
      "type": "poulet-cuit",
      "kind": "base",
+     "qty": {
+      "amount": 500.0,
+      "unit": "g"
+     },
+     "band": "2-repas",
+     "espace": "congelo",
      "congelo": true
     },
     {
      "type": "carcasse-volaille",
      "kind": "base",
+     "qty": {
+      "amount": 1.0,
+      "unit": "pièce"
+     },
+     "band": "1-repas",
+     "espace": "frigo",
      "congelo": false
     }
    ],
+   "lotEntier": true,
+   "calibreMax": 1.6,
+   "vaisselle": null,
+   "gainChainage": 0,
    "cuisinable": false
   },
   {
@@ -431,10 +599,20 @@
    "accepts": [
     {
      "type": "poulet-cuit",
+     "kind": null,
      "requis": false,
+     "qty": {
+      "amount": 400.0,
+      "unit": "g"
+     },
      "mere": "poulet-roti"
     }
    ],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": {
     "minutes": 15,
     "ingredients": [
@@ -447,6 +625,10 @@
     ]
    },
    "emits": [],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
    "cuisinable": false
   },
   {
@@ -497,10 +679,20 @@
    "accepts": [
     {
      "type": "carcasse-volaille",
+     "kind": null,
      "requis": true,
+     "qty": {
+      "amount": 1.0,
+      "unit": "pièce"
+     },
      "mere": "poulet-roti"
     }
    ],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": {
     "minutes": 10,
     "ingredients": [
@@ -519,6 +711,10 @@
     ]
    },
    "emits": [],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
    "cuisinable": false
   },
   {
@@ -581,14 +777,26 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [
     {
      "type": "curry-pois-chiches",
      "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "congelo",
      "congelo": true
     }
    ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
    "cuisinable": false
   },
   {
@@ -636,8 +844,17 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
    "cuisinable": false
   },
   {
@@ -692,14 +909,26 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [
     {
      "type": "quiche",
      "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "congelo",
      "congelo": true
     }
    ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
    "cuisinable": false
   },
   {
@@ -762,14 +991,26 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [
     {
      "type": "chili",
      "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "congelo",
      "congelo": true
     }
    ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
    "cuisinable": false
   },
   {
@@ -825,8 +1066,17 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
    "cuisinable": false
   },
   {
@@ -884,10 +1134,20 @@
    "accepts": [
     {
      "type": "lentilles-vertes-cuites",
+     "kind": null,
      "requis": true,
+     "qty": {
+      "amount": 400.0,
+      "unit": "g"
+     },
      "mere": "lentilles-mijotees"
     }
    ],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": {
     "minutes": 35,
     "ingredients": [
@@ -900,6 +1160,10 @@
     ]
    },
    "emits": [],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 20,
    "cuisinable": false
   },
   {
@@ -947,8 +1211,17 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
    "cuisinable": false
   },
   {
@@ -996,8 +1269,17 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
    "cuisinable": false
   },
   {
@@ -1075,10 +1357,20 @@
    "accepts": [
     {
      "type": "lentilles-vertes-cuites",
+     "kind": null,
      "requis": true,
+     "qty": {
+      "amount": 400.0,
+      "unit": "g"
+     },
      "mere": "lentilles-mijotees"
     }
    ],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": {
     "minutes": 35,
     "ingredients": [
@@ -1094,9 +1386,1038 @@
     {
      "type": "burgers-lentilles",
      "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "congelo",
      "congelo": true
     }
    ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "sauteuse-28",
+    "label": "sauteuse 28 cm",
+    "facteurMax": 1.5
+   },
+   "gainChainage": 5,
+   "cuisinable": true
+  },
+  {
+   "id": "chiffonnade-chou-frise-cantal",
+   "titre": "Chiffonnade de chou frisé au cantal, noix et jambon cru",
+   "minutes": 20,
+   "portions": 3,
+   "apports": {
+    "proteine": "fromage",
+    "feculent": "aucun",
+    "legumes": [
+     "crucifere",
+     "allium"
+    ],
+    "profil": "cru",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "chou-frise",
+     "nom": "chou frisé de taille moyenne",
+     "qty": 0.5,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "oignon-rouge",
+     "nom": "oignon rouge",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "cantal",
+     "nom": "cantal jeune",
+     "qty": 100,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "jambon-cru",
+     "nom": "jambon cru en tranche épaisse",
+     "qty": 100,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "pruneaux",
+     "nom": "pruneaux",
+     "qty": 8,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "noix",
+     "nom": "noix en coques",
+     "qty": 10,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive ou de noix",
+     "qty": 6,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "vinaigre",
+     "nom": "vinaigre de vin",
+     "qty": 3,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "poivre",
+     "nom": "poivre",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": false,
+   "sansReste": null,
+   "emits": [],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "cocktail-gourmand-peche-coco",
+   "titre": "Cocktail gourmand pêche-coco-vanille",
+   "minutes": 25,
+   "portions": 4,
+   "apports": {
+    "proteine": "aucune",
+    "feculent": "aucun",
+    "legumes": [],
+    "profil": "cru",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "peches",
+     "nom": "pêches jaunes ou blanches",
+     "qty": 6,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "gousse-vanille",
+     "nom": "gousse de vanille",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "creme-coco",
+     "nom": "crème de coco liquide",
+     "qty": 20,
+     "unit": "cl",
+     "base": false
+    },
+    {
+     "id": "rhum",
+     "nom": "rhum",
+     "qty": 2,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "eau",
+     "nom": "eau",
+     "qty": 10,
+     "unit": "cl",
+     "base": false
+    },
+    {
+     "id": "glacons",
+     "nom": "glaçons",
+     "qty": 8,
+     "unit": "pièce",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "gouter"
+   ],
+   "transportable": false,
+   "sansReste": null,
+   "emits": [],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "sauteuse-28",
+    "label": "sauteuse 28 cm",
+    "facteurMax": 1.5
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "consomme-de-fanes",
+   "titre": "Consommé de fanes",
+   "minutes": 25,
+   "portions": 4,
+   "apports": {
+    "proteine": "aucune",
+    "feculent": "aucun",
+    "legumes": [
+     "racine",
+     "allium",
+     "feuille"
+    ],
+    "profil": "soupe",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "parures-legumes",
+     "nom": "épluchures de carottes, vert de poireau, feuilles de céleri",
+     "qty": 1,
+     "unit": "lot",
+     "base": true
+    },
+    {
+     "id": "oignon",
+     "nom": "oignon (ou vert de cébette)",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "persil",
+     "nom": "tiges de persil (facultatif)",
+     "qty": 1,
+     "unit": "poignée",
+     "base": false
+    },
+    {
+     "id": "orties",
+     "nom": "orties (facultatif)",
+     "qty": 1,
+     "unit": "poignée",
+     "base": false
+    },
+    {
+     "id": "eau",
+     "nom": "eau",
+     "qty": 1,
+     "unit": "l",
+     "base": false
+    },
+    {
+     "id": "laurier",
+     "nom": "feuille de laurier",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "clous-girofle",
+     "nom": "clous de girofle",
+     "qty": 3,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "thym",
+     "nom": "thym, sarriette, marjolaine, origan ou hysope (au choix ou en mélange)",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "poivre",
+     "nom": "poivre",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    }
+   ],
+   "accepts": [
+    {
+     "type": "parures-legumes",
+     "kind": null,
+     "requis": false,
+     "qty": {
+      "amount": 1.0,
+      "unit": "lot"
+     },
+     "mere": "veloute-ortie"
+    }
+   ],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
+   "sansReste": {
+    "minutes": 5,
+    "ingredients": [
+     {
+      "id": "carottes",
+      "nom": "carottes",
+      "qty": 3,
+      "unit": "pièce"
+     },
+     {
+      "id": "poireau",
+      "nom": "poireau",
+      "qty": 1,
+      "unit": "pièce"
+     },
+     {
+      "id": "celeri-branche",
+      "nom": "céleri branche",
+      "qty": 2,
+      "unit": "côte"
+     }
+    ]
+   },
+   "emits": [
+    {
+     "type": "bouillon-maison",
+     "kind": "base",
+     "qty": null,
+     "band": "2-repas",
+     "espace": "congelo",
+     "congelo": true
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "cocotte-7.5l",
+    "label": "cocotte 7,5 L",
+    "facteurMax": 3.0
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "cookies-sales-chevre-thym",
+   "titre": "Cookies salés au chèvre, thym et fleur de sel",
+   "minutes": 30,
+   "portions": 4,
+   "apports": {
+    "proteine": "fromage",
+    "feculent": "farine",
+    "legumes": [],
+    "profil": "four",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "farine-complete",
+     "nom": "farine T110 de blé ou de grand épeautre",
+     "qty": 200,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "chevre-demi-sec",
+     "nom": "fromage de chèvre demi-sec",
+     "qty": 100,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "thym-frais",
+     "nom": "brins de thym bien tendres",
+     "qty": 12,
+     "unit": "brin",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 7,
+     "unit": "cl",
+     "base": false
+    },
+    {
+     "id": "vin-blanc-sec",
+     "nom": "vin blanc sec",
+     "qty": 5,
+     "unit": "cl",
+     "base": false
+    },
+    {
+     "id": "fleur-de-sel",
+     "nom": "fleur de sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "cookies-sales",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "2-repas",
+     "espace": "congelo",
+     "congelo": true
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "crockasha-echalote-ciboulette",
+   "titre": "Croc'kasha à l'échalote et à la ciboulette",
+   "minutes": 40,
+   "portions": 4,
+   "apports": {
+    "proteine": "fromage",
+    "feculent": "sarrasin",
+    "legumes": [
+     "allium"
+    ],
+    "profil": "poele",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "kasha-cuit-ing",
+     "nom": "kasha cuit et refroidi",
+     "qty": 250,
+     "unit": "g",
+     "base": true
+    },
+    {
+     "id": "echalote",
+     "nom": "échalotes",
+     "qty": 2,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile (+ un fond pour la poêle)",
+     "qty": 2,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "oeufs",
+     "nom": "œuf",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "chevre-buche",
+     "nom": "bûche de fromage de chèvre",
+     "qty": 200,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "ciboulette",
+     "nom": "ciboulette",
+     "qty": 1,
+     "unit": "petit bouquet",
+     "base": false
+    },
+    {
+     "id": "farine-complete",
+     "nom": "farine de blé ou d'épeautre (pour rouler)",
+     "qty": 1,
+     "unit": "tasse",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "poivre",
+     "nom": "poivre",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    }
+   ],
+   "accepts": [
+    {
+     "type": "kasha-cuit",
+     "kind": null,
+     "requis": false,
+     "qty": {
+      "amount": 250.0,
+      "unit": "g"
+     },
+     "mere": null
+    }
+   ],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
+   "sansReste": {
+    "minutes": 20,
+    "ingredients": [
+     {
+      "id": "kasha",
+      "nom": "kasha (sarrasin grillé)",
+      "qty": 250,
+      "unit": "g"
+     }
+    ]
+   },
+   "emits": [
+    {
+     "type": "crockasha",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "congelo",
+     "congelo": true
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "sauteuse-28",
+    "label": "sauteuse 28 cm",
+    "facteurMax": 1.5
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "escalopes-emmental-champignons",
+   "titre": "Escalopes végétariennes emmental-champignons",
+   "minutes": 40,
+   "portions": 6,
+   "apports": {
+    "proteine": "oeuf",
+    "feculent": "avoine",
+    "legumes": [
+     "champignon",
+     "allium"
+    ],
+    "profil": "four",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "champignons-paris",
+     "nom": "champignons de Paris",
+     "qty": 500,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "oignon",
+     "nom": "oignon",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "fromage-rape",
+     "nom": "emmental",
+     "qty": 180,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "flocons-avoine",
+     "nom": "flocons d'avoine",
+     "qty": 120,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "oeufs",
+     "nom": "œufs",
+     "qty": 4,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 6,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "ail",
+     "nom": "ail",
+     "qty": 1,
+     "unit": "gousse",
+     "base": false
+    },
+    {
+     "id": "persil",
+     "nom": "persil frais",
+     "qty": 0.5,
+     "unit": "bouquet",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "poivre",
+     "nom": "poivre",
+     "qty": 1,
+     "unit": "bonne pincée",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "escalopes-vegetariennes",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "2-repas",
+     "espace": "congelo",
+     "congelo": true
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "sauteuse-28",
+    "label": "sauteuse 28 cm",
+    "facteurMax": 1.0
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "falafels-aux-herbes",
+   "titre": "Falafels poêlés aux herbes",
+   "minutes": 38,
+   "portions": 4,
+   "apports": {
+    "proteine": "legumineuse",
+    "feculent": "legumineuse",
+    "legumes": [
+     "feuille",
+     "allium"
+    ],
+    "profil": "poele",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "pois-chiches-cuits-ing",
+     "nom": "pois chiches cuits bien égouttés",
+     "qty": 500,
+     "unit": "g",
+     "base": true
+    },
+    {
+     "id": "herbes-fraiches",
+     "nom": "herbes fraîches en mélange (fenouil, basilic, origan, marjolaine, ciboulette, thym, sauge, ail des ours…), tiges ligneuses retirées",
+     "qty": 80,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "tahin",
+     "nom": "tahin",
+     "qty": 50,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "farine-complete",
+     "nom": "farine semi-complète de petit épeautre (+ un peu pour enrober)",
+     "qty": 55,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "citron",
+     "nom": "jus de citron (environ un demi-citron)",
+     "qty": 3,
+     "unit": "cl",
+     "base": false
+    },
+    {
+     "id": "ail",
+     "nom": "ail",
+     "qty": 1,
+     "unit": "gousse",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive (+ un peu pour la cuisson)",
+     "qty": 4,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel fin",
+     "qty": 5,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "poivre",
+     "nom": "poivre du moulin",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    }
+   ],
+   "accepts": [
+    {
+     "type": "pois-chiches-cuits",
+     "kind": null,
+     "requis": false,
+     "qty": {
+      "amount": 500.0,
+      "unit": "g"
+     },
+     "mere": null
+    }
+   ],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
+   "sansReste": {
+    "minutes": 5,
+    "ingredients": [
+     {
+      "id": "pois-chiches",
+      "nom": "pois chiches cuits (bocal)",
+      "qty": 1000,
+      "unit": "g"
+     }
+    ]
+   },
+   "emits": [
+    {
+     "type": "falafels",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "congelo",
+     "congelo": true
+    },
+    {
+     "type": "jus-pois-chiches",
+     "kind": "base",
+     "qty": {
+      "amount": 15.0,
+      "unit": "cl"
+     },
+     "band": "1-repas",
+     "espace": "congelo",
+     "congelo": true
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "sauteuse-28",
+    "label": "sauteuse 28 cm",
+    "facteurMax": 1.5
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "farcous-vert-de-blette",
+   "titre": "Farçous végétariens au vert de blette",
+   "minutes": 35,
+   "portions": 4,
+   "apports": {
+    "proteine": "oeuf",
+    "feculent": "farine",
+    "legumes": [
+     "feuille",
+     "allium"
+    ],
+    "profil": "poele",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "oeufs",
+     "nom": "œufs",
+     "qty": 4,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "farine-complete",
+     "nom": "farine T110 de blé ou de grand épeautre",
+     "qty": 300,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "vert-de-blette",
+     "nom": "vert de blettes (ou épinards frais)",
+     "qty": 400,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "fromage-rape",
+     "nom": "gruyère râpé (facultatif)",
+     "qty": 140,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "cebette",
+     "nom": "cébette avec le vert",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "persil",
+     "nom": "persil",
+     "qty": 1,
+     "unit": "petit bouquet",
+     "base": false
+    },
+    {
+     "id": "ail",
+     "nom": "ail",
+     "qty": 2,
+     "unit": "gousse",
+     "base": false
+    },
+    {
+     "id": "lait",
+     "nom": "lait entier",
+     "qty": 40,
+     "unit": "cl",
+     "base": false
+    },
+    {
+     "id": "poudre-a-lever",
+     "nom": "poudre à lever",
+     "qty": 1,
+     "unit": "sachet",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile pour la poêle",
+     "qty": 4,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "poivre",
+     "nom": "poivre",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "farcous",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "congelo",
+     "congelo": true
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "sauteuse-28",
+    "label": "sauteuse 28 cm",
+    "facteurMax": 1.5
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "gateau-sans-cuisson-mousse",
+   "titre": "Gâteau sans cuisson à la mousse au chocolat",
+   "minutes": 20,
+   "portions": 12,
+   "apports": {
+    "proteine": "aucune",
+    "feculent": "biscuit",
+    "legumes": [],
+    "profil": "cru",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "mousse-chocolat-ing",
+     "nom": "mousse au chocolat encore tiède (proportions doublées)",
+     "qty": 2,
+     "unit": "recette",
+     "base": true
+    },
+    {
+     "id": "biscuits-cuillere",
+     "nom": "biscuits à la cuillère",
+     "qty": 27,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "sirop-imbibage",
+     "nom": "sirop d'imbibage au choix (expresso-amaretto, agrumes-rhum, Earl Grey, menthe, poire…)",
+     "qty": 15,
+     "unit": "cl",
+     "base": false
+    },
+    {
+     "id": "cacao",
+     "nom": "cacao pour saupoudrer",
+     "qty": 2,
+     "unit": "c. à s.",
+     "base": false
+    }
+   ],
+   "accepts": [
+    {
+     "type": "mousse-chocolat",
+     "kind": null,
+     "requis": true,
+     "qty": {
+      "amount": 2.0,
+      "unit": "recette"
+     },
+     "mere": "mousse-au-chocolat"
+    }
+   ],
+   "creneaux": [
+    "gouter"
+   ],
+   "transportable": false,
+   "sansReste": {
+    "minutes": 15,
+    "ingredients": [
+     {
+      "id": "chocolat-noir",
+      "nom": "chocolat noir pâtissier à 70 %",
+      "qty": 400,
+      "unit": "g"
+     },
+     {
+      "id": "creme-coco",
+      "nom": "crème de coco liquide",
+      "qty": 40,
+      "unit": "cl"
+     },
+     {
+      "id": "huile-coco",
+      "nom": "huile de coco vierge",
+      "qty": 80,
+      "unit": "g"
+     },
+     {
+      "id": "oeufs",
+      "nom": "œufs ultra frais",
+      "qty": 6,
+      "unit": "pièce"
+     },
+     {
+      "id": "sucre-complet",
+      "nom": "sucre complet",
+      "qty": 80,
+      "unit": "g"
+     }
+    ]
+   },
+   "emits": [
+    {
+     "type": "gateau-mousse",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "2-repas",
+     "espace": "frigo",
+     "congelo": false
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
    "cuisinable": true
   },
   {
@@ -1173,14 +2494,144 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [
     {
      "type": "gratin-pates",
      "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "congelo",
      "congelo": true
     }
    ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "casseroles",
+    "label": "casseroles 2,6 L / 1,6 L",
+    "facteurMax": 1.25
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "gratin-orecchiette-chou-chinois",
+   "titre": "Gratin d'orecchiette au chou chinois et au bœuf",
+   "minutes": 45,
+   "portions": 6,
+   "apports": {
+    "proteine": "viande-rouge",
+    "feculent": "pates",
+    "legumes": [
+     "crucifere",
+     "allium"
+    ],
+    "profil": "four",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "pates",
+     "nom": "orecchiette (ou autres pâtes)",
+     "qty": 500,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "chou-chinois",
+     "nom": "gros chou chinois (ou deux petits)",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "oignon",
+     "nom": "gros oignons",
+     "qty": 3,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "boeuf-hache",
+     "nom": "bœuf haché",
+     "qty": 400,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "fromage-rape",
+     "nom": "parmesan râpé",
+     "qty": 100,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 6,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "origan",
+     "nom": "origan séché",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    },
+    {
+     "id": "thym",
+     "nom": "thym séché",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "poivre",
+     "nom": "poivre",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "gratin-chou-chinois",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "congelo",
+     "congelo": true
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "sauteuse-28",
+    "label": "sauteuse 28 cm",
+    "facteurMax": 1.0
+   },
+   "gainChainage": 0,
    "cuisinable": true
   },
   {
@@ -1236,19 +2687,578 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [
     {
      "type": "lentilles-vertes-cuites",
      "kind": "base",
+     "qty": {
+      "amount": 400.0,
+      "unit": "g"
+     },
+     "band": "2-repas",
+     "espace": "congelo",
      "congelo": true
     },
     {
      "type": "puree-lentilles-carottes",
      "kind": "portion-bebe",
+     "qty": null,
+     "band": "1-repas",
+     "espace": "frigo",
      "congelo": false
     }
    ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "cocotte-7.5l",
+    "label": "cocotte 7,5 L",
+    "facteurMax": 3.0
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "mini-brownies-paques",
+   "titre": "Mini-brownies fondants de Pâques",
+   "minutes": 25,
+   "portions": 6,
+   "apports": {
+    "proteine": "aucune",
+    "feculent": "farine",
+    "legumes": [],
+    "profil": "four",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "farine-complete",
+     "nom": "farine de blé ou de grand épeautre T110",
+     "qty": 65,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "poudre-a-lever",
+     "nom": "poudre à lever",
+     "qty": 0.5,
+     "unit": "sachet",
+     "base": false
+    },
+    {
+     "id": "chocolat-noir",
+     "nom": "chocolat noir pâtissier à 70 %",
+     "qty": 100,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "sirop-agave",
+     "nom": "sirop d'agave",
+     "qty": 4,
+     "unit": "grosse c. à s.",
+     "base": false
+    },
+    {
+     "id": "huile-coco",
+     "nom": "huile de coco vierge",
+     "qty": 4,
+     "unit": "grosse c. à s.",
+     "base": false
+    },
+    {
+     "id": "extrait-vanille",
+     "nom": "extrait de vanille liquide",
+     "qty": 1,
+     "unit": "grosse c. à s.",
+     "base": false
+    },
+    {
+     "id": "oeufs",
+     "nom": "œufs",
+     "qty": 3,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "fleur-de-sel",
+     "nom": "fleur de sel",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    },
+    {
+     "id": "caissettes",
+     "nom": "caissettes à truffe ou mini-caissettes à muffins d'environ 4 cm",
+     "qty": 20,
+     "unit": "pièce",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "gouter"
+   ],
+   "transportable": true,
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "mini-brownies",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "2-repas",
+     "espace": "congelo",
+     "congelo": true
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "sauteuse-28",
+    "label": "sauteuse 28 cm",
+    "facteurMax": 1.0
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "moulinee-legumes-hiver",
+   "titre": "Moulinée toute blanche de légumes d'hiver au beurre salé",
+   "minutes": 40,
+   "portions": 4,
+   "apports": {
+    "proteine": "aucune",
+    "feculent": "aucun",
+    "legumes": [
+     "racine",
+     "crucifere",
+     "allium"
+    ],
+    "profil": "soupe",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "celeri-rave",
+     "nom": "céleri-rave",
+     "qty": 0.5,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "navet-primeur",
+     "nom": "navet blanc",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "poireau",
+     "nom": "blancs de poireau (garder le vert pour un autre usage)",
+     "qty": 2,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "oignon",
+     "nom": "bel oignon",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "eau",
+     "nom": "eau",
+     "qty": 1.5,
+     "unit": "l",
+     "base": false
+    },
+    {
+     "id": "beurre",
+     "nom": "beurre demi-sel (ou 4 c. à s. d'huile d'olive)",
+     "qty": 50,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "poivre",
+     "nom": "poivre du moulin",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "moulinee-hiver",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "congelo",
+     "congelo": true
+    },
+    {
+     "type": "parures-legumes",
+     "kind": "parure",
+     "qty": {
+      "amount": 1.0,
+      "unit": "lot"
+     },
+     "band": "1-repas",
+     "espace": "frigo",
+     "congelo": false
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "cocotte-7.5l",
+    "label": "cocotte 7,5 L",
+    "facteurMax": 3.0
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "mousse-au-chocolat",
+   "titre": "Mousse au chocolat, les deux versions",
+   "minutes": 15,
+   "portions": 6,
+   "apports": {
+    "proteine": "aucune",
+    "feculent": "aucun",
+    "legumes": [],
+    "profil": "cru",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "jus-pois-chiches-ing",
+     "nom": "jus de pois chiches (aquafaba)",
+     "qty": 12,
+     "unit": "cl",
+     "base": true
+    },
+    {
+     "id": "chocolat-noir",
+     "nom": "chocolat noir pâtissier à 70 % de cacao",
+     "qty": 200,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "creme-coco",
+     "nom": "crème de coco liquide (ou de soja)",
+     "qty": 20,
+     "unit": "cl",
+     "base": false
+    },
+    {
+     "id": "huile-coco",
+     "nom": "huile de coco vierge (ou beurre)",
+     "qty": 40,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "sucre-complet",
+     "nom": "sucre au choix (complet",
+     "qty": 40,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "extrait-vanille",
+     "nom": "extrait de vanille liquide",
+     "qty": 1,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "fleur-de-sel",
+     "nom": "fleur de sel",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    }
+   ],
+   "accepts": [
+    {
+     "type": "jus-pois-chiches",
+     "kind": null,
+     "requis": false,
+     "qty": {
+      "amount": 12.0,
+      "unit": "cl"
+     },
+     "mere": "salade-pois-chiches-oeufs-mollets"
+    }
+   ],
+   "creneaux": [
+    "gouter"
+   ],
+   "transportable": true,
+   "sansReste": {
+    "minutes": 0,
+    "ingredients": [
+     {
+      "id": "oeufs",
+      "nom": "œufs ultra frais",
+      "qty": 3,
+      "unit": "pièce"
+     }
+    ]
+   },
+   "emits": [
+    {
+     "type": "mousse-chocolat",
+     "kind": "base",
+     "qty": {
+      "amount": 1.0,
+      "unit": "recette"
+     },
+     "band": "2-repas",
+     "espace": "frigo",
+     "congelo": false
+    }
+   ],
+   "lotEntier": true,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "sauteuse-28",
+    "label": "sauteuse 28 cm",
+    "facteurMax": 1.0
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "navarin-collier-legumes",
+   "titre": "Navarin de collier aux légumes al dente",
+   "minutes": 65,
+   "portions": 6,
+   "apports": {
+    "proteine": "viande-rouge",
+    "feculent": "pommes-de-terre",
+    "legumes": [
+     "racine",
+     "crucifere",
+     "allium",
+     "solanacee"
+    ],
+    "profil": "mijote",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "agneau-collier",
+     "nom": "collier d'agneau",
+     "qty": 1.2,
+     "unit": "kg",
+     "base": false
+    },
+    {
+     "id": "pomme-de-terre",
+     "nom": "pommes de terre nouvelles",
+     "qty": 500,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "carottes",
+     "nom": "jeunes carottes",
+     "qty": 12,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "navets-roses",
+     "nom": "jeunes navets roses",
+     "qty": 12,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "echalote",
+     "nom": "échalotes (ou 2 oignons)",
+     "qty": 4,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "tomates-pelees",
+     "nom": "tomates pelées au jus",
+     "qty": 400,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 6,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "thym-frais",
+     "nom": "thym frais (ou séché)",
+     "qty": 6,
+     "unit": "brin",
+     "base": false
+    },
+    {
+     "id": "fleur-de-sel",
+     "nom": "fleur de sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "poivre",
+     "nom": "poivre du moulin",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "navarin",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "congelo",
+     "congelo": true
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "cocotte-7.5l",
+    "label": "cocotte 7,5 L",
+    "facteurMax": 2.0
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "nuggets-colin-four",
+   "titre": "Nuggets de colin au four",
+   "minutes": 30,
+   "portions": 4,
+   "apports": {
+    "proteine": "poisson",
+    "feculent": "pain",
+    "legumes": [],
+    "profil": "four",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "colin-surgele",
+     "nom": "filets de colin surgelés",
+     "qty": 400,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "fromage-rape",
+     "nom": "parmesan râpé",
+     "qty": 70,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "biscottes",
+     "nom": "biscottes complètes de blé ou d'épeautre",
+     "qty": 70,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "oeufs",
+     "nom": "œufs",
+     "qty": 2,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "ciboulette",
+     "nom": "ciboulette",
+     "qty": 1,
+     "unit": "petit bouquet",
+     "base": false
+    },
+    {
+     "id": "citron",
+     "nom": "citron (son jus)",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive ou de tournesol",
+     "qty": 2,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "poivre",
+     "nom": "poivre",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "nuggets-colin",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "frigo",
+     "congelo": false
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
    "cuisinable": true
   },
   {
@@ -1311,8 +3321,740 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "sauteuse-28",
+    "label": "sauteuse 28 cm",
+    "facteurMax": 1.5
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "omelette-du-potager",
+   "titre": "Omelette du potager",
+   "minutes": 40,
+   "portions": 4,
+   "apports": {
+    "proteine": "oeuf",
+    "feculent": "pommes-de-terre",
+    "legumes": [
+     "racine",
+     "crucifere",
+     "allium",
+     "feuille",
+     "legumineuse"
+    ],
+    "profil": "poele",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "pomme-de-terre",
+     "nom": "petites pommes de terre nouvelles",
+     "qty": 3,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "navet-primeur",
+     "nom": "navet primeur",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "carottes",
+     "nom": "carottes nouvelles",
+     "qty": 2,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "cebette",
+     "nom": "cébette",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "petits-pois",
+     "nom": "petits pois à écosser",
+     "qty": 1,
+     "unit": "poignée",
+     "base": false
+    },
+    {
+     "id": "pois-gourmands",
+     "nom": "pois gourmands",
+     "qty": 1,
+     "unit": "poignée",
+     "base": false
+    },
+    {
+     "id": "pousses-epinards",
+     "nom": "jeunes pousses d'épinards",
+     "qty": 1,
+     "unit": "poignée",
+     "base": false
+    },
+    {
+     "id": "ciboulette",
+     "nom": "ciboulette",
+     "qty": 1,
+     "unit": "petit bouquet",
+     "base": false
+    },
+    {
+     "id": "oeufs",
+     "nom": "œufs fermiers",
+     "qty": 6,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "fromage-rape",
+     "nom": "comté ou emmental fraîchement râpé",
+     "qty": 100,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 6,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "farine",
+     "nom": "farine",
+     "qty": 1,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "fleur-de-sel",
+     "nom": "fleur de sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "poivre",
+     "nom": "poivre du moulin",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
+   "sansReste": null,
+   "emits": [],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "sauteuse-28",
+    "label": "sauteuse 28 cm",
+    "facteurMax": 1.5
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "panzanella-toscana",
+   "titre": "Panzanella Toscana",
+   "minutes": 20,
+   "portions": 4,
+   "apports": {
+    "proteine": "aucune",
+    "feculent": "pain",
+    "legumes": [
+     "solanacee",
+     "cucurbitacee",
+     "allium"
+    ],
+    "profil": "cru",
+    "origine": "italien"
+   },
+   "ingredients": [
+    {
+     "id": "pain-rassis-ing",
+     "nom": "pain demi-complet au levain un peu rassis",
+     "qty": 350,
+     "unit": "g",
+     "base": true
+    },
+    {
+     "id": "tomates",
+     "nom": "grosses tomates bien goûteuses (idéalement anciennes)",
+     "qty": 4,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "concombre",
+     "nom": "petit concombre Noa",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "olives-noires",
+     "nom": "olives noires",
+     "qty": 16,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "oignon-rouge",
+     "nom": "oignon rouge",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "basilic",
+     "nom": "feuilles de basilic",
+     "qty": 2,
+     "unit": "poignée",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 5,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "vinaigre",
+     "nom": "vinaigre",
+     "qty": 2,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "poivre",
+     "nom": "poivre du moulin",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    }
+   ],
+   "accepts": [
+    {
+     "type": "pain-rassis",
+     "kind": null,
+     "requis": false,
+     "qty": {
+      "amount": 350.0,
+      "unit": "g"
+     },
+     "mere": null
+    }
+   ],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": false,
+   "sansReste": {
+    "minutes": 0,
+    "ingredients": [
+     {
+      "id": "pain-levain",
+      "nom": "pain demi-complet au levain",
+      "qty": 400,
+      "unit": "g"
+     }
+    ]
+   },
+   "emits": [],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "pasta-con-le-sarde",
+   "titre": "Pasta con le sarde à ma façon",
+   "minutes": 20,
+   "portions": 4,
+   "apports": {
+    "proteine": "poisson",
+    "feculent": "pates",
+    "legumes": [
+     "allium"
+    ],
+    "profil": "rapide",
+    "origine": "italien"
+   },
+   "ingredients": [
+    {
+     "id": "pates",
+     "nom": "tagliatelles (blanches ou semi-complètes, blé ou épeautre)",
+     "qty": 350,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "sardines-boite",
+     "nom": "sardines en boîte à l'huile d'olive",
+     "qty": 8,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "oignon",
+     "nom": "oignons",
+     "qty": 2,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "ail",
+     "nom": "ail",
+     "qty": 1,
+     "unit": "gousse",
+     "base": false
+    },
+    {
+     "id": "persil",
+     "nom": "persil plat bien frais",
+     "qty": 0.5,
+     "unit": "bouquet",
+     "base": false
+    },
+    {
+     "id": "fenouil-sauvage",
+     "nom": "tiges et feuilles de fenouil sauvage frais (ou fenouil séché)",
+     "qty": 1,
+     "unit": "poignée",
+     "base": false
+    },
+    {
+     "id": "fromage-rape",
+     "nom": "parmesan râpé",
+     "qty": 100,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 3,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "origan",
+     "nom": "origan séché",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "poivre",
+     "nom": "poivre du moulin",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "pasta-sardes",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "frigo",
+     "congelo": false
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "sauteuse-28",
+    "label": "sauteuse 28 cm",
+    "facteurMax": 1.5
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "petits-pots-creme-glacee",
+   "titre": "Petits pots de crème glacée vanille-fraise",
+   "minutes": 15,
+   "portions": 6,
+   "apports": {
+    "proteine": "aucune",
+    "feculent": "aucun",
+    "legumes": [],
+    "profil": "cru",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "creme-coco",
+     "nom": "crème de coco très froide",
+     "qty": 40,
+     "unit": "cl",
+     "base": false
+    },
+    {
+     "id": "sirop-agave",
+     "nom": "sirop d'agave (crème vanille)",
+     "qty": 5,
+     "unit": "cl",
+     "base": false
+    },
+    {
+     "id": "extrait-vanille",
+     "nom": "extrait de vanille",
+     "qty": 1,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "fraises",
+     "nom": "fraises de saison très parfumées (Mara des Bois)",
+     "qty": 200,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "sirop-agave",
+     "nom": "sirop d'agave (marbrures)",
+     "qty": 50,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "lait-soja-vanille",
+     "nom": "lait de soja-vanille",
+     "qty": 60,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "pots-carton",
+     "nom": "petits pots en carton",
+     "qty": 6,
+     "unit": "pièce",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "gouter"
+   ],
+   "transportable": false,
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "creme-glacee",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "2-repas",
+     "espace": "congelo",
+     "congelo": true
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "poelee-orge-champignons",
+   "titre": "Grande poêlée d'orge aux champignons, jambon fumé et thym frais",
+   "minutes": 35,
+   "portions": 6,
+   "apports": {
+    "proteine": "viande-blanche",
+    "feculent": "orge",
+    "legumes": [
+     "champignon",
+     "allium"
+    ],
+    "profil": "poele",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "orge",
+     "nom": "orge mondé",
+     "qty": 500,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "champignons-paris",
+     "nom": "champignons frais",
+     "qty": 500,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "champignons-conserve",
+     "nom": "champignons en conserve",
+     "qty": 450,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "jambon-cru",
+     "nom": "jambon cru fumé",
+     "qty": 100,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "oignon",
+     "nom": "gros oignon",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "ail",
+     "nom": "ail",
+     "qty": 1,
+     "unit": "gousse",
+     "base": false
+    },
+    {
+     "id": "thym-frais",
+     "nom": "brins de thym frais",
+     "qty": 3,
+     "unit": "brin",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 6,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "poivre",
+     "nom": "poivre",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "poelee-orge",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "congelo",
+     "congelo": true
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "sauteuse-28",
+    "label": "sauteuse 28 cm",
+    "facteurMax": 1.0
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "quiche-faisselle-cebettes",
+   "titre": "Quiche à la faisselle et aux cébettes",
+   "minutes": 55,
+   "portions": 4,
+   "apports": {
+    "proteine": "fromage",
+    "feculent": "pate-brisee",
+    "legumes": [
+     "allium"
+    ],
+    "profil": "four",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "poudre-amande",
+     "nom": "poudre d'amande",
+     "qty": 125,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "farine-complete",
+     "nom": "farine semi-complète de blé ou de grand épeautre",
+     "qty": 250,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 80,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "eau",
+     "nom": "eau",
+     "qty": 80,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "fleur-de-sel",
+     "nom": "fleur de sel",
+     "qty": 7,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "cebette",
+     "nom": "cébettes (oignons tiges nouveaux)",
+     "qty": 2,
+     "unit": "botte",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 2,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "faisselle",
+     "nom": "fromage frais en faisselle",
+     "qty": 500,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "fromage-rape",
+     "nom": "fromage râpé à pâte dure (parmesan, comté, tomme de chèvre ou de brebis)",
+     "qty": 200,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "oeufs",
+     "nom": "œufs",
+     "qty": 2,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "ciboulette",
+     "nom": "ciboulette",
+     "qty": 1,
+     "unit": "petit bouquet",
+     "base": false
+    },
+    {
+     "id": "farine",
+     "nom": "farine (pour lier l'appareil)",
+     "qty": 1,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel (garniture)",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "poivre",
+     "nom": "poivre du moulin",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "quiche-faisselle",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "congelo",
+     "congelo": true
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "sauteuse-28",
+    "label": "sauteuse 28 cm",
+    "facteurMax": 1.5
+   },
+   "gainChainage": 0,
    "cuisinable": true
   },
   {
@@ -1397,14 +4139,859 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [
     {
      "type": "ratatouille",
      "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "congelo",
      "congelo": true
     }
    ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "sauteuse-28",
+    "label": "sauteuse 28 cm",
+    "facteurMax": 1.5
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "reste-de-la-veille",
+   "titre": "Reste réchauffé",
+   "minutes": 10,
+   "portions": 2.5,
+   "apports": {
+    "proteine": "aucune",
+    "feculent": "aucun",
+    "legumes": [],
+    "profil": "reste"
+   },
+   "ingredients": [],
+   "accepts": [
+    {
+     "type": null,
+     "kind": "reste-plat",
+     "requis": true,
+     "qty": null,
+     "mere": null
+    }
+   ],
+   "creneaux": [
+    "dejeuner"
+   ],
+   "transportable": true,
+   "sansReste": null,
+   "emits": [],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "rillettes-poisson-echalote",
+   "titre": "Rillettes de poisson faciles à l'échalote",
+   "minutes": 30,
+   "portions": 4,
+   "apports": {
+    "proteine": "poisson",
+    "feculent": "aucun",
+    "legumes": [
+     "allium",
+     "racine"
+    ],
+    "profil": "mijote",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "saumon",
+     "nom": "saumon sauvage frais ou surgelé",
+     "qty": 250,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "echalote",
+     "nom": "échalotes",
+     "qty": 6,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "carottes",
+     "nom": "carotte",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "vin-blanc-sec",
+     "nom": "vin blanc sec (ou eau)",
+     "qty": 10,
+     "unit": "cl",
+     "base": false
+    },
+    {
+     "id": "creme",
+     "nom": "crème fraîche épaisse (ou yaourt de brebis au lait entier)",
+     "qty": 1,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "concentre-tomate",
+     "nom": "double concentré de tomate (facultatif)",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "ciboulette",
+     "nom": "ciboulette",
+     "qty": 0.5,
+     "unit": "bouquet",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 2,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "gouter"
+   ],
+   "transportable": true,
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "rillettes-poisson",
+     "kind": "base",
+     "qty": null,
+     "band": "2-repas",
+     "espace": "frigo",
+     "congelo": false
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "sauteuse-28",
+    "label": "sauteuse 28 cm",
+    "facteurMax": 1.5
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "roti-bouillon-herbes",
+   "titre": "Rôti au bouillon d'herbes printanières",
+   "minutes": 70,
+   "portions": 6,
+   "apports": {
+    "proteine": "viande-blanche",
+    "feculent": "aucun",
+    "legumes": [
+     "racine",
+     "allium",
+     "feuille"
+    ],
+    "profil": "mijote",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "roti-porc",
+     "nom": "rôti de porc",
+     "qty": 1,
+     "unit": "kg",
+     "base": false
+    },
+    {
+     "id": "oignon",
+     "nom": "oignon",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "carottes",
+     "nom": "carottes",
+     "qty": 3,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "celeri-branche",
+     "nom": "branches de céleri bien tendres",
+     "qty": 3,
+     "unit": "côte",
+     "base": false
+    },
+    {
+     "id": "poireau",
+     "nom": "poireau",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "herbes-fraiches",
+     "nom": "herbes fraîches, seules ou en mélange (romarin, sarriette, thym, serpolet, hysope, marjolaine, origan, sauge…)",
+     "qty": 1,
+     "unit": "poignée",
+     "base": false
+    },
+    {
+     "id": "persil",
+     "nom": "persil frais",
+     "qty": 1,
+     "unit": "poignée",
+     "base": false
+    },
+    {
+     "id": "eau",
+     "nom": "eau",
+     "qty": 2,
+     "unit": "l",
+     "base": false
+    },
+    {
+     "id": "clous-girofle",
+     "nom": "clous de girofle",
+     "qty": 3,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "laurier",
+     "nom": "feuille de laurier",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "gros-sel",
+     "nom": "gros sel",
+     "qty": 2,
+     "unit": "c. à s.",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "bouillon-herbes",
+     "kind": "base",
+     "qty": {
+      "amount": 1500.0,
+      "unit": "ml"
+     },
+     "band": "2-repas",
+     "espace": "congelo",
+     "congelo": true
+    },
+    {
+     "type": "roti-froid",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "2-repas",
+     "espace": "congelo",
+     "congelo": true
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "cocotte-7.5l",
+    "label": "cocotte 7,5 L",
+    "facteurMax": 2.0
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "salade-pois-chiches-oeufs-mollets",
+   "titre": "Salade de pois chiches aux œufs mollets et herbes sauvages",
+   "minutes": 20,
+   "portions": 6,
+   "apports": {
+    "proteine": "legumineuse",
+    "feculent": "legumineuse",
+    "legumes": [
+     "feuille",
+     "allium"
+    ],
+    "profil": "cru",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "pois-chiches-cuits-ing",
+     "nom": "pois chiches cuits",
+     "qty": 500,
+     "unit": "g",
+     "base": true
+    },
+    {
+     "id": "oeufs",
+     "nom": "œufs ultra frais",
+     "qty": 6,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "pousses-sauvages",
+     "nom": "jeunes pousses sauvages (pâquerette, pissenlit, plantain…), seules ou en mélange",
+     "qty": 2,
+     "unit": "grosse poignée",
+     "base": false
+    },
+    {
+     "id": "ail-des-ours",
+     "nom": "ail des ours et/ou cébette",
+     "qty": 1,
+     "unit": "gousse",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 6,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "vinaigre-balsamique",
+     "nom": "vinaigre balsamique",
+     "qty": 3,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "poivre",
+     "nom": "poivre du moulin",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    }
+   ],
+   "accepts": [
+    {
+     "type": "pois-chiches-cuits",
+     "kind": null,
+     "requis": false,
+     "qty": {
+      "amount": 500.0,
+      "unit": "g"
+     },
+     "mere": null
+    }
+   ],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": false,
+   "sansReste": {
+    "minutes": 5,
+    "ingredients": [
+     {
+      "id": "pois-chiches",
+      "nom": "pois chiches cuits (bocal)",
+      "qty": 1000,
+      "unit": "g"
+     }
+    ]
+   },
+   "emits": [
+    {
+     "type": "jus-pois-chiches",
+     "kind": "base",
+     "qty": {
+      "amount": 15.0,
+      "unit": "cl"
+     },
+     "band": "1-repas",
+     "espace": "congelo",
+     "congelo": true
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "sauteuse-28",
+    "label": "sauteuse 28 cm",
+    "facteurMax": 1.0
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "samoussas-legumes-rotis",
+   "titre": "Samoussas végétariens aux légumes rôtis",
+   "minutes": 112,
+   "portions": 8,
+   "apports": {
+    "proteine": "fromage",
+    "feculent": "pate-brisee",
+    "legumes": [
+     "cucurbitacee",
+     "solanacee",
+     "allium"
+    ],
+    "profil": "four",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "feuilles-brick",
+     "nom": "feuilles de brick rondes",
+     "qty": 24,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "courgettes",
+     "nom": "courgettes de taille moyenne",
+     "qty": 2,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "aubergine",
+     "nom": "grosse aubergine",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "poivron",
+     "nom": "gros poivron",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "tomates-roma",
+     "nom": "tomates Roma",
+     "qty": 3,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "ail",
+     "nom": "ail",
+     "qty": 3,
+     "unit": "gousse",
+     "base": false
+    },
+    {
+     "id": "basilic",
+     "nom": "feuilles de basilic",
+     "qty": 15,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "chevre-buche",
+     "nom": "bûche de chèvre",
+     "qty": 70,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "fromage-rape",
+     "nom": "tomme de brebis râpée (ou gruyère)",
+     "qty": 70,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "parmesan",
+     "nom": "parmesan",
+     "qty": 50,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "farine",
+     "nom": "farine",
+     "qty": 1,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 5,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "poivre",
+     "nom": "poivre",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "samoussas",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "3-repas",
+     "espace": "congelo",
+     "congelo": true
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "soupe-orge-petits-pois",
+   "titre": "Soupe d'orge et de petits pois",
+   "minutes": 25,
+   "portions": 6,
+   "apports": {
+    "proteine": "aucune",
+    "feculent": "orge",
+    "legumes": [
+     "legumineuse",
+     "allium"
+    ],
+    "profil": "soupe",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "bouillon-herbes-ing",
+     "nom": "bouillon de cuisson du rôti",
+     "qty": 1500,
+     "unit": "ml",
+     "base": true
+    },
+    {
+     "id": "orge",
+     "nom": "orge mondé ou perlé",
+     "qty": 200,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "petits-pois",
+     "nom": "petits pois frais écossés (ou surgelés)",
+     "qty": 200,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "ciboulette",
+     "nom": "ciboulette (facultatif)",
+     "qty": 1,
+     "unit": "petit bouquet",
+     "base": false
+    },
+    {
+     "id": "eau",
+     "nom": "eau",
+     "qty": 300,
+     "unit": "ml",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    }
+   ],
+   "accepts": [
+    {
+     "type": "bouillon-herbes",
+     "kind": null,
+     "requis": false,
+     "qty": {
+      "amount": 1500.0,
+      "unit": "ml"
+     },
+     "mere": "roti-bouillon-herbes"
+    }
+   ],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
+   "sansReste": {
+    "minutes": 0,
+    "ingredients": [
+     {
+      "id": "bouillon-legumes",
+      "nom": "bouillon de légumes",
+      "qty": 2,
+      "unit": "cube"
+     }
+    ]
+   },
+   "emits": [
+    {
+     "type": "soupe-orge",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "congelo",
+     "congelo": true
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "cocotte-7.5l",
+    "label": "cocotte 7,5 L",
+    "facteurMax": 2.0
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "tarte-aux-fraises",
+   "titre": "Tarte aux fraises « de compet' »",
+   "minutes": 50,
+   "portions": 8,
+   "apports": {
+    "proteine": "aucune",
+    "feculent": "pate-brisee",
+    "legumes": [],
+    "profil": "four",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "farine-complete",
+     "nom": "farine T110 de blé ou de grand épeautre",
+     "qty": 180,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "beurre",
+     "nom": "beurre mou",
+     "qty": 90,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "petits-suisses",
+     "nom": "petits suisses au lait entier",
+     "qty": 180,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "sucre-roux",
+     "nom": "sucre roux",
+     "qty": 3,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "bonne pincée",
+     "base": false
+    },
+    {
+     "id": "fraises",
+     "nom": "fraises bien sucrées et parfumées",
+     "qty": 350,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "creme-coco",
+     "nom": "crème de coco liquide",
+     "qty": 20,
+     "unit": "cl",
+     "base": false
+    },
+    {
+     "id": "sucre-vanille",
+     "nom": "sucre vanillé",
+     "qty": 3,
+     "unit": "sachet",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "gouter"
+   ],
+   "transportable": false,
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "tarte-fraises",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "2-repas",
+     "espace": "frigo",
+     "congelo": false
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "tarte-tomates-meme",
+   "titre": "Tarte aux tomates fraîches de Mémé",
+   "minutes": 45,
+   "portions": 4,
+   "apports": {
+    "proteine": "fromage",
+    "feculent": "pate-brisee",
+    "legumes": [
+     "solanacee"
+    ],
+    "profil": "four",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "pate-feuilletee",
+     "nom": "pâte feuilletée (aux petits suisses",
+     "qty": 1,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "tomates-roma",
+     "nom": "tomates Roma bien mûres — les autres variétés rendent trop d'eau",
+     "qty": 3,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "fromage-rape",
+     "nom": "gruyère râpé",
+     "qty": 70,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "moutarde",
+     "nom": "moutarde à l'ancienne",
+     "qty": 2,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 2,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "origan",
+     "nom": "origan en poudre",
+     "qty": 2,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "c. à c.",
+     "base": false
+    },
+    {
+     "id": "poivre",
+     "nom": "poivre",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "tarte-tomates",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "frigo",
+     "congelo": false
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
    "cuisinable": true
   },
   {
@@ -1460,17 +5047,193 @@
     }
    ],
    "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
    "sansReste": null,
    "emits": [
     {
      "type": "veloute-courgettes",
      "kind": "reste-plat",
+     "qty": null,
+     "band": "2-repas",
+     "espace": "congelo",
      "congelo": true
     }
    ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "sauteuse-28",
+    "label": "sauteuse 28 cm",
+    "facteurMax": 1.5
+   },
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
+   "id": "veloute-ortie",
+   "titre": "Velouté d'ortie (ou de fanes, ou de jeunes pousses d'épinards)",
+   "minutes": 35,
+   "portions": 4,
+   "apports": {
+    "proteine": "aucune",
+    "feculent": "pommes-de-terre",
+    "legumes": [
+     "feuille",
+     "allium"
+    ],
+    "profil": "soupe",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "pomme-de-terre",
+     "nom": "pommes de terre",
+     "qty": 400,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "oignon",
+     "nom": "oignons",
+     "qty": 2,
+     "unit": "pièce",
+     "base": false
+    },
+    {
+     "id": "orties",
+     "nom": "pointes d'orties (ou fanes de navets ou de radis, ou jeunes pousses d'épinards, ou roquette)",
+     "qty": 200,
+     "unit": "g",
+     "base": false
+    },
+    {
+     "id": "eau",
+     "nom": "eau",
+     "qty": 1.25,
+     "unit": "l",
+     "base": false
+    },
+    {
+     "id": "ail",
+     "nom": "ail frais",
+     "qty": 2,
+     "unit": "gousse",
+     "base": false
+    },
+    {
+     "id": "huile-olive",
+     "nom": "huile d'olive",
+     "qty": 4,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "sel",
+     "nom": "sel",
+     "qty": 1,
+     "unit": "c. à s.",
+     "base": false
+    },
+    {
+     "id": "poivre",
+     "nom": "poivre",
+     "qty": 1,
+     "unit": "pincée",
+     "base": false
+    }
+   ],
+   "accepts": [],
+   "creneaux": [
+    "dejeuner",
+    "diner"
+   ],
+   "transportable": true,
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "veloute-vert",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "congelo",
+     "congelo": true
+    },
+    {
+     "type": "parures-legumes",
+     "kind": "parure",
+     "qty": {
+      "amount": 1.0,
+      "unit": "lot"
+     },
+     "band": "1-repas",
+     "espace": "frigo",
+     "congelo": false
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": {
+    "id": "cocotte-7.5l",
+    "label": "cocotte 7,5 L",
+    "facteurMax": 3.0
+   },
+   "gainChainage": 0,
    "cuisinable": true
   }
  ],
+ "creneaux": {
+  "repas": {
+   "petit-dejeuner": {
+    "label": "petit-déj",
+    "nature": "routine",
+    "minutes": 10
+   },
+   "dejeuner": {
+    "label": "déjeuner",
+    "nature": "choisi",
+    "minutes": 30
+   },
+   "diner": {
+    "label": "dîner",
+    "nature": "choisi",
+    "minutes": 40
+   },
+   "gouter": {
+    "label": "goûter",
+    "nature": "routine",
+    "minutes": 10
+   }
+  },
+  "jours": {
+   "defaut": [
+    "petit-dejeuner",
+    "dejeuner",
+    "diner"
+   ],
+   "exceptions": {
+    "mercredi": [
+     "petit-dejeuner",
+     "dejeuner",
+     "gouter",
+     "diner"
+    ]
+   }
+  },
+  "emporte": {
+   "dejeuner": [
+    "mardi",
+    "jeudi"
+   ]
+  },
+  "equilibre_sur": [
+   "dejeuner",
+   "diner"
+  ]
+ },
  "rayons": {
   "ordre": [
    "primeur",
@@ -1498,28 +5261,69 @@
     "poireau",
     "brocoli",
     "citron",
-    "salade-verte"
+    "salade-verte",
+    "cebette",
+    "ciboulette",
+    "persil",
+    "thym-frais",
+    "vert-de-blette",
+    "pousses-epinards",
+    "petits-pois",
+    "pois-gourmands",
+    "navet-primeur",
+    "navets-roses",
+    "echalote",
+    "champignons-paris",
+    "celeri-branche",
+    "fraises",
+    "peches",
+    "tomates-roma",
+    "concombre",
+    "chou-chinois",
+    "chou-frise",
+    "celeri-rave",
+    "champignons-conserve",
+    "basilic",
+    "orties",
+    "pousses-sauvages",
+    "ail-des-ours",
+    "fenouil-sauvage",
+    "herbes-fraiches"
    ],
    "boucherie": [
     "boeuf-hache",
+    "agneau-collier",
+    "roti-porc",
     "poulet",
     "poulet-filets",
-    "jambon"
+    "jambon",
+    "jambon-cru"
    ],
    "poissonnerie": [
-    "saumon"
+    "saumon",
+    "colin-surgele",
+    "sardines-boite"
    ],
    "crèmerie": [
     "oeufs",
     "fromage-rape",
     "creme",
     "lait",
-    "feta"
+    "feta",
+    "faisselle",
+    "chevre-demi-sec",
+    "chevre-buche",
+    "parmesan",
+    "cantal",
+    "beurre",
+    "petits-suisses"
    ],
    "frais": [
     "tofu-fume",
     "gnocchis",
-    "pate-brisee"
+    "pate-brisee",
+    "pate-feuilletee",
+    "feuilles-brick"
    ],
    "épicerie": [
     "lentilles-seches",
@@ -1533,7 +5337,39 @@
     "mais",
     "lait-coco",
     "tortillas",
-    "pain-de-mie"
+    "pain-de-mie",
+    "farine-complete",
+    "poudre-amande",
+    "poudre-a-lever",
+    "vin-blanc-sec",
+    "flocons-avoine",
+    "kasha",
+    "vinaigre-balsamique",
+    "biscottes",
+    "orge",
+    "creme-coco",
+    "sucre-roux",
+    "sucre-vanille",
+    "chocolat-noir",
+    "huile-coco",
+    "sucre-complet",
+    "sirop-agave",
+    "extrait-vanille",
+    "lait-soja-vanille",
+    "biscuits-cuillere",
+    "sirop-imbibage",
+    "cacao",
+    "pain-levain",
+    "olives-noires",
+    "concentre-tomate",
+    "gousse-vanille",
+    "rhum",
+    "vinaigre",
+    "tahin",
+    "pruneaux",
+    "noix",
+    "caissettes",
+    "pots-carton"
    ]
   },
   "placard": [
@@ -1549,7 +5385,14 @@
    "farine",
    "son-avoine",
    "curry",
-   "moutarde"
+   "moutarde",
+   "fleur-de-sel",
+   "poivre",
+   "clous-girofle",
+   "gros-sel",
+   "origan",
+   "glacons",
+   "eau"
   ]
  },
  "equilibre": {
@@ -1594,10 +5437,13 @@
    "ecoule_congelo": 3,
    "chaine_manquante": -8,
    "hors_budget": -4,
+   "plancher_congelo": 4,
+   "mal_transporte": -6,
    "article_marginal": -0.4
   },
   "congelateur": {
    "portions_par_tiroir": 6,
+   "plancher": 4,
    "reste_ne_compte_pas_dans_les_plafonds": true
   },
   "main": {
@@ -1673,6 +5519,10 @@
    "type": "lentilles-vertes-cuites",
    "kind": "base",
    "qty_band": "2-repas",
+   "qty": {
+    "amount": 400,
+    "unit": "g"
+   },
    "born": "2026-08-06",
    "location": "frigo"
   },
@@ -1680,9 +5530,25 @@
    "type": "sauce-bolognaise",
    "kind": "base",
    "qty_band": "2-repas",
+   "qty": {
+    "amount": 700,
+    "unit": "g"
+   },
    "born": "2026-07-20",
    "location": "congelo",
    "note": "en bocaux — portion d'urgence"
   }
+ ],
+ "provenances": {
+  "placard": "placard",
+  "chaine": "déjà cuisiné cette semaine",
+  "frigo": "déjà au frigo",
+  "courses": "à acheter",
+  "absent": "à cuisiner d'avance"
+ },
+ "horsCourses": [
+  "chaine",
+  "frigo",
+  "absent"
  ]
 }

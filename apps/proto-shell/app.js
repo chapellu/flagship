@@ -48,6 +48,7 @@ function rendreA() {
         <h2>Le foyer</h2><br>
         <div class="carte"><span class="titre">${foyer.lieu}</span><div class="muted">${foyer.mangeurs}</div></div>
         <div class="carte"><span class="titre">Équipement cuisine</span><div class="muted">${foyer.equipement.join(" · ")}</div></div>
+        <div id="foyer-cuisine"></div>
         <div class="carte"><span class="titre">Facettes installées</span>
           ${foyer.facettes.map(f => `<div>${f.emoji} ${f.nom} <span class="muted">(${f.version})</span></div>`).join("")}
           <div class="muted">Sorties découplées — le shell ne connaît que la navigation.</div>
@@ -70,6 +71,11 @@ function rendreA() {
     </div>`;
   app.querySelectorAll("[data-onglet]").forEach(b =>
     b.addEventListener("click", () => { etat.ongletA = b.dataset.onglet; rendreA(); }));
+  // Ce que la cuisine peut TENIR — récipients et contenants — vient du même
+  // export que les plats, jamais d'une liste écrite à la main ici.
+  const fc = app.querySelector("#foyer-cuisine");
+  if (fc) import("./semaine-vue.js").then(m => m.encartCuisine(fc)).catch(() => {});
+
   const hote = app.querySelector("#sem-hote");
   if (hote) {
     // Le message d'erreur est affiché : sans navigateur sur la VM, c'est la
@@ -172,6 +178,9 @@ function aller(delta) {
 }
 function rendre() {
   const v = varianteCourante();
+  // Le CSS a besoin de connaître la variante : seule A a une barre d'onglets
+  // fixe sous laquelle le commutateur ne doit pas se poser.
+  document.body.dataset.variant = v.cle;
   document.getElementById("sw-label").textContent = `${v.cle} — ${v.nom}`;
   v.rendre();
 }
