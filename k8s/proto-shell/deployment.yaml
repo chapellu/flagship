@@ -25,7 +25,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: nginx
-          image: ghcr.io/chapellu/proto-shell:094acbd5b749e13dccf8b9108796853952dea5a6
+          image: ghcr.io/chapellu/proto-shell:9862d8ca9a466ab1e607bace7631f7c0b9060c11
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
