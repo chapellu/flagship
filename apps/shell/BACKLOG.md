@@ -41,7 +41,7 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
 
 ### Fondations
 
-- [ ] **T1 — Squelette Vite + React + TS.** `apps/shell` : Vite 5, React 18, TS
+- [x] **T1 — Squelette Vite + React + TS.** `apps/shell` : Vite 5, React 18, TS
       en `strict`, Vitest, scripts npm (`dev`, `build`, `test`, `typecheck`).
       Un `App.tsx` qui rend « Le comptoir » et rien d'autre. Critère : `npm run
       build` et `npm run typecheck` passent.
