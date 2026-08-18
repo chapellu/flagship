@@ -19,6 +19,7 @@ ou la barre flottante en bas d'écran (flèches ← → au clavier aussi) :
 | `A` | Facettes | Shell à onglets classique ; chaque facette est un *lieu*. Jardin = tableau de bord (quêtes de la semaine, puis les bacs). |
 | `B` | Terrasse | Le plan spatial de la terrasse EST l'accueil ; tout part d'un bac touché (bottom sheet). La cuisine n'existe que comme bannière quand un flag stock arrive. |
 | `C` | Journal | Un flux chronologique unique mélange les deux facettes ; les facettes sont des *filtres*, pas des lieux. Le lien récolte → « vu, disponible » → dîner est le fil conducteur. |
+| `D` | Comptoir | La direction 1 du canevas Claude Design, transcrite sur le vrai modèle. La facette se lit en quatre vues courtes (aujourd'hui, la semaine, à prévoir, poser un plat) et les trois chiffres restent épinglés dans celle où l'on choisit. Coquille propre : cockpit, facettes, barre du bas. |
 
 ## Ce que l'onglet Cuisine montre
 
@@ -40,6 +41,27 @@ absence produisait un mensonge à l'écran :
 | **En stock** | le stock n'était qu'un compteur ; il se détaille, avec ce que la semaine y prend et ce qu'il en reste |
 | **Rentrer les courses** | cocher, c'est dans le magasin ; rentrer, c'est à la maison. Et la case cochée ne s'efface plus au premier re-rendu |
 | 🥡 **Gamelles** | on ne cuisine pas une lunchbox le matin même : le dîner de la veille doit être cuisiné plus grand |
+
+## La variante D, et ce qu'elle a coûté
+
+`comptoir.js` + `organic.css` transcrivent `Direction 1 - Le comptoir.dc.html`
+(projet Claude Design « Application mobile ») en vanilla, posé sur `semaine.js`.
+Trois écarts, tous documentés en tête de `comptoir.js` :
+
+- **les euros n'existent pas** dans `cuisine-data.json` — aucun prix au
+  catalogue. Le cadran des trois chiffres garde sa forme et compte ce que le
+  modèle sait : articles, heures, lots ;
+- **les quantités par étape non plus** : le modèle tient les ingrédients d'un
+  plat, pas leur répartition dans les gestes. Le mode guidé montre l'étape
+  seule, la liste complète reste au bouton ;
+- **l'heure du repas** est posée en dur (`HEURE`) : la direction s'appuie
+  dessus (compte à rebours, rappel), le foyer ne la porte pas encore.
+
+Et un résultat, mesuré : poser les quatorze créneaux d'un coup prend **13,7 s**
+sur une machine de bureau, parce que `offre()` rejoue `calculer()` pour chacun
+des 51 plats candidats. La semaine se remplit donc sous les yeux, un créneau à
+la fois. Ce coût est la principale chose que ce proto a apprise — et il ne se
+répare pas ici.
 
 ## Règles du prototype
 

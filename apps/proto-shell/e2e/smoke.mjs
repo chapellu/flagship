@@ -15,11 +15,21 @@ const check = (nom, ok, detail = "") => {
   console.log(`  ${ok ? "✓" : "✗"} ${nom}${detail ? " — " + detail : ""}`);
 };
 
-for (const v of ["A", "B", "C"]) {
+for (const v of ["A", "B", "C", "D"]) {
   const p = await b.newPage({ viewport: { width: 390, height: 844 } });
   const errs = [];
   p.on("pageerror", e => errs.push(e.message));
-  p.on("console", m => m.type() === "error" && errs.push("console: " + m.text()));
+  // La police du système de design vient de Google Fonts. Une machine de CI sans
+  // sortie réseau la rate, et ce n'est pas un bug du proto : on ne compte que
+  // les erreurs qui viennent de notre code.
+  const reseauTiers = u => /fonts\.(googleapis|gstatic)\.com/.test(u || "");
+  p.on("requestfailed", r => reseauTiers(r.url()) || errs.push("requête: " + r.url()));
+  p.on("console", m => {
+    if (m.type() !== "error") return;
+    if (reseauTiers(m.location()?.url)) return;
+    if (/Failed to load resource/.test(m.text())) return;  // détaillé par requestfailed
+    errs.push("console: " + m.text());
+  });
   await p.goto(`${BASE}/?variant=${v}`, { waitUntil: "networkidle" });
   console.log(`\nvariante ${v}`);
 
@@ -201,6 +211,51 @@ for (const v of ["A", "B", "C"]) {
     // `innerText` rend le texte VU : le titre passe en capitales par la CSS.
     check("une course rentrée se retrouve en stock",
       (await p.locator(".sem-stock").innerText()).toLowerCase().includes("rentré des courses"));
+  }
+
+  if (v === "D") {
+    // La semaine se pose créneau par créneau (voir preRemplir) : on attend la
+    // fin du remplissage avant de juger quoi que ce soit.
+    await p.waitForFunction(() => !document.querySelector(".co-pose"), null, { timeout: 90000 });
+
+    // La coquille : la barre du bas est la seule chose qui ne change jamais.
+    check("la barre du bas porte les trois facettes", await p.locator(".co-barre button").count() === 3);
+    check("la sous-nav cuisine porte quatre vues", await p.locator(".co-sousnav button").count() === 4);
+
+    // Les quatorze créneaux, deux par jour, sont posés.
+    await p.click('[data-ecran="W"]');
+    await p.waitForTimeout(200);
+    check("14 créneaux dans la semaine", await p.locator(".co-slot").count() === 14);
+    const vides = await p.locator(".co-slot .nom.attente").count();
+    check("la semaine arrive posée", vides === 0, `${vides} créneau(x) vide(s)`);
+
+    // La plomberie ne s'écrit qu'au doigt : on touche, la phrase apparaît.
+    await p.locator(".co-slot").first().click();
+    await p.waitForTimeout(150);
+    check("toucher un créneau montre le lien", await p.locator(".co-slot .detail").count() === 1);
+
+    // Les deux plafonds par espace vivent dans le stock, à deux gestes.
+    await p.click(".co-chiffres");
+    await p.waitForTimeout(200);
+    check("le stock porte les trois espaces", await p.locator(".co-espace").count() === 3);
+    check("le stock détaille ses lots", await p.locator(".co-lot").count() > 0);
+
+    // Le mode guidé : une étape par écran, prise du vrai plat.
+    await p.click('[data-ecran="A"]');
+    await p.waitForTimeout(200);
+    await p.locator("[data-cuisine]").first().click();
+    await p.waitForTimeout(250);
+    check("le mode guidé découpe la recette", await p.locator(".co-segments i").count() > 1);
+    check("l'étape porte un geste", (await p.locator(".co-etape .geste").innerText()).length > 5);
+
+    // Le commutateur du prototype ne doit pas recouvrir la barre du comptoir.
+    for (const nom of ["Cockpit", "Cuisine", "Jardin"]) {
+      const bb = await p.locator(`.co-barre button:has-text("${nom}")`).boundingBox();
+      const libre = await p.evaluate(([x, y]) =>
+        !!document.elementFromPoint(x, y)?.closest(".co-barre button"),
+        [bb.x + bb.width / 2, bb.y + bb.height / 2]);
+      check(`tap au centre de ${nom}`, libre);
+    }
   }
 
   check("aucune erreur JS", errs.length === 0, errs.join(" | "));

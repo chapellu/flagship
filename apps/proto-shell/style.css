@@ -37,6 +37,13 @@ h1 { font-size: 1.3rem; } h2 { font-size: 1.05rem; } h3 { font-size: 0.95rem; }
 body[data-variant="A"] #switcher {
   bottom: calc(68px + env(safe-area-inset-bottom));
 }
+/* Même raison pour D : « Le comptoir » a sa propre barre de navigation en bas,
+   plus haute (52 px de cible + rembourrage). */
+body[data-variant="D"] #switcher {
+  bottom: calc(84px + env(safe-area-inset-bottom));
+}
+/* Le comptoir occupe tout l'écran : ni marge ni fond hérités de style.css. */
+body[data-variant="D"] #app { max-width: 430px; }
 
 /* ---------------- variante A — Facettes (onglets) ---------------- */
 .va { padding-bottom: 120px; }

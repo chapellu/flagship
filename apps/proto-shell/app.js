@@ -7,6 +7,7 @@ const VARIANTES = [
   { cle: "A", nom: "Facettes", rendre: rendreA },
   { cle: "B", nom: "Terrasse", rendre: rendreB },
   { cle: "C", nom: "Journal", rendre: rendreC },
+  { cle: "D", nom: "Comptoir", rendre: rendreD },
 ];
 
 // État en mémoire uniquement (règle du prototype : pas de persistance).
@@ -161,6 +162,27 @@ function rendreC() {
     </div>`;
   app.querySelectorAll("[data-filtre]").forEach(b =>
     b.addEventListener("click", () => { etat.filtreC = b.dataset.filtre; rendreC(); }));
+}
+
+/* ------- variante D — « Le comptoir » (direction Claude Design) -------
+   La seule variante qui ne se dessine pas ici : elle porte sa propre coquille
+   (cockpit, facettes, barre du bas) et son propre système de design. app.js ne
+   lui prête que le conteneur. */
+function rendreD() {
+  // La feuille du système de design (et la police Google qu'elle importe) ne se
+  // charge qu'ici : liée depuis index.html, elle faisait payer une requête
+  // externe aux variantes A, B et C, qui n'en utilisent pas une ligne.
+  if (!document.getElementById("co-css")) {
+    const l = document.createElement("link");
+    l.id = "co-css"; l.rel = "stylesheet"; l.href = "organic.css";
+    document.head.appendChild(l);
+  }
+  app.innerHTML = '<div class="co" id="co-hote"><div style="padding:24px">chargement…</div></div>';
+  const hote = app.querySelector("#co-hote");
+  import("./comptoir.js")
+    .then(m => m.monter(hote))
+    .catch(e => { hote.innerHTML =
+      `<div style="padding:24px"><b>Erreur de chargement</b><br>${e}</div>`; });
 }
 
 /* ---------------- commutateur ---------------- */
