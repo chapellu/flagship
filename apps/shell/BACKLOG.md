@@ -45,7 +45,7 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
       en `strict`, Vitest, scripts npm (`dev`, `build`, `test`, `typecheck`).
       Un `App.tsx` qui rend « Le comptoir » et rien d'autre. Critère : `npm run
       build` et `npm run typecheck` passent.
-- [ ] **T2 — Le système de design Organic.** `src/styles/organic.css` : les
+- [x] **T2 — Le système de design Organic.** `src/styles/organic.css` : les
       tokens et les primitives (`.btn`, `.card`, `.tag`, la coquille) portés
       depuis `apps/proto-shell/organic.css`, cette fois en `:root` — l'app n'a
       qu'un seul système de design, le scopage sur `.co` n'avait de raison
