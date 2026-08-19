@@ -75,10 +75,14 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
       getters, les gamelles, la couverture, le score de chaque carte sur chaque
       créneau libre, la main tirée sur trois repioches, et l'enseigne des
       51 plats.
-- [ ] **T6 — Dexie.** `src/db/` : schéma versionné (`semaine`, `parts`,
-      `courses`, `stock`, `foyer`), couche d'accès, hooks `useLiveQuery`.
-      Une migration, même vide, dès la v1 : la première migration écrite après
-      coup est toujours celle qui perd des données.
+- [x] **T6 — Dexie.** `src/db/` : schéma versionné, couche d'accès, hooks
+      `useLiveQuery`. Quatre tables : `creneaux` (le plat ET les parts, qui sont
+      deux décisions sur le même créneau), `courses`, `stock`, `reglages`.
+      **La clé d'un créneau est (jour, repas), jamais son index** — sinon une
+      semaine qui roule déplace les plats de trois jours sans que rien
+      n'échoue. Pas de migration vide en v1 : elle ne s'exécuterait sur aucune
+      base et on la croirait testée. À la place, un test épingle la version et
+      les tables, et rougira le jour où une table s'ajoute sans migration.
 - [ ] **T7 — La coquille et le routeur.** Barre du bas (cockpit · cuisine ·
       jardin), sous-nav cuisine, une route par écran — un écran doit être
       atteignable par URL, sinon il n'est pas testable au téléphone.
@@ -95,7 +99,8 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
 - [ ] **T12 — En cuisine.** Mode guidé, une étape par écran, chauffe et
       minuteur, la liste d'ingrédients à un bouton.
 - [ ] **T13 — Courses.** Deux modes (magasin / maison), le hors-liste. Le
-      premier écran qui prouve la persistance : cocher, fermer, rouvrir.
+      premier écran de la direction qui vive sur la persistance : cocher,
+      fermer, rouvrir. (La sonde de T6 l'a déjà prouvée hors direction.)
 - [ ] **T14 — Les parts.** Deux cibles de 64 px, pas de 0,5, l'aperçu de la
       semaine.
 - [ ] **T15 — L'inventaire.** Les catégories et leur fiabilité, les deux
