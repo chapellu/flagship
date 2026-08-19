@@ -55,10 +55,13 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
       `Ingredient`, `Emit`, `Accept`, `Foyer`, `Creneau`, `Stock`… dérivés de
       `cuisine-data.json`. Plus un chargeur qui valide à l'entrée : un export
       qui a dérivé doit échouer bruyamment, pas produire un écran faux.
-- [ ] **T4 — Le cœur du modèle.** Port TS de `Stock`, `prelever`, `provenance`,
+- [x] **T4 — Le cœur du modèle.** Port TS de `Stock`, `prelever`, `provenance`,
       `facteur`, `calculer`, `bilanStockage`. Tests unitaires repris des
       contrôles du smoke : le bocal qui se vide au lieu de se dupliquer, la base
       absente qui ne part pas aux courses, les deux plafonds par espace.
+      Plus `npm run parite`, qui joue les mêmes semaines dans les deux modèles
+      et compare tout ce que `calculer` produit — un port se prouve par
+      l'égalité, pas par ses propres tests.
 - [ ] **T5 — Le reste du modèle.** `offresSurproduction`, `gamelles`,
       `couverture`, `categorie`, `offre`, `main`, `articles`, `parRayon`,
       `minutesParJour`. Tests sur le scoring — c'est lui qui décide ce que
@@ -89,6 +92,16 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
 - [ ] **T15 — L'inventaire.** Les catégories et leur fiabilité, les deux
       plafonds par espace, les lots.
 - [ ] **T16 — Le cockpit.** La journée d'abord, les cartes de facette ensuite.
+
+### Trouvé en portant, à décider
+
+- [ ] **Un lot congelable posé cette semaine vieillit au frigo.** `calculer`
+      range TOUTE sortie avec `location: "frigo"` — le lot n'est pas encore AU
+      congélo, il refroidit — mais du coup il sort de la fenêtre de fraîcheur au
+      bout de `fenetreFrigo` jours, alors que son `espace` dit congélo. Un plat
+      très en aval ne le trouve donc plus. Épinglé par un test dans
+      `calcul.test.ts` : le changer sera une décision, pas un effet de bord.
+      C'est une question pour le modèle Python, pas pour l'app.
 
 ### Le reste
 
