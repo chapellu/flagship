@@ -17,6 +17,17 @@ export function cleDuCreneau(jeu: Jeu, i: number): string | null {
   return cleCreneau(jourISO(j.date), c.repas);
 }
 
+/** L'index, dans la semaine affichée, du créneau que l'URL désigne. `-1` quand
+ *  il tombe hors de la fenêtre — un lien d'hier rouvert aujourd'hui. C'est la
+ *  traduction inverse de `cleDuCreneau`, et elle vit ici pour la même raison :
+ *  un seul endroit où les deux façons de nommer un créneau se rencontrent. */
+export function indexDuCreneau(jeu: Jeu, jour: string, repas: string): number {
+  return jeu.creneaux.findIndex((c, i) => {
+    void c;
+    return cleDuCreneau(jeu, i) === cleCreneau(jour, repas);
+  });
+}
+
 /** Les décisions qui concernent la semaine affichée, par clé. */
 export async function lireSemaine(base: Base, jeu: Jeu): Promise<Map<string, DecisionCreneau>> {
   const jours = jeu.jours.map((j) => jourISO(j.date));

@@ -83,9 +83,16 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
       n'échoue. Pas de migration vide en v1 : elle ne s'exécuterait sur aucune
       base et on la croirait testée. À la place, un test épingle la version et
       les tables, et rougira le jour où une table s'ajoute sans migration.
-- [ ] **T7 — La coquille et le routeur.** Barre du bas (cockpit · cuisine ·
-      jardin), sous-nav cuisine, une route par écran — un écran doit être
-      atteignable par URL, sinon il n'est pas testable au téléphone.
+- [x] **T7 — La coquille et le routeur.** Barre du bas (cockpit · cuisine ·
+      jardin), sous-nav cuisine, une route par écran. Routeur écrit sur place
+      plutôt qu'importé : la navigation est un ensemble FINI et plat, et une
+      union discriminée fait vérifier par le compilateur qu'aucun écran n'est
+      oublié — ce qu'aucune chaîne `/cuisine/:vue` ne fera. Hash et non chemin :
+      un lien profond marche sans que le serveur en sache rien, y compris hors
+      ligne. **Un créneau se nomme (jour, repas) dans l'URL aussi**, pour la
+      même raison qu'en base. Les dix écrans existent en carton daté de leur
+      ticket : une route qui mène au blanc ne se distingue pas d'une route
+      cassée.
 
 ### Les écrans (portés de `comptoir.js`, un par ticket)
 
