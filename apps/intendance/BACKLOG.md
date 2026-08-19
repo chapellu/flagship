@@ -1,4 +1,10 @@
-# shell — le vrai squelette
+# intendance — le vrai squelette
+
+> **intendance** *n.f.* — la conduite d'une maison : ses stocks, ses plafonds,
+> son approvisionnement, son calendrier. C'est ce que le modèle calcule ; le mot
+> ne se réduit ni au jardin ni à la cuisine, et laisse la place aux facettes qui
+> viendront. Dans le code, la coquille reste « la coquille » : le nom de l'app
+> et le nom de son châssis n'ont pas à être le même mot.
 
 **Ceci n'est pas un prototype.** `apps/proto-shell` répondait à une question de
 design et sera supprimé ; ceci est l'app, sur la stack décidée par
@@ -41,7 +47,7 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
 
 ### Fondations
 
-- [x] **T1 — Squelette Vite + React + TS.** `apps/shell` : Vite 5, React 18, TS
+- [x] **T1 — Squelette Vite + React + TS.** `apps/intendance` : Vite 5, React 18, TS
       en `strict`, Vitest, scripts npm (`dev`, `build`, `test`, `typecheck`).
       Un `App.tsx` qui rend « Le comptoir » et rien d'autre. Critère : `npm run
       build` et `npm run typecheck` passent.
@@ -109,7 +115,7 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
       quatorze créneaux sous 1 s sur un téléphone. Le proto y mettait 13,7 s.
 - [ ] **T18 — PWA.** Manifeste, service worker, installable, utilisable hors
       ligne — l'app se juge sur l'écran d'accueil d'un iPhone, pas dans Safari.
-- [ ] **T19 — Déploiement.** Dockerfile, `k8s/shell`, workflow d'image, rrset
+- [ ] **T19 — Déploiement.** Dockerfile, `k8s/intendance`, workflow d'image, rrset
       DNS, listener Gateway. À côté de `proto-shell`, pas à sa place.
 - [ ] **T20 — E2E.** Playwright sur les parcours qui comptent : poser une
       semaine, la retrouver après rechargement, cocher des courses et les
