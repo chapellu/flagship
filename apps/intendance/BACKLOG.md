@@ -101,8 +101,17 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
       pour 666 px de vue. Le geste et le rappel sont des décisions et sont
       persistés, sous une clé qui porte le JOUR — « sortir la sauce du congélo »
       est fait pour aujourd'hui, pas pour toujours.
-- [ ] **T9 — La semaine.** Sept journées, midi/soir, le point sauge du
-      chaînage, la plomberie au doigt.
+- [x] **T9 — La semaine.** Sept journées, midi/soir, le point sauge du
+      chaînage, la plomberie au doigt. La case ouverte se désigne par
+      (jour, repas) comme tout le reste — c'est un regard et pas une décision,
+      donc rien en base, mais une fenêtre qui glisse à minuit déplierait la
+      carte du voisin. Trois écarts assumés au proto, chacun parce que le proto
+      avait tort : les trois chiffres sont NOMMÉS (« 22 articles », pas « 22 »),
+      la routine se dit une fois pour la semaine au lieu de sept fois, et
+      « Poser un plat » vise le premier créneau libre au lieu du dernier
+      touché. Corrigé au passage : la coquille avait `min-height: 100dvh` —
+      le premier écran plus long qu'un téléphone emportait la barre du bas
+      hors de l'écran.
 - [ ] **T10 — À prévoir.** Déjà enchaîné / offres ouvertes, avec leurs réserves.
 - [ ] **T11 — Poser un plat.** Les trois chiffres épinglés, les cartes
       consomme/produit. L'écran central de la direction.

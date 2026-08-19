@@ -170,8 +170,15 @@ h1, h2, h3, h4 {
    disparaît, et ce qui le remplace est la seule chose qu'il simulait — une
    colonne de la hauteur de l'écran, barre de navigation collée en bas.
    ══════════════════════════════════════════════════════════════════════ */
+/* HAUTEUR FIXE, PAS MINIMUM. Avec `min-height`, la coquille grandit avec son
+   contenu : `.co-corps` reçoit toute la hauteur du contenu, ne défile plus de
+   lui-même, et c'est le document qui défile — emportant la barre du bas hors
+   de l'écran. Ça ne pouvait pas se voir tant qu'aucun écran ne dépassait la
+   hauteur d'un téléphone ; « la semaine » et ses sept journées l'ont montré.
+   `100vh` d'abord pour les navigateurs qui ignorent `dvh`. */
 .coquille {
-  min-height: 100dvh; display: flex; flex-direction: column;
+  height: 100vh; height: 100dvh;
+  display: flex; flex-direction: column;
   padding-top: env(safe-area-inset-top);
 }
 *, *::before, *::after { box-sizing: border-box; }
@@ -283,6 +290,9 @@ button { font-family: var(--font-body); color: inherit; }
   padding: var(--space-2) var(--space-3); color: var(--color-text);
 }
 .co-chiffres .n { font-family: var(--font-heading); font-size: 19px; }
+/* Le proto alignait trois nombres nus. Un nombre sans unité n'est pas une
+   information : on nomme ce qu'on compte, en petit, juste après. */
+.co-chiffres .k { font-size: 11px; font-weight: 700; color: var(--color-neutral-700); }
 .co-chiffres .lien { font-size: 12px; color: var(--color-accent-700); font-weight: 700; }
 .co-jour { margin-bottom: var(--space-3); }
 .co-jour .tete {
@@ -301,6 +311,14 @@ button { font-family: var(--font-body); color: inherit; }
   flex: 1; min-width: 0; text-align: left; cursor: pointer; border: 0;
   background: var(--color-surface); border-radius: var(--radius-md);
   padding: var(--space-2); color: var(--color-text);
+}
+/* La carte est un DIV, pas un bouton : son détail contient des liens et un
+   bouton, et un élément cliquable dans un élément cliquable n'est ni du HTML
+   valide ni quelque chose qu'un lecteur d'écran sait annoncer. Le résumé — la
+   partie qu'on touche pour déplier — est le bouton. */
+.co-slot .resume {
+  display: block; width: 100%; text-align: left; padding: 0;
+  border: 0; background: transparent; color: inherit; cursor: pointer;
 }
 .co-slot.saute { background: var(--color-neutral-200); }
 .co-slot.ouvert { box-shadow: inset 0 0 0 2px var(--color-accent-2-500); }
@@ -324,8 +342,10 @@ button { font-family: var(--font-body); color: inherit; }
 .co-slot .detail .recoit { color: var(--color-neutral-800); }
 .co-slot .detail .donne { color: var(--color-accent-2-900); }
 .co-slot .detail .actions { display: flex; gap: var(--space-1); margin-top: 4px; flex-wrap: wrap; }
-.co-slot .detail .actions span {
+.co-slot .detail .actions a,
+.co-slot .detail .actions button {
   font-size: 11.5px; font-weight: 700; border-radius: 999px; padding: 4px 10px;
+  border: 0; cursor: pointer; text-decoration: none;
   background: var(--color-bg); color: var(--color-accent-800);
 }
 .co-routine { font-size: 11px; color: var(--color-neutral-600); padding: 4px var(--space-1) 0; }

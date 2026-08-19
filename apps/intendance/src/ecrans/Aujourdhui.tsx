@@ -21,6 +21,7 @@ import { gamelles, offresSurproduction } from "../model/offres";
 import { chemin } from "../nav/routes";
 import { Corps } from "../ui/Coquille";
 import { duree, fmt, hhmm } from "../ui/format";
+import { phraseManque } from "../ui/phrases";
 import { Icone } from "../ui/icones";
 
 export function Aujourdhui() {
@@ -112,7 +113,7 @@ function CeSoir({ jeu, calc, i }: { jeu: Jeu; calc: Calcul; i: number }) {
   for (const m of calc.manques.filter((x) => x.i === i))
     sorties.push({
       cle: `manque-${m.acc.type ?? m.acc.kind}`,
-      texte: `il manque ${fmt(m.manque)} ${m.unite ?? ""} de ${m.acc.type ?? m.acc.kind}`,
+      texte: `il ${phraseManque(m)}`,
       manque: true,
     });
 
