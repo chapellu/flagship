@@ -5,7 +5,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
 
     /* `strict` seul laisse passer trois choses que ce code fera tout le temps :
        indexer un tableau de créneaux hors bornes, oublier une branche d'union,

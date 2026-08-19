@@ -51,7 +51,7 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
       qu'un seul système de design, le scopage sur `.co` n'avait de raison
       d'être que la cohabitation. Polices **auto-hébergées** : le proto payait
       une requête Google à chaque chargement, une PWA hors ligne ne le peut pas.
-- [ ] **T3 — Les types du catalogue.** `src/model/types.ts` : `Plat`,
+- [x] **T3 — Les types du catalogue.** `src/model/types.ts` : `Plat`,
       `Ingredient`, `Emit`, `Accept`, `Foyer`, `Creneau`, `Stock`… dérivés de
       `cuisine-data.json`. Plus un chargeur qui valide à l'entrée : un export
       qui a dérivé doit échouer bruyamment, pas produire un écran faux.
