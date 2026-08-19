@@ -96,8 +96,11 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
 
 ### Les écrans (portés de `comptoir.js`, un par ticket)
 
-- [ ] **T8 — Aujourd'hui.** Ce soir, le geste du jour, l'offre en attente,
-      demain. Sans défilement sur un 390 × 844 : c'est la thèse de l'écran.
+- [x] **T8 — Aujourd'hui.** Ce soir, le geste du jour, l'offre en attente,
+      demain. Sans défilement sur un 390 × 844 : mesuré à 666 px de contenu
+      pour 666 px de vue. Le geste et le rappel sont des décisions et sont
+      persistés, sous une clé qui porte le JOUR — « sortir la sauce du congélo »
+      est fait pour aujourd'hui, pas pour toujours.
 - [ ] **T9 — La semaine.** Sept journées, midi/soir, le point sauge du
       chaînage, la plomberie au doigt.
 - [ ] **T10 — À prévoir.** Déjà enchaîné / offres ouvertes, avec leurs réserves.
