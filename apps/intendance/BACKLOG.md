@@ -68,10 +68,13 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
       Plus `npm run parite`, qui joue les mêmes semaines dans les deux modèles
       et compare tout ce que `calculer` produit — un port se prouve par
       l'égalité, pas par ses propres tests.
-- [ ] **T5 — Le reste du modèle.** `offresSurproduction`, `gamelles`,
+- [x] **T5 — Le reste du modèle.** `offresSurproduction`, `gamelles`,
       `couverture`, `categorie`, `offre`, `main`, `articles`, `parRayon`,
       `minutesParJour`. Tests sur le scoring — c'est lui qui décide ce que
-      l'écran propose.
+      l'écran propose. `npm run parite` couvre désormais les offres et leurs
+      getters, les gamelles, la couverture, le score de chaque carte sur chaque
+      créneau libre, la main tirée sur trois repioches, et l'enseigne des
+      51 plats.
 - [ ] **T6 — Dexie.** `src/db/` : schéma versionné (`semaine`, `parts`,
       `courses`, `stock`, `foyer`), couche d'accès, hooks `useLiveQuery`.
       Une migration, même vide, dès la v1 : la première migration écrite après
@@ -100,6 +103,13 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
 - [ ] **T16 — Le cockpit.** La journée d'abord, les cartes de facette ensuite.
 
 ### Trouvé en portant, à décider
+
+- [ ] **Le catalogue configure la main, le code l'ignore.** `equilibre.main`
+      porte `taille: 5`, `cooldown_jours: 10` et `garantir: [express, souche,
+      derive]` ; `main()` code en dur une taille de 4 et les mêmes trois
+      enseignes, et ne lit jamais le cooldown. Le port garde ce comportement,
+      sinon la parité ne voudrait rien dire. Reste à trancher : la
+      configuration a-t-elle raison, ou faut-il la retirer du catalogue ?
 
 - [ ] **Un lot congelable posé cette semaine vieillit au frigo.** `calculer`
       range TOUTE sortie avec `location: "frigo"` — le lot n'est pas encore AU
