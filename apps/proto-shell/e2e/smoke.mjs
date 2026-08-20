@@ -36,10 +36,28 @@ for (const v of ["A", "B", "C"]) {
     await p.click('[data-onglet="cuisine"]');
     await p.waitForSelector(".sem-main .carte", { timeout: 8000 });
 
-    // Trois repas par jour : 7 journées, 14 créneaux choisis, 7 lignes routine.
+    // Trois repas par jour : 7 journées, 14 créneaux choisis, 7 lignes routine,
+    // et 7 desserts optionnels — remplissables, mais jamais des trous.
     check("7 journées", await p.locator(".sem-journee").count() === 7);
-    check("14 créneaux choisis", await p.locator(".sem-slot").count() === 14);
+    check("14 créneaux choisis",
+      await p.locator(".sem-slot:not(.optionnel)").count() === 14);
+    check("7 desserts optionnels", await p.locator(".sem-slot.optionnel").count() === 7);
     check("les routines sont annoncées", await p.locator(".jour-routine").count() === 7);
+
+    // L'ordre porte la sémantique (le chaînage marche les créneaux vers
+    // l'avant), et il se trie sur l'HEURE. Le mercredi est le seul jour à cinq
+    // repas : c'est là que l'ordre de déclaration mentait, en rangeant le
+    // goûter de 16 h après le dîner de 19 h 30.
+    const ordreMercredi = await p.evaluate(async () => {
+      const S = await import("./semaine.js");
+      const data = await fetch("cuisine-data.json").then(r => r.json());
+      const jeu = S.creerJeu(data);
+      const j = jeu.jours.findIndex(x => x.nom === "mercredi");
+      return jeu.creneaux.filter(c => c.jour === j).map(c => c.repas);
+    });
+    check("les créneaux sont triés sur l'heure",
+      ordreMercredi.join(">") === "petit-dejeuner>dejeuner>gouter>diner>dessert",
+      ordreMercredi.join(" > "));
 
     // La thèse du proto : voir le coût PENDANT qu'on choisit. Les apports et la
     // première carte doivent rester au-dessus du pli.
@@ -49,9 +67,13 @@ for (const v of ["A", "B", "C"]) {
     check("1re carte au-dessus du pli", c1.y < 844, `y=${c1.y.toFixed(0)}`);
 
     // Jouer une carte remplit le créneau sélectionné, et rien d'autre.
+    // Mesuré en DELTA, pas en absolu : la semaine ne démarre pas forcément
+    // vide (cf. `AMORCE` dans semaine.js, le dîner du test grandeur nature).
+    const avant = await p.locator(".sem-slot.rempli").count();
     await p.locator(".sem-main .carte").first().click();
     await p.waitForTimeout(300);
-    check("un seul créneau rempli", await p.locator(".sem-slot.rempli").count() === 1);
+    check("un seul créneau rempli de plus",
+      await p.locator(".sem-slot.rempli").count() === avant + 1);
 
     await p.click('[data-vue="courses"]');
     await p.waitForTimeout(300);
@@ -73,7 +95,7 @@ for (const v of ["A", "B", "C"]) {
         auDiner: !!cherche(avec, slot(2, "diner")),
       };
     });
-    check("22 créneaux (21 + goûter)", m.creneaux === 22, `${m.creneaux}`);
+    check("29 créneaux (21 + goûter + 7 desserts)", m.creneaux === 29, `${m.creneaux}`);
     check("sans reste, la carte est pénalisée", m.avant < 0, `score ${m.avant}`);
     check("après un dîner, elle est chaînée et gratuite",
       m.apres?.chaine === true && m.apres?.marginal === 0,

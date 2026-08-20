@@ -168,6 +168,11 @@ function bandeauSemaine(calc) {
         .filter(c => c.jour === ij);
       const choisis = slots.filter(c => c.nature === "choisi");
       const routines = slots.filter(c => c.nature === "routine");
+      // Les créneaux optionnels vivent sur leur propre ligne, sous les repas.
+      // Les mêler aux dîners en ferait des trous à l'œil — trois cases vides
+      // côte à côte se lisent comme trois décisions en retard, or celle-ci
+      // n'en est pas une. Un dessert vide n'est pas un dessert oublié.
+      const optionnels = slots.filter(c => c.nature === "optionnel");
       const m = minutes[ij];
       return `<div class="sem-journee">
         <div class="jour-tete">
@@ -178,6 +183,8 @@ function bandeauSemaine(calc) {
         <div class="jour-slots">
           ${choisis.map(c => creneau(c, calc)).join("")}
         </div>
+        ${optionnels.length ? `<div class="jour-option">${
+          optionnels.map(c => creneau(c, calc)).join("")}</div>` : ""}
         ${routines.length ? `<div class="jour-routine">${
           routines.map(c => c.label).join(" · ")} <em>— routine</em></div>` : ""}
       </div>`;
@@ -195,7 +202,8 @@ function creneau(c, calc) {
   const parts = jeu.parts[c.i] !== jeu.data.foyer.parts
     ? `<b class="parts">${fmtParts(jeu.parts[c.i])} p.</b>` : "";
   return `<button class="sem-slot ${c.i === jeu.slot ? "actif" : ""}
-            ${p ? "rempli" : ""} ${saute ? "saute" : ""}" data-slot="${c.i}">
+            ${p ? "rempli" : ""} ${saute ? "saute" : ""}
+            ${c.nature === "optionnel" ? "optionnel" : ""}" data-slot="${c.i}">
     <span class="lab">${c.label}${c.emporte ? " 🥡" : ""}</span>
     ${saute ? `<span class="t muet">on ne mange pas là</span>
                <span class="vider" data-sauter="${c.i}">×</span>`
