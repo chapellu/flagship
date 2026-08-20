@@ -166,6 +166,20 @@ body[data-variant="A"] #switcher {
 .jour-routine { font-size: .66rem; color: #a9a89e; margin-top: 3px; }
 .jour-routine em { font-style: normal; }
 
+/* Créneau OPTIONNEL. Il doit se voir moins qu'un repas et plus qu'une routine.
+   VIDE, il se réduit à une seule ligne basse : trois cases vides de la taille
+   d'un dîner se lisent comme trois décisions en retard, et un dessert qu'on n'a
+   pas choisi n'est pas un dessert oublié. REMPLI, il redevient une vraie carte,
+   parce que là il y a bien quelque chose à cuisiner. */
+.jour-option { display: flex; margin-top: 4px; }
+.sem-slot.optionnel { border-color: #e6e3d8; }
+.sem-slot.optionnel:not(.rempli) {
+  min-height: 0; padding: 2px 8px; flex-direction: row; align-items: center;
+  gap: 6px; border-style: dotted; opacity: .7; }
+.sem-slot.optionnel:not(.rempli) .lab { font-size: .58rem; color: #b3b1a6; }
+.sem-slot.optionnel:not(.rempli) .vide { font-size: .7rem; color: #c4c2b7; }
+.sem-slot.optionnel.rempli { border-color: var(--cuisine); }
+
 .jour-slots { display: flex; gap: 6px; }
 .sem-slot { flex: 1 1 0; min-width: 0; min-height: 46px; border-radius: 10px;
   background: var(--carte); border: 1.5px dashed #d8d5c9; padding: 4px 7px;

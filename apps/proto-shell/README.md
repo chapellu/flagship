@@ -40,6 +40,39 @@ absence produisait un mensonge à l'écran :
 | **En stock** | le stock n'était qu'un compteur ; il se détaille, avec ce que la semaine y prend et ce qu'il en reste |
 | **Rentrer les courses** | cocher, c'est dans le magasin ; rentrer, c'est à la maison. Et la case cochée ne s'efface plus au premier re-rendu |
 | 🥡 **Gamelles** | on ne cuisine pas une lunchbox le matin même : le dîner de la veille doit être cuisiné plus grand |
+| **Créneau dessert** | les six desserts du catalogue étaient planifiables, achetables et **injoignables** : ils se déclaraient `[gouter]`, or la semaine n'a qu'un goûter et il est `routine`, donc jamais distribué |
+
+### Le dessert, et la troisième nature de créneau
+
+Trouvé en pilotant ce proto en prod, pas en raisonnant. Aucun geste de l'écran ne
+pouvait poser un dessert dans une semaine. La réparation évidente — ajouter
+`diner` aux créneaux d'un dessert — est la mauvaise : il devient candidat plat
+principal et ses `apports` (ni protéine ni légume) tirent la couverture vers le
+bas, ce que `[gouter]` évitait justement. Le plat n'est pas mal rangé, **c'est le
+créneau qui manquait**.
+
+`creneaux.yaml` porte donc un repas `dessert` à 20 h 15, tous les jours, dont la
+nature n'est ni `choisi` ni `routine` :
+
+| nature | vide, c'est… | distribué ? | rempli d'office ? |
+|---|---|---|---|
+| `choisi` | un **trou** dont la semaine se plaint | oui | oui |
+| `routine` | rien — compté et acheté, jamais choisi | non | non |
+| `optionnel` | rien — mais sélectionnable, et il distribue | oui | non |
+
+Un créneau qui **existe sans être un manque**. À l'écran ça se voit : vide, il se
+réduit à une ligne basse pointillée sous les repas ; rempli, il redevient une
+carte pleine. Trois cases vides de la taille d'un dîner se liraient comme trois
+décisions en retard.
+
+**Et ça a exhumé une divergence.** `creerJeu()` triait les créneaux d'une journée
+par ordre de déclaration dans `cuisine-data.json`, là où le Python trie sur
+l'**heure** depuis qu'`anticipation.py` existe. Les deux ne divergeaient que le
+mercredi — le seul jour à goûter, déclaré après le dîner, donc rangé après
+19 h 30 alors qu'il est à 16 h. L'ordre porte la sémantique (le chaînage marche
+les créneaux vers l'avant), donc c'était « hier soir nourrit ce midi » qui était
+faux, pas seulement l'affichage. Ajouter un cinquième repas est ce qui l'a rendu
+visible ; le tri se fait maintenant sur l'heure des deux côtés.
 
 ## Règles du prototype
 

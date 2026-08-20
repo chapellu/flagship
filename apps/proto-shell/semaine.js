@@ -15,9 +15,30 @@
 
 const JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
 
+// TROISIÈME NATURE DE CRÉNEAU (creneaux.yaml). `choisi` fait d'un créneau vide
+// un TROU ; `routine` veut dire « compté mais jamais distribué » ; `optionnel`
+// est la case que ces deux-là laissaient vide — un créneau qui EXISTE sans
+// être un manque quand il est vide, mais qui se sélectionne et distribue des
+// cartes. C'est ce qu'est un dessert : on n'en mange pas tous les soirs, et une
+// semaine sans dessert n'est pas une semaine incomplète.
+export const remplissable = c => c.nature === "choisi" || c.nature === "optionnel";
+
+// AMORCE DU TEST GRANDEUR NATURE DU 21/08/2026 — À RETIRER APRÈS.
+// Le dîner d'invité et son dessert, posés en dur pour ce soir-là. Ancré sur la
+// DATE et non sur un indice de créneau : la fenêtre de 7 jours glisse, donc
+// l'amorce cesse d'elle-même de s'appliquer dès que la date sort de la semaine
+// affichée. Pas de code mort à nettoyer, pas de piège la semaine suivante.
+const AMORCE = {
+  "2026-08-21": {
+    diner: { plat: "tourte-nicoise-courgettes", parts: 3.5 },
+    dessert: { plat: "clafoutis-miel-abricot", parts: 3.5 },
+  },
+};
+const cleJour = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+  + `-${String(d.getDate()).padStart(2, "0")}`;
+
 export function creerJeu(data, nJours = 7) {
   const cfg = data.creneaux;
-  const ordre = Object.keys(cfg.repas);
   const emporte = cfg.emporte || {};
   const jours = Array.from({ length: nJours }, (_, i) => {
     const d = new Date(); d.setDate(d.getDate() + i);
@@ -27,7 +48,13 @@ export function creerJeu(data, nJours = 7) {
   const creneaux = [];
   jours.forEach((j, i) => {
     const duJour = (cfg.jours.exceptions || {})[j.nom] || cfg.jours.defaut;
-    [...duJour].sort((a, b) => ordre.indexOf(a) - ordre.indexOf(b)).forEach(repas => {
+    // TRIÉ SUR L'HEURE, comme `construire_creneaux()` côté Python — et pas sur
+    // l'ordre de déclaration, ce que ce fichier faisait jusqu'ici. Les deux
+    // divergeaient depuis que le goûter (16 h) est déclaré après le dîner :
+    // le mercredi sortait petit-déj, déjeuner, dîner, goûter. L'ordre porte la
+    // sémantique — le chaînage marche les créneaux vers l'avant — donc c'était
+    // « hier soir nourrit ce midi » qui était faux, pas seulement l'affichage.
+    [...duJour].sort((a, b) => cfg.repas[a].heure - cfg.repas[b].heure).forEach(repas => {
       creneaux.push({
         jour: i, repas,
         label: cfg.repas[repas].label,
@@ -37,18 +64,29 @@ export function creerJeu(data, nJours = 7) {
     });
   });
 
+  const choix = Array(creneaux.length).fill(null);
+  const parts = Array(creneaux.length).fill(data.foyer.parts);
+  creneaux.forEach((c, i) => {
+    const a = AMORCE[cleJour(jours[c.jour].date)]?.[c.repas];
+    if (a && data.plats.some(p => p.id === a.plat)) {
+      choix[i] = a.plat;
+      parts[i] = a.parts;
+    }
+  });
+
   return {
     data,
     plats: Object.fromEntries(data.plats.map(p => [p.id, p])),
     jours, creneaux,
     equilibreSur: cfg.equilibre_sur || ["dejeuner", "diner"],
-    choix: Array(creneaux.length).fill(null),
+    choix,
     // Les parts se règlent PAR REPAS, pas une fois pour la semaine. Un dîner
     // avec des amis, un midi tout seul et une gamelle à prévoir n'ont pas la
     // même taille, et c'est la taille qui commande le panier et les restes.
-    parts: Array(creneaux.length).fill(data.foyer.parts),
+    parts,
     // On démarre sur le premier créneau réellement choisi : personne ne pioche
-    // une carte pour son petit-déjeuner.
+    // une carte pour son petit-déjeuner, ni pour un dessert qu'on ne veut
+    // peut-être pas — un créneau optionnel se demande, il ne se propose pas.
     slot: creneaux.findIndex(c => c.nature === "choisi"),
     repioches: Array(creneaux.length).fill(0),
   };

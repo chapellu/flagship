@@ -2106,7 +2106,8 @@
    "actifMin": 10,
    "accepts": [],
    "creneaux": [
-    "gouter"
+    "gouter",
+    "dessert"
    ],
    "transportable": true,
    "sansReste": null,
@@ -3800,7 +3801,8 @@
     }
    ],
    "creneaux": [
-    "gouter"
+    "gouter",
+    "dessert"
    ],
    "transportable": false,
    "sansReste": {
@@ -4664,7 +4666,8 @@
    "actifMin": 19,
    "accepts": [],
    "creneaux": [
-    "gouter"
+    "gouter",
+    "dessert"
    ],
    "transportable": true,
    "sansReste": null,
@@ -5037,7 +5040,8 @@
     }
    ],
    "creneaux": [
-    "gouter"
+    "gouter",
+    "dessert"
    ],
    "transportable": true,
    "sansReste": {
@@ -6518,7 +6522,8 @@
    "actifMin": 15,
    "accepts": [],
    "creneaux": [
-    "gouter"
+    "gouter",
+    "dessert"
    ],
    "transportable": false,
    "sansReste": null,
@@ -8702,7 +8707,8 @@
    "actifMin": 25,
    "accepts": [],
    "creneaux": [
-    "gouter"
+    "gouter",
+    "dessert"
    ],
    "transportable": false,
    "sansReste": null,
@@ -9594,20 +9600,28 @@
     "nature": "routine",
     "minutes": 10,
     "heure": 16
+   },
+   "dessert": {
+    "label": "dessert",
+    "nature": "optionnel",
+    "minutes": 5,
+    "heure": 20.25
    }
   },
   "jours": {
    "defaut": [
     "petit-dejeuner",
     "dejeuner",
-    "diner"
+    "diner",
+    "dessert"
    ],
    "exceptions": {
     "mercredi": [
      "petit-dejeuner",
      "dejeuner",
      "gouter",
-     "diner"
+     "diner",
+     "dessert"
     ]
    }
   },
