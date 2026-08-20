@@ -65,6 +65,19 @@ describe("les routes", () => {
     expect(pleinEcran({ ecran: "semaine" })).toBe(false);
   });
 
+  test("la fiche peut viser un plat qu'on n'a pas encore posé", () => {
+    // « Fiche » depuis une carte de la main : on lit la recette d'un candidat,
+    // pendant que le créneau porte peut-être encore autre chose.
+    const r = { ecran: "cuisiner", creneau: { jour: "2026-08-19", repas: "diner" }, plat: "lasagnes" } as const;
+    expect(chemin(r)).toBe("#/cuisine/cuisiner/2026-08-19/diner/lasagnes");
+    expect(lireRoute(chemin(r))).toEqual(r);
+    // Sans plat, la fiche est celle du créneau — et l'URL n'invente pas un
+    // segment vide.
+    const sans = { ecran: "cuisiner", creneau: { jour: "2026-08-19", repas: "diner" } } as const;
+    expect(chemin(sans)).toBe("#/cuisine/cuisiner/2026-08-19/diner");
+    expect(lireRoute(chemin(sans))).toEqual(sans);
+  });
+
   test("un chemin traînant une barre finale désigne le même écran", () => {
     expect(lireRoute("#/cuisine/semaine/")).toEqual({ ecran: "semaine" });
   });

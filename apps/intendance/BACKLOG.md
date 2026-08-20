@@ -126,8 +126,17 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
       derrière elle (« en faire 1,36× » devenait « 1,02× » au lieu de
       disparaître) ; et le constat d'une gamelle réglée recomptait la gamelle
       une seconde fois — « 7,5 parts au lieu de 5 » sur un dîner cuisiné pour 5.
-- [ ] **T11 — Poser un plat.** Les trois chiffres épinglés, les cartes
-      consomme/produit. L'écran central de la direction.
+- [x] **T11 — Poser un plat.** Les trois chiffres épinglés, les cartes
+      consomme/produit. L'écran central de la direction : tout le reste de
+      l'app existe pour que ce choix-là soit informé. Le nombre de **repioches
+      est persisté** — la main est déterministe en (créneau, repioches), donc
+      sans ce compteur, quitter l'écran et revenir redonne la main qu'on venait
+      de refuser ; ce n'est pas une décision sur la semaine, c'est la mémoire
+      d'un refus. La route `cuisiner` gagne un plat optionnel :
+      `#/cuisine/cuisiner/2026-08-22/diner/lentilles-mijotees` — « Fiche »
+      s'ouvre sur le CANDIDAT, pas sur ce que le créneau porte encore.
+      Mesuré au navigateur : une main sur une semaine pleine coûte **55 à
+      62 ms** ici (voir T17).
 - [ ] **T12 — En cuisine.** Mode guidé, une étape par écran, chauffe et
       minuteur, la liste d'ingrédients à un bouton.
 - [ ] **T13 — Courses.** Deux modes (magasin / maison), le hors-liste. Le
@@ -158,6 +167,16 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
       sinon la parité ne voudrait rien dire. Reste à trancher : la
       configuration a-t-elle raison, ou faut-il la retirer du catalogue ?
 
+- [ ] **Le catalogue n'a pas de nom lisible pour ce qu'il produit.** Un `emit`
+      porte un `type` (`lentilles-vertes-cuites`, `puree-lentilles-carottes`) et
+      une catégorie d'équilibre porte un id (`legumineuse`) — jamais de libellé.
+      Les écrans les affichent donc tels quels, identifiants compris : « apporte
+      legumineuse, qui manque », « puree-lentilles-carottes ». Les
+      dé-tiretiser produirait du faux français (« puree » sans accent), ce qui
+      est pire qu'un jeton qui s'assume. C'est une donnée qui manque au modèle
+      Python : un `label` par type et par catégorie, et les huit écrans en
+      profitent le même jour.
+
 - [ ] **Un lot congelable posé cette semaine vieillit au frigo.** `calculer`
       range TOUTE sortie avec `location: "frigo"` — le lot n'est pas encore AU
       congélo, il refroidit — mais du coup il sort de la fenêtre de fraîcheur au
@@ -168,8 +187,15 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
 
 ### Le reste
 
-- [ ] **T17 — Perf.** Mémoïser `offre()` / `calculer()`. Cible : poser les
-      quatorze créneaux sous 1 s sur un téléphone. Le proto y mettait 13,7 s.
+- [ ] **T17 — Perf.** **La cible est peut-être déjà atteinte, et c'est à
+      vérifier avant d'optimiser.** T11 a mesuré le pire cas au navigateur :
+      tirer une main sur une semaine pleine — donc 51 appels à `calculer` —
+      coûte 55 à 62 ms sur cette machine, soit ~0,85 s pour quatorze créneaux
+      là où le proto mettait 13,7 s. Reste à mesurer sur un vrai téléphone,
+      trois à cinq fois plus lent : si un créneau y coûte 300 ms, l'écran est
+      bon et il n'y a rien à mémoïser. Ne pas optimiser avant ce chiffre — la
+      mémoïsation de `calculer` coûterait une invalidation à tenir juste, et on
+      ne paie pas ça pour un problème qu'on n'a plus.
 - [ ] **T18 — PWA.** Manifeste, service worker, installable, utilisable hors
       ligne — l'app se juge sur l'écran d'accueil d'un iPhone, pas dans Safari.
 - [ ] **T19 — Déploiement.** Dockerfile, `k8s/intendance`, workflow d'image, rrset

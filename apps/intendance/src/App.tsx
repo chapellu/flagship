@@ -85,7 +85,10 @@ function rendre(route: Route, jeu: NonNullable<ReturnType<typeof useSemaine>["je
     case "cuisiner": {
       const i = indexDuCreneau(jeu, route.creneau.jour, route.creneau.repas);
       if (i < 0) return <HorsSemaine jour={route.creneau.jour} repas={route.creneau.repas} />;
-      if (route.ecran === "poser") return <Poser />;
+      // Les écrans reçoivent le créneau, pas la route : un écran qui lirait le
+      // hash lui-même serait le second endroit à savoir comment une URL est
+      // faite, et le premier à s'en désaligner.
+      if (route.ecran === "poser") return <Poser creneau={route.creneau} />;
       if (route.ecran === "parts") return <Parts />;
       return <Cuisiner />;
     }

@@ -13,7 +13,7 @@ import { cleCreneau, jourISO } from "../db";
 import { articles, minutesParJour, type Calcul, type LigneChaine } from "../model/calcul";
 import { joue, SAUTE, type Jeu } from "../model/jeu";
 import type { Emit, Plat } from "../model/types";
-import type { CleCreneau } from "../nav/routes";
+import type { CleCreneau, Route } from "../nav/routes";
 import { duree } from "../ui/format";
 import { phraseManque } from "../ui/phrases";
 
@@ -126,6 +126,10 @@ export function routinesDeFond(jours: VueJour[]): string[] {
 export interface Chiffre {
   cle: string;
   valeur: string;
+  /** Là où le chiffre mène, quand il mène quelque part. Seuls les lots ont un
+   *  ailleurs : les articles et les minutes sont des conséquences de la
+   *  semaine, le stock est une chose qu'on va voir. */
+  vers?: Route;
 }
 
 /**
@@ -146,7 +150,7 @@ export function chiffresDeLaSemaine(jeu: Jeu, calc: Calcul): Chiffre[] {
   return [
     { cle: arts > 1 ? "articles" : "article", valeur: String(arts) },
     { cle: "de cuisine", valeur: duree(minutes) },
-    { cle: lots > 1 ? "lots" : "lot", valeur: String(lots) },
+    { cle: lots > 1 ? "lots" : "lot", valeur: String(lots), vers: { ecran: "stock" } },
   ];
 }
 

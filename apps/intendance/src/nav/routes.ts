@@ -45,7 +45,10 @@ export type Route =
   | { ecran: "stock" }
   | { ecran: "poser"; creneau: CleCreneau }
   | { ecran: "parts"; creneau: CleCreneau }
-  | { ecran: "cuisiner"; creneau: CleCreneau };
+  // « En cuisine » peut viser un plat qui n'est pas (encore) celui du créneau :
+  // la fiche s'ouvre depuis une carte qu'on n'a pas posée, pour la lire avant
+  // de choisir. Sans `plat`, c'est le plat du créneau qui s'affiche.
+  | { ecran: "cuisiner"; creneau: CleCreneau; plat?: string };
 
 export type Ecran = Route["ecran"];
 
@@ -96,7 +99,8 @@ export function chemin(r: Route): string {
     case "stock": return "#/cuisine/stock";
     case "poser": return `#/cuisine/poser/${r.creneau.jour}/${r.creneau.repas}`;
     case "parts": return `#/cuisine/parts/${r.creneau.jour}/${r.creneau.repas}`;
-    case "cuisiner": return `#/cuisine/cuisiner/${r.creneau.jour}/${r.creneau.repas}`;
+    case "cuisiner":
+      return `#/cuisine/cuisiner/${r.creneau.jour}/${r.creneau.repas}${r.plat ? `/${r.plat}` : ""}`;
   }
 }
 
@@ -112,6 +116,11 @@ export function lireRoute(hash: string): Route {
   if (simple) return { ecran: simple } as Route;
 
   const morceaux = brut.split("/");
+  // La fiche d'un plat qu'on n'a pas encore posé : un segment de plus.
+  if (morceaux.length === 5 && `${morceaux[0]}/${morceaux[1]}` === "cuisine/cuisiner") {
+    const [, , jour, repas, plat] = morceaux as [string, string, string, string, string];
+    if (JOUR.test(jour) && repas && plat) return { ecran: "cuisiner", creneau: { jour, repas }, plat };
+  }
   if (morceaux.length === 4) {
     const [a, b, jour, repas] = morceaux as [string, string, string, string];
     const ecran = AVEC_CRENEAU[`${a}/${b}`];
