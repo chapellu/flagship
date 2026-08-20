@@ -20,7 +20,7 @@ import { creerJeu, type Choix, type Jeu } from "../model/jeu";
 import type { Catalogue } from "../model/types";
 import { lireCourses } from "./courses";
 import { base, jourISO, type EtatCourse, type LotStock } from "./schema";
-import { hydrater, oublier, poser, reglerParts } from "./semaine";
+import { hydrater, oublier, poser, prevoirGamelle, reglerParts } from "./semaine";
 
 /** Le catalogue, chargé une fois pour la vie de l'onglet. Il ne change pas en
  *  cours de route : c'est un asset, pas une donnée vivante. */
@@ -52,6 +52,9 @@ export interface SemaineVivante {
   chargement: boolean;
   poserPlat: (i: number, plat: Choix) => Promise<void>;
   reglerLesParts: (i: number, parts: number | null) => Promise<void>;
+  /** Le dîner de la veille grossit ET le midi part sur le reste : une seule
+   *  transaction, parce que l'une sans l'autre est un dégât. */
+  prevoirLaGamelle: (midi: number, veille: number, parts: number, plat: string) => Promise<void>;
   oublierCreneau: (i: number) => Promise<void>;
 }
 
@@ -106,6 +109,12 @@ export function useSemaine(catalogue: Catalogue | null, aujourdhui = new Date())
     },
     [jeu],
   );
+  const prevoirLaGamelle = useCallback(
+    async (midi: number, veille: number, parts: number, plat: string) => {
+      if (jeu) await prevoirGamelle(base, jeu, midi, veille, parts, plat);
+    },
+    [jeu],
+  );
   const oublierCreneau = useCallback(
     async (i: number) => {
       if (jeu) await oublier(base, jeu, i);
@@ -119,6 +128,7 @@ export function useSemaine(catalogue: Catalogue | null, aujourdhui = new Date())
     chargement: !catalogue || decisions === undefined,
     poserPlat,
     reglerLesParts,
+    prevoirLaGamelle,
     oublierCreneau,
   };
 }

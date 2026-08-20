@@ -112,7 +112,20 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
       touché. Corrigé au passage : la coquille avait `min-height: 100dvh` —
       le premier écran plus long qu'un téléphone emportait la barre du bas
       hors de l'écran.
-- [ ] **T10 — À prévoir.** Déjà enchaîné / offres ouvertes, avec leurs réserves.
+- [x] **T10 — À prévoir.** Déjà enchaîné / offres ouvertes, avec leurs
+      réserves. Les deux gestes de l'écran sont le même geste : agrandir un lot
+      comme prévoir une gamelle, c'est **régler les parts d'un créneau amont** —
+      le modèle n'a pas d'autre levier, et c'est ce qui rend ces offres
+      relisibles ailleurs. La gamelle écrit DEUX décisions (le dîner grossit, le
+      midi part sur le reste) : une transaction, sinon un rechargement au mauvais
+      moment laisse un dîner cuisiné pour six sans personne pour en manger la
+      moitié. Le compte de la pastille vient désormais d'ici — une pastille qui
+      annonce un autre nombre que la liste qu'elle ouvre est pire que pas de
+      pastille. Deux bugs du proto corrigés, tous deux vus au navigateur :
+      l'offre s'arrondissait au demi le PLUS PROCHE et laissait 33 g de sauce
+      derrière elle (« en faire 1,36× » devenait « 1,02× » au lieu de
+      disparaître) ; et le constat d'une gamelle réglée recomptait la gamelle
+      une seconde fois — « 7,5 parts au lieu de 5 » sur un dîner cuisiné pour 5.
 - [ ] **T11 — Poser un plat.** Les trois chiffres épinglés, les cartes
       consomme/produit. L'écran central de la direction.
 - [ ] **T12 — En cuisine.** Mode guidé, une étape par écran, chauffe et
@@ -127,6 +140,16 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
 - [ ] **T16 — Le cockpit.** La journée d'abord, les cartes de facette ensuite.
 
 ### Trouvé en portant, à décider
+
+- [ ] **Le modèle écrit du français.** `Offre.combien`, `deQuoi` et
+      `reserves()` rendent des phrases toutes faites — « en faire 1.36× », « un
+      lot ne se coupe pas : 0.5 portion(s) de plus à ranger ». Elles portent le
+      point décimal anglais et un pluriel entre parenthèses ; l'écran les
+      repasse par `virgules()` faute de mieux, parce que la parité avec le proto
+      se joue sur ces chaînes exactes. À trancher : le modèle rend-il des
+      NOMBRES et l'écran les phrases, ou garde-t-il la parole ? Le premier est
+      plus propre et casse la parité ; le second demande d'y écrire un français
+      correct. À faire quand `apps/proto-shell` disparaîtra, pas avant.
 
 - [ ] **Le catalogue configure la main, le code l'ignore.** `equilibre.main`
       porte `taille: 5`, `cooldown_jours: 10` et `garantir: [express, souche,

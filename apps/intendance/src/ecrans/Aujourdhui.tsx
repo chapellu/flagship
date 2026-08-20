@@ -17,12 +17,12 @@ import { cleGeste, cleRappel, poserReglage, useDrapeau } from "../db/reglages";
 import { facteurAffiche, type Calcul } from "../model/calcul";
 import { heureDe } from "../model/heures";
 import { joue, SAUTE, type Jeu } from "../model/jeu";
-import { gamelles, offresSurproduction } from "../model/offres";
 import { chemin } from "../nav/routes";
 import { Corps } from "../ui/Coquille";
 import { duree, fmt, hhmm } from "../ui/format";
 import { phraseManque } from "../ui/phrases";
 import { Icone } from "../ui/icones";
+import { vueAPrevoir } from "./prevoir.vue";
 
 export function Aujourdhui() {
   const { catalogue } = useCatalogue();
@@ -36,9 +36,8 @@ function Contenu({ jeu, calc }: { jeu: Jeu; calc: Calcul }) {
   const soir = jeu.creneaux.findIndex((c) => c.jour === 0 && c.repas === "diner");
   const geste = useMemo(() => gesteDuJour(jeu, calc), [jeu, calc]);
 
-  const enAttente =
-    offresSurproduction(jeu, jeu.choix, calc).length +
-    gamelles(jeu, jeu.choix).filter((g) => !g.fait && g.plat).length;
+  // Le même chiffre que la pastille et que la liste : voir `prevoir.vue.ts`.
+  const enAttente = vueAPrevoir(jeu, calc).enAttente;
 
   return (
     <Corps plat>

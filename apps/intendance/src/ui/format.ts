@@ -13,6 +13,18 @@ export const duree = (m: number): string =>
 export const hhmm = (m: number): string =>
   `${Math.floor((((m % 1440) + 1440) % 1440) / 60)}h${String(((m % 60) + 60) % 60).padStart(2, "0")}`;
 
+/**
+ * Un point décimal anglais, dans une phrase déjà écrite par le modèle.
+ *
+ * `Offre.combien` et `Offre.reserves()` sortent du français tout fait — « en
+ * faire 1.36× » — parce que le modèle Python le faisait avant eux. On ne les
+ * corrige pas à la source : la parité avec `apps/proto-shell/semaine.js` se
+ * joue sur ces chaînes exactes, et c'est elle qui prouve le port. L'écran, lui,
+ * écrit en français. Le point n'est remplacé QU'ENTRE DEUX CHIFFRES, pour ne
+ * pas manger une fin de phrase.
+ */
+export const virgules = (s: string): string => s.replace(/(\d)\.(\d)/g, "$1,$2");
+
 export const mmss = (t: number): string =>
   `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
 

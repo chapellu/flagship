@@ -106,6 +106,29 @@ export async function reglerParts(
   jeu.parts[i] = parts ?? jeu.catalogue.foyer.parts;
 }
 
+/**
+ * La gamelle : le dîner de la veille grossit, et le midi du lendemain part sur
+ * le reste.
+ *
+ * DEUX ÉCRITURES QUI N'ONT DE SENS QU'ENSEMBLE, donc une transaction. Un
+ * rechargement entre les deux laisserait un dîner cuisiné pour six sans
+ * personne pour manger la moitié — l'inverse exact de ce qu'on a promis en
+ * proposant l'enchaînement.
+ */
+export async function prevoirGamelle(
+  base: Base,
+  jeu: Jeu,
+  midi: number,
+  veille: number,
+  parts: number,
+  plat: string,
+): Promise<void> {
+  await base.transaction("rw", base.creneaux, async () => {
+    await reglerParts(base, jeu, veille, parts);
+    await poser(base, jeu, midi, plat);
+  });
+}
+
 /** Oublie tout ce qui concerne un créneau — le plat ET les parts. C'est le
  *  geste « je n'ai rien décidé ici », distinct de « je saute ce repas ». */
 export async function oublier(base: Base, jeu: Jeu, i: number): Promise<void> {

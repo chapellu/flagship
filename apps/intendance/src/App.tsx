@@ -10,8 +10,7 @@ import { useEffect } from "react";
 import { base, indexDuCreneau } from "./db";
 import { useCatalogue, useSemaine } from "./db/hooks";
 import { amorcer } from "./db/stock";
-import { gamelles } from "./model/offres";
-import { offresSurproduction } from "./model/offres";
+import { vueAPrevoir } from "./ecrans/prevoir.vue";
 import { pleinEcran, type Route } from "./nav/routes";
 import { useRoute } from "./nav/useRoute";
 import { Coquille, Corps, type Pastilles } from "./ui/Coquille";
@@ -43,12 +42,11 @@ export function App() {
   if (erreur) return <Panne message={erreur.message} />;
   if (chargement || !jeu || !calc) return <Chargement />;
 
-  // CE QUI ATTEND UNE RÉPONSE. Les offres de surproduction, plus les gamelles
-  // qu'aucun dîner de la veille ne couvre encore. C'est le chiffre de la
-  // pastille, et il vient du modèle — pas d'un compteur qu'on incrémenterait.
-  const gam = gamelles(jeu, jeu.choix);
+  // CE QUI ATTEND UNE RÉPONSE. Le chiffre vient de l'écran qui y répondra —
+  // « À prévoir » — et pas d'un compte refait ici. Une pastille qui annonce un
+  // autre nombre que la liste qu'elle ouvre est pire que pas de pastille.
   const pastilles: Pastilles = {
-    cuisine: offresSurproduction(jeu, jeu.choix, calc).length + gam.filter((g) => !g.fait && g.plat).length,
+    cuisine: vueAPrevoir(jeu, calc).enAttente,
     // Le cockpit compte les choses à faire de la journée, toutes facettes
     // confondues. Cette liste est le sujet de T16 : la deviner ici produirait
     // un chiffre que l'écran contredirait en arrivant.
