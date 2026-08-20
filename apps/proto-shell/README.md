@@ -74,6 +74,48 @@ les créneaux vers l'avant), donc c'était « hier soir nourrit ce midi » qui �
 faux, pas seulement l'affichage. Ajouter un cinquième repas est ce qui l'a rendu
 visible ; le tri se fait maintenant sur l'heure des deux côtés.
 
+### Le déroulé guidé — un écran, un geste
+
+`deroule.js`, ouvert par le ▸ d'un créneau rempli ou par le bouton de la fiche.
+La fiche est une **page de livre** : tout d'un coup, les quantités en haut, la
+marche à suivre en bas. Elle se lit avant de cuisiner. Les mains dans la farine,
+il faut l'inverse — le geste courant en gros, ce qu'il réclame et rien d'autre,
+le minuteur déjà armé. C'est ce que fait un appareil de cuisson guidée, et le
+déroulé s'arrête là où s'arrête l'analogie.
+
+Ce que ce foyer a et qu'un robot n'a pas, et qu'il a donc fallu construire :
+
+- **Des gestes en parallèle.** Un robot fait une chose à la fois, donc son
+  déroulé est une file. Ici la pâte se pétrit *pendant* que la poêlée refroidit,
+  et le modèle le sait déjà (`parallel_with`, exporté en `enParallele`).
+- **Plusieurs minuteurs à la fois.** Corollaire : ils vivent dans une barre qui
+  **survit à la navigation, au changement de plat et à la fermeture** de
+  l'écran. Le four ne s'arrête pas parce qu'on est passé à autre chose.
+- **Un bébé.** Le prélèvement non salé est une étape à part entière, injectée là
+  où la recette dit qu'il reste du nature à prendre.
+
+**Ce que cet écran a fait tomber, et c'est sa justification.** Le four est une
+ressource **exclusive**, et rien dans le modèle ne le sait : `minutesSurPlace` et
+`avanceMin` sont calculés plat par plat, comme si chacun cuisinait seul. Deux
+plats le même soir, et l'écran de soirée le montre — le clafoutis (1 h à 150 °C)
+et la tourte (45 min à 180 °C + gril) se disputaient **34 minutes** de four à
+deux températures différentes. Les heures affichées sont **déjà corrigées** ;
+l'encadré ne dit plus que ce qui a bougé et pourquoi. Afficher deux heures qui ne
+peuvent pas coexister et laisser la soustraction au lecteur, devant son four,
+n'aurait servi à rien.
+
+Deux manques nommés au passage, tous deux côté modèle :
+
+- **Aucune étape ne peut dire qu'elle *règle* l'appareil** plutôt qu'elle s'en
+  sert. « Préchauffer à 180 °C » réclame `bake` exactement comme « enfourner
+  45 min ». Le déroulé tranche au **seuil** (≤ 2 min = un tour de bouton), ce qui
+  est une heuristique, pas une donnée — et le même trou fait qu'aucune
+  température n'est lisible ailleurs que dans la phrase.
+- **Aucun champ ne porte un interdit d'âge et sa raison.** Le clafoutis n'a pas
+  de portion bébé, délibérément (miel, rhum, extrait d'amande amère), et le
+  modèle ne sait le dire que par **absence** — ce qui ne se distingue pas de
+  « personne n'y a pensé ». L'écran l'écrit en toutes lettres faute de mieux.
+
 ## Règles du prototype
 
 - Données **en mémoire, en dur** (`data.js`) pour le jardin : le vrai site de

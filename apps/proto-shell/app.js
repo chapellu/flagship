@@ -188,6 +188,9 @@ document.getElementById("sw-prev").addEventListener("click", () => aller(-1));
 document.getElementById("sw-next").addEventListener("click", () => aller(1));
 document.addEventListener("keydown", e => {
   if (e.target.matches("input, textarea, [contenteditable]")) return;
+  // Déroulé ouvert : les flèches lui appartiennent. Changer de variante du shell
+  // sous les doigts de quelqu'un qui cuisine serait la pire des surprises.
+  if (document.body.dataset.deroule) return;
   if (e.key === "ArrowLeft") aller(-1);
   if (e.key === "ArrowRight") aller(1);
 });

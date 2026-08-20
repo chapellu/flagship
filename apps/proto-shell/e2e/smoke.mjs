@@ -210,6 +210,53 @@ for (const v of ["A", "B", "C"]) {
     await p.waitForTimeout(150);
     check("la fiche se referme", await p.locator(".fiche").count() === 0);
 
+    // LE DÉROULÉ GUIDÉ. Ce qui est contrôlé ici n'est pas l'affichage mais les
+    // trois propriétés qui le distinguent d'une fiche : les quantités arrivent
+    // à l'étape qui les réclame, le prélèvement bébé tombe AVANT ce qui sale,
+    // et un minuteur survit à la navigation.
+    await p.locator(".sem-slot .derouler").first().click();
+    await p.waitForSelector(".dr", { timeout: 6000 });
+    check("le déroulé s'ouvre sur la soirée quand il y a deux plats",
+      (await p.locator(".dr-corps").innerText()).includes("un seul four"));
+    check("le conflit de four est nommé et chiffré",
+      /\d+ min de chevauchement/.test(await p.locator(".dr-corps").innerText()));
+
+    const dr = await p.evaluate(async () => {
+      const D = await import("./deroule.js");
+      const data = await fetch("cuisine-data.json").then(r => r.json());
+      const plat = data.plats.find(x => x.id === "tourte-nicoise-courgettes");
+      const cs = D.cartes(data, plat);
+      return {
+        iBebe: cs.findIndex(e => e.bebe),
+        iParmesan: cs.findIndex(e => (e.uses || []).includes("parmesan")),
+        iPorte: cs.findIndex(e => e.porteAssaisonnement),
+        sansUses: cs.filter(e => e.uses == null).length,
+        // Le four d'un plat seul ne se dispute avec personne.
+        seul: D.conflitFour(D.blocsFour(data, plat, 19.5 * 60)),
+      };
+    });
+    check("le prélèvement bébé passe AVANT le parmesan, pas à la porte de sel",
+      dr.iBebe > 0 && dr.iBebe < dr.iParmesan && dr.iParmesan < dr.iPorte,
+      `bébé ${dr.iBebe} · parmesan ${dr.iParmesan} · porte ${dr.iPorte}`);
+    check("toutes les étapes disent ce qu'elles versent", dr.sansUses === 0);
+    check("un plat seul n'a pas de conflit de four", dr.seul === null);
+
+    await p.locator(".dr-suite").click();        // → mise en place
+    await p.waitForTimeout(200);
+    await p.locator(".dr-suite").click();        // → première étape
+    await p.waitForTimeout(200);
+    await p.locator(".dr-timer").first().click();
+    await p.waitForTimeout(1200);
+    const arme = await p.locator(".dr-mn").count();
+    await p.locator(".dr-nav .pri").click();     // on change d'étape
+    await p.waitForTimeout(400);
+    check("le minuteur survit au changement d'étape",
+      arme === 1 && await p.locator(".dr-mn").count() === 1);
+    await p.locator(".dr-x").click();
+    await p.waitForTimeout(200);
+    check("le déroulé se referme", await p.locator(".dr").count() === 0
+      && !(await p.evaluate(() => document.body.dataset.deroule)));
+
     // Le stock, et les courses qu'on rentre.
     await p.click('[data-vue="stock"]');
     await p.waitForTimeout(200);

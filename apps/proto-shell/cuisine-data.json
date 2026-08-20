@@ -50,6 +50,78 @@
     "cause": "place"
    }
   },
+  "outils": {
+   "bake": {
+    "label": "four chaleur tournante",
+    "reecrit": null,
+    "deltaMin": 0
+   },
+   "blend-smooth": {
+    "label": "mixeur plongeur",
+    "reecrit": "au mixeur plongeur, directement dans le récipient",
+    "deltaMin": 0
+   },
+   "boil": {
+    "label": "plaque induction 3 feux",
+    "reecrit": null,
+    "deltaMin": 0
+   },
+   "chop-coarse": {
+    "label": "petit blender du mixeur plongeur",
+    "reecrit": "au petit blender, en 2–3 fois, par impulsions courtes",
+    "deltaMin": 3
+   },
+   "congeler": {
+    "label": "congélateur 3 tiroirs",
+    "reecrit": null,
+    "deltaMin": 0
+   },
+   "gratin": {
+    "label": "four chaleur tournante",
+    "reecrit": null,
+    "deltaMin": 0
+   },
+   "gratin-vessel": {
+    "label": "plats à gratin 35×18 / 32×20",
+    "reecrit": null,
+    "deltaMin": 0
+   },
+   "grill": {
+    "label": "four chaleur tournante",
+    "reecrit": null,
+    "deltaMin": 0
+   },
+   "pan-fry": {
+    "label": "sauteuse 28 cm",
+    "reecrit": null,
+    "deltaMin": 0
+   },
+   "reheat": {
+    "label": "micro-ondes",
+    "reecrit": null,
+    "deltaMin": 0
+   },
+   "simmer": {
+    "label": "casseroles 2,6 L / 1,6 L",
+    "reecrit": null,
+    "deltaMin": 0
+   },
+   "simmer-large": {
+    "label": "cocotte 7,5 L",
+    "reecrit": null,
+    "deltaMin": 0
+   },
+   "steam": {
+    "label": "cocotte 7,5 L",
+    "reecrit": "dans le panier vapeur de la cocotte, 2 cm d'eau au fond",
+    "deltaMin": 0
+   },
+   "weigh": {
+    "label": "balance de cuisine",
+    "reecrit": null,
+    "deltaMin": 0
+   }
+  },
   "contenants": [
    {
     "id": "boites-hermetiques",
@@ -146,6 +218,7 @@
    "ingredients": [
     {
      "id": "boeuf-hache",
+     "ref": "boeuf-hache",
      "nom": "bœuf haché",
      "qty": 500,
      "unit": "g",
@@ -154,6 +227,7 @@
     },
     {
      "id": "tomates-pelees",
+     "ref": "tomates-pelees",
      "nom": "tomates pelées en conserve",
      "qty": 800,
      "unit": "g",
@@ -162,6 +236,7 @@
     },
     {
      "id": "carottes",
+     "ref": "carottes",
      "nom": "carottes",
      "qty": 2,
      "unit": "pièce",
@@ -170,6 +245,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "oignon",
      "qty": 2,
      "unit": "pièce",
@@ -178,6 +254,7 @@
     },
     {
      "id": "ail",
+     "ref": "ail",
      "nom": "ail",
      "qty": 2,
      "unit": "gousse",
@@ -186,6 +263,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 2,
      "unit": "c. à s.",
@@ -194,6 +272,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -203,6 +282,8 @@
    ],
    "steps": [],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": null,
    "accepts": [],
    "creneaux": [
@@ -252,6 +333,7 @@
    "ingredients": [
     {
      "id": "sauce-bolognaise-ing",
+     "ref": "sauce-bolognaise-ing",
      "nom": "sauce bolognaise",
      "qty": 500,
      "unit": "g",
@@ -260,6 +342,7 @@
     },
     {
      "id": "pates",
+     "ref": "pates",
      "nom": "pâtes longues (spaghetti, linguine)",
      "qty": 350,
      "unit": "g",
@@ -268,6 +351,7 @@
     },
     {
      "id": "fromage-rape",
+     "ref": "fromage-rape",
      "nom": "parmesan ou comté râpé",
      "qty": 60,
      "unit": "g",
@@ -277,6 +361,8 @@
    ],
    "steps": [],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": null,
    "accepts": [
     {
@@ -346,6 +432,7 @@
    "ingredients": [
     {
      "id": "sauce-bolognaise-ing",
+     "ref": "sauce-bolognaise-ing",
      "nom": "sauce bolognaise",
      "qty": 700,
      "unit": "g",
@@ -354,6 +441,7 @@
     },
     {
      "id": "pates-lasagne",
+     "ref": "pates-lasagne",
      "nom": "plaques à lasagne",
      "qty": 250,
      "unit": "g",
@@ -362,6 +450,7 @@
     },
     {
      "id": "lait",
+     "ref": "lait",
      "nom": "lait",
      "qty": 50,
      "unit": "cl",
@@ -370,6 +459,7 @@
     },
     {
      "id": "farine",
+     "ref": "farine",
      "nom": "farine",
      "qty": 4,
      "unit": "c. à s.",
@@ -378,6 +468,7 @@
     },
     {
      "id": "fromage-rape",
+     "ref": "fromage-rape",
      "nom": "comté râpé",
      "qty": 100,
      "unit": "g",
@@ -387,6 +478,8 @@
    ],
    "steps": [],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": null,
    "accepts": [
     {
@@ -468,6 +561,7 @@
    "ingredients": [
     {
      "id": "gnocchis",
+     "ref": "gnocchis",
      "nom": "gnocchis à poêler",
      "qty": 500,
      "unit": "g",
@@ -476,6 +570,7 @@
     },
     {
      "id": "courgettes",
+     "ref": "courgettes",
      "nom": "courgettes",
      "qty": 2,
      "unit": "pièce",
@@ -484,6 +579,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "oignon",
      "qty": 1,
      "unit": "pièce",
@@ -492,6 +588,7 @@
     },
     {
      "id": "fromage-rape",
+     "ref": "fromage-rape",
      "nom": "parmesan râpé",
      "qty": 60,
      "unit": "g",
@@ -500,6 +597,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 2,
      "unit": "c. à s.",
@@ -509,6 +607,8 @@
    ],
    "steps": [],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": null,
    "accepts": [],
    "creneaux": [
@@ -545,6 +645,7 @@
    "ingredients": [
     {
      "id": "poulet",
+     "ref": "poulet",
      "nom": "poulet fermier entier",
      "qty": 1,
      "unit": "pièce",
@@ -553,6 +654,7 @@
     },
     {
      "id": "pommes-de-terre",
+     "ref": "pommes-de-terre",
      "nom": "pommes de terre",
      "qty": 1,
      "unit": "kg",
@@ -561,6 +663,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "oignon",
      "qty": 2,
      "unit": "pièce",
@@ -569,6 +672,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 2,
      "unit": "c. à s.",
@@ -577,6 +681,7 @@
     },
     {
      "id": "thym",
+     "ref": "thym",
      "nom": "thym",
      "qty": 1,
      "unit": "c. à c.",
@@ -586,6 +691,8 @@
    ],
    "steps": [],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": null,
    "accepts": [],
    "creneaux": [
@@ -649,6 +756,7 @@
    "ingredients": [
     {
      "id": "poulet-cuit-ing",
+     "ref": "poulet-cuit-ing",
      "nom": "poulet cuit effiloché",
      "qty": 400,
      "unit": "g",
@@ -657,6 +765,7 @@
     },
     {
      "id": "tortillas",
+     "ref": "tortillas",
      "nom": "tortillas de blé",
      "qty": 8,
      "unit": "pièce",
@@ -665,6 +774,7 @@
     },
     {
      "id": "poivron",
+     "ref": "poivron",
      "nom": "poivrons",
      "qty": 2,
      "unit": "pièce",
@@ -673,6 +783,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "oignon",
      "qty": 1,
      "unit": "pièce",
@@ -681,6 +792,7 @@
     },
     {
      "id": "creme",
+     "ref": "creme",
      "nom": "crème fraîche",
      "qty": 10,
      "unit": "cl",
@@ -689,6 +801,7 @@
     },
     {
      "id": "fromage-rape",
+     "ref": "fromage-rape",
      "nom": "fromage râpé",
      "qty": 80,
      "unit": "g",
@@ -698,6 +811,8 @@
    ],
    "steps": [],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": null,
    "accepts": [
     {
@@ -756,6 +871,7 @@
    "ingredients": [
     {
      "id": "carcasse-ing",
+     "ref": "carcasse-ing",
      "nom": "carcasse de volaille",
      "qty": 1,
      "unit": "pièce",
@@ -764,6 +880,7 @@
     },
     {
      "id": "carottes",
+     "ref": "carottes",
      "nom": "carottes",
      "qty": 3,
      "unit": "pièce",
@@ -772,6 +889,7 @@
     },
     {
      "id": "poireau",
+     "ref": "poireau",
      "nom": "poireau",
      "qty": 1,
      "unit": "pièce",
@@ -780,6 +898,7 @@
     },
     {
      "id": "vermicelles",
+     "ref": "vermicelles",
      "nom": "vermicelles",
      "qty": 100,
      "unit": "g",
@@ -789,6 +908,8 @@
    ],
    "steps": [],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": null,
    "accepts": [
     {
@@ -853,6 +974,7 @@
    "ingredients": [
     {
      "id": "pois-chiches",
+     "ref": "pois-chiches",
      "nom": "pois chiches cuits (bocal)",
      "qty": 500,
      "unit": "g",
@@ -861,6 +983,7 @@
     },
     {
      "id": "lait-coco",
+     "ref": "lait-coco",
      "nom": "lait de coco",
      "qty": 40,
      "unit": "cl",
@@ -869,6 +992,7 @@
     },
     {
      "id": "tomates-pelees",
+     "ref": "tomates-pelees",
      "nom": "tomates pelées en conserve",
      "qty": 400,
      "unit": "g",
@@ -877,6 +1001,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "oignon",
      "qty": 1,
      "unit": "pièce",
@@ -885,6 +1010,7 @@
     },
     {
      "id": "riz",
+     "ref": "riz",
      "nom": "riz basmati",
      "qty": 250,
      "unit": "g",
@@ -893,6 +1019,7 @@
     },
     {
      "id": "curry",
+     "ref": "curry",
      "nom": "curry doux en poudre",
      "qty": 2,
      "unit": "c. à c.",
@@ -902,6 +1029,8 @@
    ],
    "steps": [],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": null,
    "accepts": [],
    "creneaux": [
@@ -948,6 +1077,7 @@
    "ingredients": [
     {
      "id": "saumon",
+     "ref": "saumon",
      "nom": "pavés de saumon",
      "qty": 4,
      "unit": "pièce",
@@ -956,6 +1086,7 @@
     },
     {
      "id": "riz",
+     "ref": "riz",
      "nom": "riz",
      "qty": 250,
      "unit": "g",
@@ -964,6 +1095,7 @@
     },
     {
      "id": "brocoli",
+     "ref": "brocoli",
      "nom": "brocoli",
      "qty": 1,
      "unit": "pièce",
@@ -972,6 +1104,7 @@
     },
     {
      "id": "citron",
+     "ref": "citron",
      "nom": "citron",
      "qty": 1,
      "unit": "pièce",
@@ -981,6 +1114,8 @@
    ],
    "steps": [],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": null,
    "accepts": [],
    "creneaux": [
@@ -1016,6 +1151,7 @@
    "ingredients": [
     {
      "id": "pate-brisee",
+     "ref": "pate-brisee",
      "nom": "pâte brisée",
      "qty": 1,
      "unit": "pièce",
@@ -1024,6 +1160,7 @@
     },
     {
      "id": "poireau",
+     "ref": "poireau",
      "nom": "poireaux",
      "qty": 3,
      "unit": "pièce",
@@ -1032,6 +1169,7 @@
     },
     {
      "id": "oeufs",
+     "ref": "oeufs",
      "nom": "œufs",
      "qty": 3,
      "unit": "pièce",
@@ -1040,6 +1178,7 @@
     },
     {
      "id": "creme",
+     "ref": "creme",
      "nom": "crème fraîche",
      "qty": 20,
      "unit": "cl",
@@ -1048,6 +1187,7 @@
     },
     {
      "id": "fromage-rape",
+     "ref": "fromage-rape",
      "nom": "comté râpé",
      "qty": 80,
      "unit": "g",
@@ -1057,6 +1197,8 @@
    ],
    "steps": [],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": null,
    "accepts": [],
    "creneaux": [
@@ -1104,6 +1246,7 @@
    "ingredients": [
     {
      "id": "haricots-rouges",
+     "ref": "haricots-rouges",
      "nom": "haricots rouges cuits",
      "qty": 500,
      "unit": "g",
@@ -1112,6 +1255,7 @@
     },
     {
      "id": "tomates-pelees",
+     "ref": "tomates-pelees",
      "nom": "tomates pelées en conserve",
      "qty": 400,
      "unit": "g",
@@ -1120,6 +1264,7 @@
     },
     {
      "id": "mais",
+     "ref": "mais",
      "nom": "maïs doux",
      "qty": 150,
      "unit": "g",
@@ -1128,6 +1273,7 @@
     },
     {
      "id": "poivron",
+     "ref": "poivron",
      "nom": "poivron",
      "qty": 1,
      "unit": "pièce",
@@ -1136,6 +1282,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "oignon",
      "qty": 1,
      "unit": "pièce",
@@ -1144,6 +1291,7 @@
     },
     {
      "id": "riz",
+     "ref": "riz",
      "nom": "riz",
      "qty": 250,
      "unit": "g",
@@ -1153,6 +1301,8 @@
    ],
    "steps": [],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": null,
    "accepts": [],
    "creneaux": [
@@ -1200,6 +1350,7 @@
    "ingredients": [
     {
      "id": "courgettes",
+     "ref": "courgettes",
      "nom": "courgettes",
      "qty": 3,
      "unit": "pièce",
@@ -1208,6 +1359,7 @@
     },
     {
      "id": "riz",
+     "ref": "riz",
      "nom": "riz",
      "qty": 200,
      "unit": "g",
@@ -1216,6 +1368,7 @@
     },
     {
      "id": "oeufs",
+     "ref": "oeufs",
      "nom": "œufs",
      "qty": 2,
      "unit": "pièce",
@@ -1224,6 +1377,7 @@
     },
     {
      "id": "fromage-rape",
+     "ref": "fromage-rape",
      "nom": "comté râpé",
      "qty": 80,
      "unit": "g",
@@ -1232,6 +1386,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "oignon",
      "qty": 1,
      "unit": "pièce",
@@ -1241,6 +1396,8 @@
    ],
    "steps": [],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": null,
    "accepts": [],
    "creneaux": [
@@ -1277,6 +1434,7 @@
    "ingredients": [
     {
      "id": "lentilles-cuites",
+     "ref": "lentilles-cuites",
      "nom": "lentilles vertes cuites",
      "qty": 400,
      "unit": "g",
@@ -1285,6 +1443,7 @@
     },
     {
      "id": "feta",
+     "ref": "feta",
      "nom": "feta",
      "qty": 150,
      "unit": "g",
@@ -1293,6 +1452,7 @@
     },
     {
      "id": "tomates",
+     "ref": "tomates",
      "nom": "tomates",
      "qty": 3,
      "unit": "pièce",
@@ -1301,6 +1461,7 @@
     },
     {
      "id": "oignon-rouge",
+     "ref": "oignon-rouge",
      "nom": "oignon rouge",
      "qty": 1,
      "unit": "pièce",
@@ -1309,6 +1470,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 3,
      "unit": "c. à s.",
@@ -1318,6 +1480,8 @@
    ],
    "steps": [],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": null,
    "accepts": [
     {
@@ -1375,6 +1539,7 @@
    "ingredients": [
     {
      "id": "pain-de-mie",
+     "ref": "pain-de-mie",
      "nom": "pain de mie",
      "qty": 8,
      "unit": "pièce",
@@ -1383,6 +1548,7 @@
     },
     {
      "id": "jambon",
+     "ref": "jambon",
      "nom": "jambon blanc",
      "qty": 4,
      "unit": "pièce",
@@ -1391,6 +1557,7 @@
     },
     {
      "id": "fromage-rape",
+     "ref": "fromage-rape",
      "nom": "comté râpé",
      "qty": 100,
      "unit": "g",
@@ -1399,6 +1566,7 @@
     },
     {
      "id": "salade-verte",
+     "ref": "salade-verte",
      "nom": "salade verte",
      "qty": 1,
      "unit": "pièce",
@@ -1408,6 +1576,8 @@
    ],
    "steps": [],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": null,
    "accepts": [],
    "creneaux": [
@@ -1443,6 +1613,7 @@
    "ingredients": [
     {
      "id": "pate-brisee",
+     "ref": "pate-brisee",
      "nom": "pâte brisée",
      "qty": 1,
      "unit": "pièce",
@@ -1451,6 +1622,7 @@
     },
     {
      "id": "tomates",
+     "ref": "tomates",
      "nom": "tomates",
      "qty": 5,
      "unit": "pièce",
@@ -1459,6 +1631,7 @@
     },
     {
      "id": "moutarde",
+     "ref": "moutarde",
      "nom": "moutarde",
      "qty": 2,
      "unit": "c. à s.",
@@ -1467,6 +1640,7 @@
     },
     {
      "id": "fromage-rape",
+     "ref": "fromage-rape",
      "nom": "comté râpé",
      "qty": 80,
      "unit": "g",
@@ -1476,6 +1650,8 @@
    ],
    "steps": [],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": null,
    "accepts": [],
    "creneaux": [
@@ -1511,6 +1687,7 @@
    "ingredients": [
     {
      "id": "lentilles-cuites",
+     "ref": "lentilles-cuites",
      "nom": "lentilles vertes cuites",
      "qty": 400,
      "unit": "g",
@@ -1519,6 +1696,7 @@
     },
     {
      "id": "tofu-fume",
+     "ref": "tofu-fume",
      "nom": "tofu fumé",
      "qty": 200,
      "unit": "g",
@@ -1527,6 +1705,7 @@
     },
     {
      "id": "oignons",
+     "ref": "oignons",
      "nom": "oignons",
      "qty": 3,
      "unit": "pièce",
@@ -1535,6 +1714,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 4,
      "unit": "c. à s.",
@@ -1543,6 +1723,7 @@
     },
     {
      "id": "farine",
+     "ref": "farine",
      "nom": "farine complète (blé ou épeautre)",
      "qty": 3,
      "unit": "c. à s.",
@@ -1551,6 +1732,7 @@
     },
     {
      "id": "bouillon-miso",
+     "ref": "bouillon-miso",
      "nom": "cube de bouillon de légumes au miso",
      "qty": 1,
      "unit": "pièce",
@@ -1559,6 +1741,7 @@
     },
     {
      "id": "poivre-5-baies",
+     "ref": "poivre-5-baies",
      "nom": "poivre 5 baies",
      "qty": 1,
      "unit": "pincée",
@@ -1567,6 +1750,7 @@
     },
     {
      "id": "son-avoine",
+     "ref": "son-avoine",
      "nom": "son d'avoine (panure)",
      "qty": 50,
      "unit": "g",
@@ -1583,6 +1767,8 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -1599,6 +1785,8 @@
       "chop-coarse"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -1613,6 +1801,8 @@
      "minutes": 4,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -1627,6 +1817,8 @@
      "minutes": 5,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -1641,6 +1833,8 @@
      "minutes": 4,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -1657,6 +1851,8 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -1667,6 +1863,8 @@
     }
    ],
    "bebe": "3 c. à s. de lentilles cuites nature, avant l'étape du mélange (le bouillon et le tofu fumé sont trop salés)",
+   "bebePrep": "écraser ou mixer avec un peu d'eau tiède",
+   "bebeApres": null,
    "actifMin": 25,
    "accepts": [
     {
@@ -1740,6 +1938,7 @@
    "ingredients": [
     {
      "id": "chou-frise",
+     "ref": "chou-frise",
      "nom": "chou frisé de taille moyenne",
      "qty": 0.5,
      "unit": "pièce",
@@ -1748,6 +1947,7 @@
     },
     {
      "id": "oignon-rouge",
+     "ref": "oignon-rouge",
      "nom": "oignon rouge",
      "qty": 1,
      "unit": "pièce",
@@ -1756,6 +1956,7 @@
     },
     {
      "id": "cantal",
+     "ref": "cantal",
      "nom": "cantal jeune",
      "qty": 100,
      "unit": "g",
@@ -1764,6 +1965,7 @@
     },
     {
      "id": "jambon-cru",
+     "ref": "jambon-cru",
      "nom": "jambon cru en tranche épaisse",
      "qty": 100,
      "unit": "g",
@@ -1772,6 +1974,7 @@
     },
     {
      "id": "pruneaux",
+     "ref": "pruneaux",
      "nom": "pruneaux",
      "qty": 8,
      "unit": "pièce",
@@ -1780,6 +1983,7 @@
     },
     {
      "id": "noix",
+     "ref": "noix",
      "nom": "noix en coques",
      "qty": 10,
      "unit": "pièce",
@@ -1788,6 +1992,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive ou de noix",
      "qty": 6,
      "unit": "c. à s.",
@@ -1796,6 +2001,7 @@
     },
     {
      "id": "vinaigre",
+     "ref": "vinaigre",
      "nom": "vinaigre de vin",
      "qty": 3,
      "unit": "c. à s.",
@@ -1804,6 +2010,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -1812,6 +2019,7 @@
     },
     {
      "id": "poivre",
+     "ref": "poivre",
      "nom": "poivre",
      "qty": 1,
      "unit": "pincée",
@@ -1826,6 +2034,8 @@
      "minutes": 5,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -1842,6 +2052,8 @@
       "chop-coarse"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -1856,6 +2068,8 @@
      "minutes": 7,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -1870,6 +2084,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -1884,6 +2100,8 @@
      "minutes": 1,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -1894,6 +2112,8 @@
     }
    ],
    "bebe": "quelques cubes de cantal et un peu de pruneau, AVANT l'assaisonnement",
+   "bebePrep": "écraser le pruneau à la fourchette ; ni chou cru ni noix, ni jambon",
+   "bebeApres": null,
    "actifMin": 20,
    "accepts": [],
    "creneaux": [
@@ -1927,6 +2147,7 @@
    "ingredients": [
     {
      "id": "lait-amande",
+     "ref": "lait-amande",
      "nom": "lait d'amande",
      "qty": 50,
      "unit": "cl",
@@ -1935,6 +2156,7 @@
     },
     {
      "id": "puree-amande-blanche",
+     "ref": "puree-amande-blanche",
      "nom": "purée d'amande blanche",
      "qty": 40,
      "unit": "g",
@@ -1943,6 +2165,7 @@
     },
     {
      "id": "oeufs",
+     "ref": "oeufs",
      "nom": "œufs fermiers ultra frais",
      "qty": 4,
      "unit": "pièce",
@@ -1951,6 +2174,7 @@
     },
     {
      "id": "farine-petit-epeautre",
+     "ref": "farine-petit-epeautre",
      "nom": "farine T110 de petit épeautre",
      "qty": 55,
      "unit": "g",
@@ -1959,6 +2183,7 @@
     },
     {
      "id": "miel-acacia",
+     "ref": "miel-acacia",
      "nom": "miel d'acacia",
      "qty": 115,
      "unit": "g",
@@ -1967,6 +2192,7 @@
     },
     {
      "id": "abricots",
+     "ref": "abricots",
      "nom": "abricots — ou tout autre fruit à noyau : cerises, pêches, nectarines, reines-claudes, mirabelles",
      "qty": 350,
      "unit": "g",
@@ -1975,6 +2201,7 @@
     },
     {
      "id": "rhum",
+     "ref": "rhum",
      "nom": "rhum",
      "qty": 1,
      "unit": "c. à s.",
@@ -1983,6 +2210,7 @@
     },
     {
      "id": "extrait-amande-amere",
+     "ref": "extrait-amande-amere",
      "nom": "extrait d'amande amère pour pâtisserie",
      "qty": 0.5,
      "unit": "c. à moka",
@@ -1991,6 +2219,7 @@
     },
     {
      "id": "amandes-effilees",
+     "ref": "amandes-effilees",
      "nom": "amandes effilées",
      "qty": 2,
      "unit": "c. à s.",
@@ -2005,6 +2234,10 @@
      "minutes": 6,
      "needs": [],
      "surveille": true,
+     "uses": [
+      "abricots"
+     ],
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2021,6 +2254,8 @@
       "bake"
      ],
      "surveille": false,
+     "uses": [],
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2035,6 +2270,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": true,
+     "uses": [],
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2049,6 +2286,16 @@
      "minutes": 5,
      "needs": [],
      "surveille": true,
+     "uses": [
+      "lait-amande",
+      "puree-amande-blanche",
+      "oeufs",
+      "farine-petit-epeautre",
+      "miel-acacia",
+      "rhum",
+      "extrait-amande-amere"
+     ],
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2063,6 +2310,11 @@
      "minutes": 3,
      "needs": [],
      "surveille": true,
+     "uses": [
+      "abricots",
+      "amandes-effilees"
+     ],
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2079,6 +2331,8 @@
       "bake"
      ],
      "surveille": true,
+     "uses": [],
+     "enParallele": null,
      "attente": 60,
      "attenteRaison": "refroidissement",
      "attenteSouple": true,
@@ -2093,6 +2347,8 @@
      "minutes": 1,
      "needs": [],
      "surveille": true,
+     "uses": [],
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2103,6 +2359,8 @@
     }
    ],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": 10,
    "accepts": [],
    "creneaux": [
@@ -2147,6 +2405,7 @@
    "ingredients": [
     {
      "id": "peches",
+     "ref": "peches",
      "nom": "pêches jaunes ou blanches",
      "qty": 6,
      "unit": "pièce",
@@ -2155,6 +2414,7 @@
     },
     {
      "id": "gousse-vanille",
+     "ref": "gousse-vanille",
      "nom": "gousse de vanille",
      "qty": 1,
      "unit": "pièce",
@@ -2163,6 +2423,7 @@
     },
     {
      "id": "creme-coco",
+     "ref": "creme-coco",
      "nom": "crème de coco liquide",
      "qty": 20,
      "unit": "cl",
@@ -2171,6 +2432,7 @@
     },
     {
      "id": "rhum",
+     "ref": "rhum",
      "nom": "rhum",
      "qty": 2,
      "unit": "c. à s.",
@@ -2179,6 +2441,7 @@
     },
     {
      "id": "eau",
+     "ref": "eau",
      "nom": "eau",
      "qty": 10,
      "unit": "cl",
@@ -2187,6 +2450,7 @@
     },
     {
      "id": "glacons",
+     "ref": "glacons",
      "nom": "glaçons",
      "qty": 8,
      "unit": "pièce",
@@ -2201,6 +2465,8 @@
      "minutes": 4,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2217,6 +2483,8 @@
       "simmer"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2231,6 +2499,8 @@
      "minutes": 8,
      "needs": [],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2245,6 +2515,8 @@
      "minutes": 8,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": "refroidir",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2261,6 +2533,8 @@
       "blend-smooth"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2275,6 +2549,8 @@
      "minutes": 1,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2285,6 +2561,8 @@
     }
    ],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": 15,
    "accepts": [],
    "creneaux": [
@@ -2325,6 +2603,7 @@
    "ingredients": [
     {
      "id": "parures-legumes",
+     "ref": "parures-legumes",
      "nom": "épluchures de carottes, vert de poireau, feuilles de céleri",
      "qty": 1,
      "unit": "lot",
@@ -2333,6 +2612,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "oignon (ou vert de cébette)",
      "qty": 1,
      "unit": "pièce",
@@ -2341,6 +2621,7 @@
     },
     {
      "id": "persil",
+     "ref": "persil",
      "nom": "tiges de persil (facultatif)",
      "qty": 1,
      "unit": "poignée",
@@ -2349,6 +2630,7 @@
     },
     {
      "id": "orties",
+     "ref": "orties",
      "nom": "orties (facultatif)",
      "qty": 1,
      "unit": "poignée",
@@ -2357,6 +2639,7 @@
     },
     {
      "id": "eau",
+     "ref": "eau",
      "nom": "eau",
      "qty": 1,
      "unit": "l",
@@ -2365,6 +2648,7 @@
     },
     {
      "id": "laurier",
+     "ref": "laurier",
      "nom": "feuille de laurier",
      "qty": 1,
      "unit": "pièce",
@@ -2373,6 +2657,7 @@
     },
     {
      "id": "clous-girofle",
+     "ref": "clous-girofle",
      "nom": "clous de girofle",
      "qty": 3,
      "unit": "pièce",
@@ -2381,6 +2666,7 @@
     },
     {
      "id": "thym",
+     "ref": "thym",
      "nom": "thym, sarriette, marjolaine, origan ou hysope (au choix ou en mélange)",
      "qty": 1,
      "unit": "c. à c.",
@@ -2389,6 +2675,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -2397,6 +2684,7 @@
     },
     {
      "id": "poivre",
+     "ref": "poivre",
      "nom": "poivre",
      "qty": 1,
      "unit": "pincée",
@@ -2411,6 +2699,8 @@
      "minutes": 8,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2427,6 +2717,8 @@
       "simmer-large"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2441,6 +2733,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2455,6 +2749,8 @@
      "minutes": 1,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2465,6 +2761,8 @@
     }
    ],
    "bebe": "une petite louche de bouillon filtré, AVANT de rectifier le sel",
+   "bebePrep": "servir tiède à la cuillère, ou l'utiliser pour détendre une purée",
+   "bebeApres": null,
    "actifMin": 10,
    "accepts": [
     {
@@ -2547,6 +2845,7 @@
    "ingredients": [
     {
      "id": "farine-complete",
+     "ref": "farine-complete",
      "nom": "farine T110 de blé ou de grand épeautre",
      "qty": 200,
      "unit": "g",
@@ -2555,6 +2854,7 @@
     },
     {
      "id": "chevre-demi-sec",
+     "ref": "chevre-demi-sec",
      "nom": "fromage de chèvre demi-sec",
      "qty": 100,
      "unit": "g",
@@ -2563,6 +2863,7 @@
     },
     {
      "id": "thym-frais",
+     "ref": "thym-frais",
      "nom": "brins de thym bien tendres",
      "qty": 12,
      "unit": "brin",
@@ -2571,6 +2872,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 7,
      "unit": "cl",
@@ -2579,6 +2881,7 @@
     },
     {
      "id": "vin-blanc-sec",
+     "ref": "vin-blanc-sec",
      "nom": "vin blanc sec",
      "qty": 5,
      "unit": "cl",
@@ -2587,6 +2890,7 @@
     },
     {
      "id": "fleur-de-sel",
+     "ref": "fleur-de-sel",
      "nom": "fleur de sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -2603,6 +2907,8 @@
       "bake"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2617,6 +2923,8 @@
      "minutes": 5,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2631,6 +2939,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2647,6 +2957,8 @@
       "weigh"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2663,6 +2975,8 @@
       "bake"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2677,6 +2991,8 @@
      "minutes": 1,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2687,6 +3003,8 @@
     }
    ],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": 10,
    "accepts": [],
    "creneaux": [
@@ -2733,6 +3051,7 @@
    "ingredients": [
     {
      "id": "kasha-cuit-ing",
+     "ref": "kasha-cuit-ing",
      "nom": "kasha cuit et refroidi",
      "qty": 250,
      "unit": "g",
@@ -2741,6 +3060,7 @@
     },
     {
      "id": "echalote",
+     "ref": "echalote",
      "nom": "échalotes",
      "qty": 2,
      "unit": "pièce",
@@ -2749,6 +3069,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile (+ un fond pour la poêle)",
      "qty": 2,
      "unit": "c. à s.",
@@ -2757,6 +3078,7 @@
     },
     {
      "id": "oeufs",
+     "ref": "oeufs",
      "nom": "œuf",
      "qty": 1,
      "unit": "pièce",
@@ -2765,6 +3087,7 @@
     },
     {
      "id": "chevre-buche",
+     "ref": "chevre-buche",
      "nom": "bûche de fromage de chèvre",
      "qty": 200,
      "unit": "g",
@@ -2773,6 +3096,7 @@
     },
     {
      "id": "ciboulette",
+     "ref": "ciboulette",
      "nom": "ciboulette",
      "qty": 1,
      "unit": "petit bouquet",
@@ -2781,6 +3105,7 @@
     },
     {
      "id": "farine-complete",
+     "ref": "farine-complete",
      "nom": "farine de blé ou d'épeautre (pour rouler)",
      "qty": 1,
      "unit": "tasse",
@@ -2789,6 +3114,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -2797,6 +3123,7 @@
     },
     {
      "id": "poivre",
+     "ref": "poivre",
      "nom": "poivre",
      "qty": 1,
      "unit": "pincée",
@@ -2813,6 +3140,8 @@
       "simmer"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2829,6 +3158,8 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2843,6 +3174,8 @@
      "minutes": 4,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2857,6 +3190,8 @@
      "minutes": 1,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2871,6 +3206,8 @@
      "minutes": 8,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2887,6 +3224,8 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2901,6 +3240,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -2911,6 +3252,8 @@
     }
    ],
    "bebe": "2 c. à s. du mélange kasha-chèvre AVANT le poivre et le sel de finition",
+   "bebePrep": "former une petite croquette sans farine, la dorer à la poêle et la couper en bâtonnets",
+   "bebeApres": null,
    "actifMin": 30,
    "accepts": [
     {
@@ -2984,6 +3327,7 @@
    "ingredients": [
     {
      "id": "champignons-paris",
+     "ref": "champignons-paris",
      "nom": "champignons de Paris",
      "qty": 500,
      "unit": "g",
@@ -2992,6 +3336,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "oignon",
      "qty": 1,
      "unit": "pièce",
@@ -3000,6 +3345,7 @@
     },
     {
      "id": "fromage-rape",
+     "ref": "fromage-rape",
      "nom": "emmental",
      "qty": 180,
      "unit": "g",
@@ -3008,6 +3354,7 @@
     },
     {
      "id": "flocons-avoine",
+     "ref": "flocons-avoine",
      "nom": "flocons d'avoine",
      "qty": 120,
      "unit": "g",
@@ -3016,6 +3363,7 @@
     },
     {
      "id": "oeufs",
+     "ref": "oeufs",
      "nom": "œufs",
      "qty": 4,
      "unit": "pièce",
@@ -3024,6 +3372,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 6,
      "unit": "c. à s.",
@@ -3032,6 +3381,7 @@
     },
     {
      "id": "ail",
+     "ref": "ail",
      "nom": "ail",
      "qty": 1,
      "unit": "gousse",
@@ -3040,6 +3390,7 @@
     },
     {
      "id": "persil",
+     "ref": "persil",
      "nom": "persil frais",
      "qty": 0.5,
      "unit": "bouquet",
@@ -3048,6 +3399,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -3056,6 +3408,7 @@
     },
     {
      "id": "poivre",
+     "ref": "poivre",
      "nom": "poivre",
      "qty": 1,
      "unit": "bonne pincée",
@@ -3072,6 +3425,8 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3088,6 +3443,8 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3104,6 +3461,8 @@
       "bake"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": "cuire-champignons",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3120,6 +3479,8 @@
       "chop-coarse"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3134,6 +3495,8 @@
      "minutes": 1,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3148,6 +3511,8 @@
      "minutes": 4,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3164,6 +3529,8 @@
       "bake"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3174,6 +3541,8 @@
     }
    ],
    "bebe": "2 c. à s. de pâte, AVANT le sel et le poivre",
+   "bebePrep": "cuire une petite escalope à part et la couper en bâtonnets à saisir",
+   "bebeApres": null,
    "actifMin": 30,
    "accepts": [],
    "creneaux": [
@@ -3225,6 +3594,7 @@
    "ingredients": [
     {
      "id": "pois-chiches-cuits-ing",
+     "ref": "pois-chiches-cuits-ing",
      "nom": "pois chiches cuits bien égouttés",
      "qty": 500,
      "unit": "g",
@@ -3233,6 +3603,7 @@
     },
     {
      "id": "herbes-fraiches",
+     "ref": "herbes-fraiches",
      "nom": "herbes fraîches en mélange (fenouil, basilic, origan, marjolaine, ciboulette, thym, sauge, ail des ours…), tiges ligneuses retirées",
      "qty": 80,
      "unit": "g",
@@ -3241,6 +3612,7 @@
     },
     {
      "id": "tahin",
+     "ref": "tahin",
      "nom": "tahin",
      "qty": 50,
      "unit": "g",
@@ -3249,6 +3621,7 @@
     },
     {
      "id": "farine-complete",
+     "ref": "farine-complete",
      "nom": "farine semi-complète de petit épeautre (+ un peu pour enrober)",
      "qty": 55,
      "unit": "g",
@@ -3257,6 +3630,7 @@
     },
     {
      "id": "citron",
+     "ref": "citron",
      "nom": "jus de citron (environ un demi-citron)",
      "qty": 3,
      "unit": "cl",
@@ -3265,6 +3639,7 @@
     },
     {
      "id": "ail",
+     "ref": "ail",
      "nom": "ail",
      "qty": 1,
      "unit": "gousse",
@@ -3273,6 +3648,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive (+ un peu pour la cuisson)",
      "qty": 4,
      "unit": "c. à s.",
@@ -3281,6 +3657,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel fin",
      "qty": 5,
      "unit": "g",
@@ -3289,6 +3666,7 @@
     },
     {
      "id": "poivre",
+     "ref": "poivre",
      "nom": "poivre du moulin",
      "qty": 1,
      "unit": "pincée",
@@ -3305,6 +3683,8 @@
       "chop-coarse"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3321,6 +3701,8 @@
       "chop-coarse"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3337,6 +3719,8 @@
       "weigh"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3353,6 +3737,8 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3367,6 +3753,8 @@
      "minutes": 1,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3377,6 +3765,8 @@
     }
    ],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": 37,
    "accepts": [
     {
@@ -3463,6 +3853,7 @@
    "ingredients": [
     {
      "id": "oeufs",
+     "ref": "oeufs",
      "nom": "œufs",
      "qty": 4,
      "unit": "pièce",
@@ -3471,6 +3862,7 @@
     },
     {
      "id": "farine-complete",
+     "ref": "farine-complete",
      "nom": "farine T110 de blé ou de grand épeautre",
      "qty": 300,
      "unit": "g",
@@ -3479,6 +3871,7 @@
     },
     {
      "id": "vert-de-blette",
+     "ref": "vert-de-blette",
      "nom": "vert de blettes (ou épinards frais)",
      "qty": 400,
      "unit": "g",
@@ -3487,6 +3880,7 @@
     },
     {
      "id": "fromage-rape",
+     "ref": "fromage-rape",
      "nom": "gruyère râpé (facultatif)",
      "qty": 140,
      "unit": "g",
@@ -3495,6 +3889,7 @@
     },
     {
      "id": "cebette",
+     "ref": "cebette",
      "nom": "cébette avec le vert",
      "qty": 1,
      "unit": "pièce",
@@ -3503,6 +3898,7 @@
     },
     {
      "id": "persil",
+     "ref": "persil",
      "nom": "persil",
      "qty": 1,
      "unit": "petit bouquet",
@@ -3511,6 +3907,7 @@
     },
     {
      "id": "ail",
+     "ref": "ail",
      "nom": "ail",
      "qty": 2,
      "unit": "gousse",
@@ -3519,6 +3916,7 @@
     },
     {
      "id": "lait",
+     "ref": "lait",
      "nom": "lait entier",
      "qty": 40,
      "unit": "cl",
@@ -3527,6 +3925,7 @@
     },
     {
      "id": "poudre-a-lever",
+     "ref": "poudre-a-lever",
      "nom": "poudre à lever",
      "qty": 1,
      "unit": "sachet",
@@ -3535,6 +3934,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile pour la poêle",
      "qty": 4,
      "unit": "c. à s.",
@@ -3543,6 +3943,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -3551,6 +3952,7 @@
     },
     {
      "id": "poivre",
+     "ref": "poivre",
      "nom": "poivre",
      "qty": 1,
      "unit": "pincée",
@@ -3565,6 +3967,8 @@
      "minutes": 6,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3581,6 +3985,8 @@
       "blend-smooth"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3595,6 +4001,8 @@
      "minutes": 1,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3611,6 +4019,8 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3625,6 +4035,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3635,6 +4047,8 @@
     }
    ],
    "bebe": "une petite louche de pâte, AVANT salage",
+   "bebePrep": "cuire un farçou fin à la poêle, puis l'écraser ou le couper en bâtonnets à saisir",
+   "bebeApres": null,
    "actifMin": 30,
    "accepts": [],
    "creneaux": [
@@ -3696,6 +4110,7 @@
    "ingredients": [
     {
      "id": "mousse-chocolat-ing",
+     "ref": "mousse-chocolat-ing",
      "nom": "mousse au chocolat encore tiède (proportions doublées)",
      "qty": 2,
      "unit": "recette",
@@ -3704,6 +4119,7 @@
     },
     {
      "id": "biscuits-cuillere",
+     "ref": "biscuits-cuillere",
      "nom": "biscuits à la cuillère",
      "qty": 27,
      "unit": "pièce",
@@ -3712,6 +4128,7 @@
     },
     {
      "id": "sirop-imbibage",
+     "ref": "sirop-imbibage",
      "nom": "sirop d'imbibage au choix (expresso-amaretto, agrumes-rhum, Earl Grey, menthe, poire…)",
      "qty": 15,
      "unit": "cl",
@@ -3720,6 +4137,7 @@
     },
     {
      "id": "cacao",
+     "ref": "cacao",
      "nom": "cacao pour saupoudrer",
      "qty": 2,
      "unit": "c. à s.",
@@ -3734,6 +4152,8 @@
      "minutes": 8,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3748,6 +4168,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3762,6 +4184,8 @@
      "minutes": 6,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3776,6 +4200,8 @@
      "minutes": 4,
      "needs": [],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": 720,
      "attenteRaison": "repos",
      "attenteSouple": false,
@@ -3786,6 +4212,8 @@
     }
    ],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": 20,
    "accepts": [
     {
@@ -3879,6 +4307,7 @@
    "ingredients": [
     {
      "id": "pates",
+     "ref": "pates",
      "nom": "pâtes courtes (penne, coquillettes)",
      "qty": 350,
      "unit": "g",
@@ -3887,6 +4316,7 @@
     },
     {
      "id": "tomates-pelees",
+     "ref": "tomates-pelees",
      "nom": "tomates pelées en conserve",
      "qty": 400,
      "unit": "g",
@@ -3895,6 +4325,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "oignon",
      "qty": 1,
      "unit": "pièce",
@@ -3903,6 +4334,7 @@
     },
     {
      "id": "ail",
+     "ref": "ail",
      "nom": "ail",
      "qty": 2,
      "unit": "gousse",
@@ -3911,6 +4343,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 2,
      "unit": "c. à s.",
@@ -3919,6 +4352,7 @@
     },
     {
      "id": "fromage-rape",
+     "ref": "fromage-rape",
      "nom": "comté râpé",
      "qty": 80,
      "unit": "g",
@@ -3927,6 +4361,7 @@
     },
     {
      "id": "herbes-provence",
+     "ref": "herbes-provence",
      "nom": "herbes de Provence",
      "qty": 1,
      "unit": "c. à c.",
@@ -3935,6 +4370,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -3952,6 +4388,8 @@
       "simmer"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3968,6 +4406,8 @@
       "boil"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": "sauce",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -3984,6 +4424,8 @@
       "gratin-vessel"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4000,6 +4442,8 @@
       "gratin"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4010,6 +4454,8 @@
     }
    ],
    "bebe": "quelques pâtes et 2 c. à s. de sauce tomate, avant salage et sans fromage",
+   "bebePrep": "écraser à la fourchette",
+   "bebeApres": "pates",
    "actifMin": 15,
    "accepts": [],
    "creneaux": [
@@ -4061,6 +4507,7 @@
    "ingredients": [
     {
      "id": "pates",
+     "ref": "pates",
      "nom": "orecchiette (ou autres pâtes)",
      "qty": 500,
      "unit": "g",
@@ -4069,6 +4516,7 @@
     },
     {
      "id": "chou-chinois",
+     "ref": "chou-chinois",
      "nom": "gros chou chinois (ou deux petits)",
      "qty": 1,
      "unit": "pièce",
@@ -4077,6 +4525,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "gros oignons",
      "qty": 3,
      "unit": "pièce",
@@ -4085,6 +4534,7 @@
     },
     {
      "id": "boeuf-hache",
+     "ref": "boeuf-hache",
      "nom": "bœuf haché",
      "qty": 400,
      "unit": "g",
@@ -4093,6 +4543,7 @@
     },
     {
      "id": "fromage-rape",
+     "ref": "fromage-rape",
      "nom": "parmesan râpé",
      "qty": 100,
      "unit": "g",
@@ -4101,6 +4552,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 6,
      "unit": "c. à s.",
@@ -4109,6 +4561,7 @@
     },
     {
      "id": "origan",
+     "ref": "origan",
      "nom": "origan séché",
      "qty": 1,
      "unit": "pincée",
@@ -4117,6 +4570,7 @@
     },
     {
      "id": "thym",
+     "ref": "thym",
      "nom": "thym séché",
      "qty": 1,
      "unit": "pincée",
@@ -4125,6 +4579,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -4133,6 +4588,7 @@
     },
     {
      "id": "poivre",
+     "ref": "poivre",
      "nom": "poivre",
      "qty": 1,
      "unit": "pincée",
@@ -4149,6 +4605,8 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4163,6 +4621,8 @@
      "minutes": 8,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": "revenir-oignons",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4179,6 +4639,8 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4193,6 +4655,8 @@
      "minutes": 1,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4209,6 +4673,8 @@
       "pan-fry"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4225,6 +4691,8 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4241,6 +4709,8 @@
       "simmer-large"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": "mijoter",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4257,6 +4727,8 @@
       "bake"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": "mijoter",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4273,6 +4745,8 @@
       "gratin-vessel"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4289,6 +4763,8 @@
       "gratin"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4299,6 +4775,8 @@
     }
    ],
    "bebe": "2 c. à s. de chou et de viande, AVANT de saler et poivrer la poêlée",
+   "bebePrep": "écraser à la fourchette avec quelques pâtes bien cuites",
+   "bebeApres": null,
    "actifMin": 25,
    "accepts": [],
    "creneaux": [
@@ -4350,6 +4828,7 @@
    "ingredients": [
     {
      "id": "lentilles-seches",
+     "ref": "lentilles-seches",
      "nom": "lentilles vertes sèches",
      "qty": 300,
      "unit": "g",
@@ -4358,6 +4837,7 @@
     },
     {
      "id": "carottes",
+     "ref": "carottes",
      "nom": "carottes",
      "qty": 4,
      "unit": "pièce",
@@ -4366,6 +4846,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "oignon",
      "qty": 1,
      "unit": "pièce",
@@ -4374,6 +4855,7 @@
     },
     {
      "id": "laurier",
+     "ref": "laurier",
      "nom": "feuille de laurier",
      "qty": 1,
      "unit": "pièce",
@@ -4382,6 +4864,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -4398,6 +4881,8 @@
       "simmer-large"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4414,6 +4899,8 @@
       "steam"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": "lancer-mijotage",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4428,6 +4915,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4438,6 +4927,8 @@
     }
    ],
    "bebe": "3 c. à s. de lentilles + quelques rondelles de carottes, avant salage",
+   "bebePrep": "mixer avec un peu d'eau de cuisson tiède",
+   "bebeApres": null,
    "actifMin": 10,
    "accepts": [],
    "creneaux": [
@@ -4499,6 +4990,7 @@
    "ingredients": [
     {
      "id": "farine-complete",
+     "ref": "farine-complete",
      "nom": "farine de blé ou de grand épeautre T110",
      "qty": 65,
      "unit": "g",
@@ -4507,6 +4999,7 @@
     },
     {
      "id": "poudre-a-lever",
+     "ref": "poudre-a-lever",
      "nom": "poudre à lever",
      "qty": 0.5,
      "unit": "sachet",
@@ -4515,6 +5008,7 @@
     },
     {
      "id": "chocolat-noir",
+     "ref": "chocolat-noir",
      "nom": "chocolat noir pâtissier à 70 %",
      "qty": 100,
      "unit": "g",
@@ -4523,6 +5017,7 @@
     },
     {
      "id": "sirop-agave",
+     "ref": "sirop-agave",
      "nom": "sirop d'agave",
      "qty": 4,
      "unit": "grosse c. à s.",
@@ -4531,6 +5026,7 @@
     },
     {
      "id": "huile-coco",
+     "ref": "huile-coco",
      "nom": "huile de coco vierge",
      "qty": 4,
      "unit": "grosse c. à s.",
@@ -4539,6 +5035,7 @@
     },
     {
      "id": "extrait-vanille",
+     "ref": "extrait-vanille",
      "nom": "extrait de vanille liquide",
      "qty": 1,
      "unit": "grosse c. à s.",
@@ -4547,6 +5044,7 @@
     },
     {
      "id": "oeufs",
+     "ref": "oeufs",
      "nom": "œufs",
      "qty": 3,
      "unit": "pièce",
@@ -4555,6 +5053,7 @@
     },
     {
      "id": "fleur-de-sel",
+     "ref": "fleur-de-sel",
      "nom": "fleur de sel",
      "qty": 1,
      "unit": "pincée",
@@ -4563,6 +5062,7 @@
     },
     {
      "id": "caissettes",
+     "ref": "caissettes",
      "nom": "caissettes à truffe ou mini-caissettes à muffins d'environ 4 cm",
      "qty": 20,
      "unit": "pièce",
@@ -4579,6 +5079,8 @@
       "bake"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4593,6 +5095,8 @@
      "minutes": 4,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4607,6 +5111,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4623,6 +5129,8 @@
       "simmer"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4637,6 +5145,8 @@
      "minutes": 4,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4653,6 +5163,8 @@
       "bake"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4663,6 +5175,8 @@
     }
    ],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": 19,
    "accepts": [],
    "creneaux": [
@@ -4715,6 +5229,7 @@
    "ingredients": [
     {
      "id": "celeri-rave",
+     "ref": "celeri-rave",
      "nom": "céleri-rave",
      "qty": 0.5,
      "unit": "pièce",
@@ -4723,6 +5238,7 @@
     },
     {
      "id": "navet-primeur",
+     "ref": "navet-primeur",
      "nom": "navet blanc",
      "qty": 1,
      "unit": "pièce",
@@ -4731,6 +5247,7 @@
     },
     {
      "id": "poireau",
+     "ref": "poireau",
      "nom": "blancs de poireau (garder le vert pour un autre usage)",
      "qty": 2,
      "unit": "pièce",
@@ -4739,6 +5256,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "bel oignon",
      "qty": 1,
      "unit": "pièce",
@@ -4747,6 +5265,7 @@
     },
     {
      "id": "eau",
+     "ref": "eau",
      "nom": "eau",
      "qty": 1.5,
      "unit": "l",
@@ -4755,6 +5274,7 @@
     },
     {
      "id": "beurre",
+     "ref": "beurre",
      "nom": "beurre demi-sel (ou 4 c. à s. d'huile d'olive)",
      "qty": 50,
      "unit": "g",
@@ -4763,6 +5283,7 @@
     },
     {
      "id": "poivre",
+     "ref": "poivre",
      "nom": "poivre du moulin",
      "qty": 1,
      "unit": "pincée",
@@ -4777,6 +5298,8 @@
      "minutes": 10,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4793,6 +5316,8 @@
       "simmer-large"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4807,6 +5332,8 @@
      "minutes": 1,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4823,6 +5350,8 @@
       "blend-smooth"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4833,6 +5362,8 @@
     }
    ],
    "bebe": "une petite louche de légumes et de bouillon, AVANT le beurre demi-sel et le poivre",
+   "bebePrep": "mixer avec un peu d'eau de cuisson ; le sel du plat vient du beurre, donc le prélèvement est vraiment non salé",
+   "bebeApres": null,
    "actifMin": 12,
    "accepts": [],
    "creneaux": [
@@ -4907,6 +5438,7 @@
    "ingredients": [
     {
      "id": "jus-pois-chiches-ing",
+     "ref": "jus-pois-chiches-ing",
      "nom": "jus de pois chiches (aquafaba)",
      "qty": 12,
      "unit": "cl",
@@ -4915,6 +5447,7 @@
     },
     {
      "id": "chocolat-noir",
+     "ref": "chocolat-noir",
      "nom": "chocolat noir pâtissier à 70 % de cacao",
      "qty": 200,
      "unit": "g",
@@ -4923,6 +5456,7 @@
     },
     {
      "id": "creme-coco",
+     "ref": "creme-coco",
      "nom": "crème de coco liquide (ou de soja)",
      "qty": 20,
      "unit": "cl",
@@ -4931,6 +5465,7 @@
     },
     {
      "id": "huile-coco",
+     "ref": "huile-coco",
      "nom": "huile de coco vierge (ou beurre)",
      "qty": 40,
      "unit": "g",
@@ -4939,6 +5474,7 @@
     },
     {
      "id": "sucre-complet",
+     "ref": "sucre-complet",
      "nom": "sucre au choix (complet",
      "qty": 40,
      "unit": "g",
@@ -4947,6 +5483,7 @@
     },
     {
      "id": "extrait-vanille",
+     "ref": "extrait-vanille",
      "nom": "extrait de vanille liquide",
      "qty": 1,
      "unit": "c. à s.",
@@ -4955,6 +5492,7 @@
     },
     {
      "id": "fleur-de-sel",
+     "ref": "fleur-de-sel",
      "nom": "fleur de sel",
      "qty": 1,
      "unit": "pincée",
@@ -4971,6 +5509,8 @@
       "simmer"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -4987,6 +5527,8 @@
       "blend-smooth"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": "fondre-chocolat",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5001,6 +5543,8 @@
      "minutes": 3,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5015,6 +5559,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": 240,
      "attenteRaison": "repos",
      "attenteSouple": true,
@@ -5025,6 +5571,8 @@
     }
    ],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": 15,
    "accepts": [
     {
@@ -5103,6 +5651,7 @@
    "ingredients": [
     {
      "id": "agneau-collier",
+     "ref": "agneau-collier",
      "nom": "collier d'agneau",
      "qty": 1.2,
      "unit": "kg",
@@ -5111,6 +5660,7 @@
     },
     {
      "id": "pomme-de-terre",
+     "ref": "pomme-de-terre",
      "nom": "pommes de terre nouvelles",
      "qty": 500,
      "unit": "g",
@@ -5119,6 +5669,7 @@
     },
     {
      "id": "carottes",
+     "ref": "carottes",
      "nom": "jeunes carottes",
      "qty": 12,
      "unit": "pièce",
@@ -5127,6 +5678,7 @@
     },
     {
      "id": "navets-roses",
+     "ref": "navets-roses",
      "nom": "jeunes navets roses",
      "qty": 12,
      "unit": "pièce",
@@ -5135,6 +5687,7 @@
     },
     {
      "id": "echalote",
+     "ref": "echalote",
      "nom": "échalotes (ou 2 oignons)",
      "qty": 4,
      "unit": "pièce",
@@ -5143,6 +5696,7 @@
     },
     {
      "id": "tomates-pelees",
+     "ref": "tomates-pelees",
      "nom": "tomates pelées au jus",
      "qty": 400,
      "unit": "g",
@@ -5151,6 +5705,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 6,
      "unit": "c. à s.",
@@ -5159,6 +5714,7 @@
     },
     {
      "id": "thym-frais",
+     "ref": "thym-frais",
      "nom": "thym frais (ou séché)",
      "qty": 6,
      "unit": "brin",
@@ -5167,6 +5723,7 @@
     },
     {
      "id": "fleur-de-sel",
+     "ref": "fleur-de-sel",
      "nom": "fleur de sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -5175,6 +5732,7 @@
     },
     {
      "id": "poivre",
+     "ref": "poivre",
      "nom": "poivre du moulin",
      "qty": 1,
      "unit": "pincée",
@@ -5189,6 +5747,8 @@
      "minutes": 15,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5205,6 +5765,8 @@
       "simmer-large"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5219,6 +5781,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5235,6 +5799,8 @@
       "simmer-large"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5251,6 +5817,8 @@
       "simmer-large"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5267,6 +5835,8 @@
       "simmer-large"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5277,6 +5847,8 @@
     }
    ],
    "bebe": "quelques légumes sautés, AVANT de les saler et de les réserver",
+   "bebePrep": "écraser à la fourchette avec un peu de l'huile parfumée de la cocotte",
+   "bebeApres": null,
    "actifMin": 30,
    "accepts": [],
    "creneaux": [
@@ -5335,6 +5907,7 @@
    "ingredients": [
     {
      "id": "colin-surgele",
+     "ref": "colin-surgele",
      "nom": "filets de colin surgelés",
      "qty": 400,
      "unit": "g",
@@ -5343,6 +5916,7 @@
     },
     {
      "id": "fromage-rape",
+     "ref": "fromage-rape",
      "nom": "parmesan râpé",
      "qty": 70,
      "unit": "g",
@@ -5351,6 +5925,7 @@
     },
     {
      "id": "biscottes",
+     "ref": "biscottes",
      "nom": "biscottes complètes de blé ou d'épeautre",
      "qty": 70,
      "unit": "g",
@@ -5359,6 +5934,7 @@
     },
     {
      "id": "oeufs",
+     "ref": "oeufs",
      "nom": "œufs",
      "qty": 2,
      "unit": "pièce",
@@ -5367,6 +5943,7 @@
     },
     {
      "id": "ciboulette",
+     "ref": "ciboulette",
      "nom": "ciboulette",
      "qty": 1,
      "unit": "petit bouquet",
@@ -5375,6 +5952,7 @@
     },
     {
      "id": "citron",
+     "ref": "citron",
      "nom": "citron (son jus)",
      "qty": 1,
      "unit": "pièce",
@@ -5383,6 +5961,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive ou de tournesol",
      "qty": 2,
      "unit": "c. à s.",
@@ -5391,6 +5970,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -5399,6 +5979,7 @@
     },
     {
      "id": "poivre",
+     "ref": "poivre",
      "nom": "poivre",
      "qty": 1,
      "unit": "pincée",
@@ -5413,6 +5994,8 @@
      "minutes": 5,
      "needs": [],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": 120,
      "attenteRaison": "decongelation",
      "attenteSouple": true,
@@ -5431,6 +6014,8 @@
      "minutes": 4,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5445,6 +6030,8 @@
      "minutes": 1,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5461,6 +6048,8 @@
       "chop-coarse"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5475,6 +6064,8 @@
      "minutes": 3,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5489,6 +6080,8 @@
      "minutes": 8,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5505,6 +6098,8 @@
       "bake"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5515,6 +6110,8 @@
     }
    ],
    "bebe": "un morceau de colin AVANT panure et avant le second salage",
+   "bebePrep": "cuire à la vapeur ou au four sans chapelure, puis écraser à la fourchette ; vérifier l'absence d'arêtes",
+   "bebeApres": null,
    "actifMin": 15,
    "accepts": [],
    "creneaux": [
@@ -5562,6 +6159,7 @@
    "ingredients": [
     {
      "id": "oeufs",
+     "ref": "oeufs",
      "nom": "œufs",
      "qty": 6,
      "unit": "pièce",
@@ -5570,6 +6168,7 @@
     },
     {
      "id": "courgettes",
+     "ref": "courgettes",
      "nom": "courgettes",
      "qty": 2,
      "unit": "pièce",
@@ -5578,6 +6177,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "oignon",
      "qty": 1,
      "unit": "pièce",
@@ -5586,6 +6186,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 2,
      "unit": "c. à s.",
@@ -5594,6 +6195,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "pincée",
@@ -5602,6 +6204,7 @@
     },
     {
      "id": "poivre-5-baies",
+     "ref": "poivre-5-baies",
      "nom": "poivre 5 baies",
      "qty": 1,
      "unit": "pincée",
@@ -5618,6 +6221,8 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5632,6 +6237,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5648,6 +6255,8 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5658,6 +6267,8 @@
     }
    ],
    "bebe": "quelques rondelles de courgettes fondues, avant salage",
+   "bebePrep": "écraser à la fourchette",
+   "bebeApres": "revenir",
    "actifMin": 18,
    "accepts": [],
    "creneaux": [
@@ -5701,6 +6312,7 @@
    "ingredients": [
     {
      "id": "pomme-de-terre",
+     "ref": "pomme-de-terre",
      "nom": "petites pommes de terre nouvelles",
      "qty": 3,
      "unit": "pièce",
@@ -5709,6 +6321,7 @@
     },
     {
      "id": "navet-primeur",
+     "ref": "navet-primeur",
      "nom": "navet primeur",
      "qty": 1,
      "unit": "pièce",
@@ -5717,6 +6330,7 @@
     },
     {
      "id": "carottes",
+     "ref": "carottes",
      "nom": "carottes nouvelles",
      "qty": 2,
      "unit": "pièce",
@@ -5725,6 +6339,7 @@
     },
     {
      "id": "cebette",
+     "ref": "cebette",
      "nom": "cébette",
      "qty": 1,
      "unit": "pièce",
@@ -5733,6 +6348,7 @@
     },
     {
      "id": "petits-pois",
+     "ref": "petits-pois",
      "nom": "petits pois à écosser",
      "qty": 1,
      "unit": "poignée",
@@ -5741,6 +6357,7 @@
     },
     {
      "id": "pois-gourmands",
+     "ref": "pois-gourmands",
      "nom": "pois gourmands",
      "qty": 1,
      "unit": "poignée",
@@ -5749,6 +6366,7 @@
     },
     {
      "id": "pousses-epinards",
+     "ref": "pousses-epinards",
      "nom": "jeunes pousses d'épinards",
      "qty": 1,
      "unit": "poignée",
@@ -5757,6 +6375,7 @@
     },
     {
      "id": "ciboulette",
+     "ref": "ciboulette",
      "nom": "ciboulette",
      "qty": 1,
      "unit": "petit bouquet",
@@ -5765,6 +6384,7 @@
     },
     {
      "id": "oeufs",
+     "ref": "oeufs",
      "nom": "œufs fermiers",
      "qty": 6,
      "unit": "pièce",
@@ -5773,6 +6393,7 @@
     },
     {
      "id": "fromage-rape",
+     "ref": "fromage-rape",
      "nom": "comté ou emmental fraîchement râpé",
      "qty": 100,
      "unit": "g",
@@ -5781,6 +6402,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 6,
      "unit": "c. à s.",
@@ -5789,6 +6411,7 @@
     },
     {
      "id": "farine",
+     "ref": "farine",
      "nom": "farine",
      "qty": 1,
      "unit": "c. à s.",
@@ -5797,6 +6420,7 @@
     },
     {
      "id": "fleur-de-sel",
+     "ref": "fleur-de-sel",
      "nom": "fleur de sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -5805,6 +6429,7 @@
     },
     {
      "id": "poivre",
+     "ref": "poivre",
      "nom": "poivre du moulin",
      "qty": 1,
      "unit": "pincée",
@@ -5819,6 +6444,8 @@
      "minutes": 10,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5835,6 +6462,8 @@
       "pan-fry"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5849,6 +6478,8 @@
      "minutes": 8,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": "cuire-racines",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5865,6 +6496,8 @@
       "pan-fry"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5879,6 +6512,8 @@
      "minutes": 4,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": "ajouter-verts",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5895,6 +6530,8 @@
       "pan-fry"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5909,6 +6546,8 @@
      "minutes": 10,
      "needs": [],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -5919,6 +6558,8 @@
     }
    ],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": 15,
    "accepts": [],
    "creneaux": [
@@ -5960,6 +6601,7 @@
    "ingredients": [
     {
      "id": "pain-rassis-ing",
+     "ref": "pain-rassis-ing",
      "nom": "pain demi-complet au levain un peu rassis",
      "qty": 350,
      "unit": "g",
@@ -5968,6 +6610,7 @@
     },
     {
      "id": "tomates",
+     "ref": "tomates",
      "nom": "grosses tomates bien goûteuses (idéalement anciennes)",
      "qty": 4,
      "unit": "pièce",
@@ -5976,6 +6619,7 @@
     },
     {
      "id": "concombre",
+     "ref": "concombre",
      "nom": "petit concombre Noa",
      "qty": 1,
      "unit": "pièce",
@@ -5984,6 +6628,7 @@
     },
     {
      "id": "olives-noires",
+     "ref": "olives-noires",
      "nom": "olives noires",
      "qty": 16,
      "unit": "pièce",
@@ -5992,6 +6637,7 @@
     },
     {
      "id": "oignon-rouge",
+     "ref": "oignon-rouge",
      "nom": "oignon rouge",
      "qty": 1,
      "unit": "pièce",
@@ -6000,6 +6646,7 @@
     },
     {
      "id": "basilic",
+     "ref": "basilic",
      "nom": "feuilles de basilic",
      "qty": 2,
      "unit": "poignée",
@@ -6008,6 +6655,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 5,
      "unit": "c. à s.",
@@ -6016,6 +6664,7 @@
     },
     {
      "id": "vinaigre",
+     "ref": "vinaigre",
      "nom": "vinaigre",
      "qty": 2,
      "unit": "c. à s.",
@@ -6024,6 +6673,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -6032,6 +6682,7 @@
     },
     {
      "id": "poivre",
+     "ref": "poivre",
      "nom": "poivre du moulin",
      "qty": 1,
      "unit": "pincée",
@@ -6046,6 +6697,8 @@
      "minutes": 6,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6060,6 +6713,8 @@
      "minutes": 4,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6074,6 +6729,8 @@
      "minutes": 1,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6088,6 +6745,8 @@
      "minutes": 7,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6102,6 +6761,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": 45,
      "attenteRaison": "repos",
      "attenteSouple": true,
@@ -6112,6 +6773,8 @@
     }
    ],
    "bebe": "un morceau de pain trempé et quelques dés de tomate, AVANT sel, huile et vinaigre",
+   "bebePrep": "écraser à la fourchette ; pas d'olive ni d'oignon cru",
+   "bebeApres": null,
    "actifMin": 20,
    "accepts": [
     {
@@ -6169,6 +6832,7 @@
    "ingredients": [
     {
      "id": "pates",
+     "ref": "pates",
      "nom": "tagliatelles (blanches ou semi-complètes, blé ou épeautre)",
      "qty": 350,
      "unit": "g",
@@ -6177,6 +6841,7 @@
     },
     {
      "id": "sardines-boite",
+     "ref": "sardines-boite",
      "nom": "sardines en boîte à l'huile d'olive",
      "qty": 8,
      "unit": "pièce",
@@ -6185,6 +6850,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "oignons",
      "qty": 2,
      "unit": "pièce",
@@ -6193,6 +6859,7 @@
     },
     {
      "id": "ail",
+     "ref": "ail",
      "nom": "ail",
      "qty": 1,
      "unit": "gousse",
@@ -6201,6 +6868,7 @@
     },
     {
      "id": "persil",
+     "ref": "persil",
      "nom": "persil plat bien frais",
      "qty": 0.5,
      "unit": "bouquet",
@@ -6209,6 +6877,7 @@
     },
     {
      "id": "fenouil-sauvage",
+     "ref": "fenouil-sauvage",
      "nom": "tiges et feuilles de fenouil sauvage frais (ou fenouil séché)",
      "qty": 1,
      "unit": "poignée",
@@ -6217,6 +6886,7 @@
     },
     {
      "id": "fromage-rape",
+     "ref": "fromage-rape",
      "nom": "parmesan râpé",
      "qty": 100,
      "unit": "g",
@@ -6225,6 +6895,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 3,
      "unit": "c. à s.",
@@ -6233,6 +6904,7 @@
     },
     {
      "id": "origan",
+     "ref": "origan",
      "nom": "origan séché",
      "qty": 1,
      "unit": "c. à c.",
@@ -6241,6 +6913,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -6249,6 +6922,7 @@
     },
     {
      "id": "poivre",
+     "ref": "poivre",
      "nom": "poivre du moulin",
      "qty": 1,
      "unit": "pincée",
@@ -6265,6 +6939,8 @@
       "simmer-large"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6281,6 +6957,8 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": "cuire-pates",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6295,6 +6973,8 @@
      "minutes": 3,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": "cuire-pates",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6311,6 +6991,8 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6327,6 +7009,8 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6341,6 +7025,8 @@
      "minutes": 3,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6351,6 +7037,8 @@
     }
    ],
    "bebe": "quelques tagliatelles et un peu de chair de sardine, AVANT la persillade et le poivre",
+   "bebePrep": "vérifier soigneusement peau et arêtes, couper les pâtes court et écraser à la fourchette",
+   "bebeApres": null,
    "actifMin": 20,
    "accepts": [],
    "creneaux": [
@@ -6399,6 +7087,7 @@
    "ingredients": [
     {
      "id": "creme-coco",
+     "ref": "creme-coco",
      "nom": "crème de coco très froide",
      "qty": 40,
      "unit": "cl",
@@ -6407,6 +7096,7 @@
     },
     {
      "id": "sirop-agave",
+     "ref": "sirop-agave",
      "nom": "sirop d'agave (crème vanille)",
      "qty": 5,
      "unit": "cl",
@@ -6415,6 +7105,7 @@
     },
     {
      "id": "extrait-vanille",
+     "ref": "extrait-vanille",
      "nom": "extrait de vanille",
      "qty": 1,
      "unit": "c. à s.",
@@ -6423,6 +7114,7 @@
     },
     {
      "id": "fraises",
+     "ref": "fraises",
      "nom": "fraises de saison très parfumées (Mara des Bois)",
      "qty": 200,
      "unit": "g",
@@ -6431,6 +7123,7 @@
     },
     {
      "id": "sirop-agave",
+     "ref": "sirop-agave",
      "nom": "sirop d'agave (marbrures)",
      "qty": 50,
      "unit": "g",
@@ -6439,6 +7132,7 @@
     },
     {
      "id": "lait-soja-vanille",
+     "ref": "lait-soja-vanille",
      "nom": "lait de soja-vanille",
      "qty": 60,
      "unit": "g",
@@ -6447,6 +7141,7 @@
     },
     {
      "id": "pots-carton",
+     "ref": "pots-carton",
      "nom": "petits pots en carton",
      "qty": 6,
      "unit": "pièce",
@@ -6463,6 +7158,8 @@
       "blend-smooth"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6479,6 +7176,8 @@
       "blend-smooth"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6493,6 +7192,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6509,6 +7210,8 @@
       "congeler"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6519,6 +7222,8 @@
     }
    ],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": 15,
    "accepts": [],
    "creneaux": [
@@ -6576,6 +7281,7 @@
    "ingredients": [
     {
      "id": "orge",
+     "ref": "orge",
      "nom": "orge mondé",
      "qty": 500,
      "unit": "g",
@@ -6584,6 +7290,7 @@
     },
     {
      "id": "champignons-paris",
+     "ref": "champignons-paris",
      "nom": "champignons frais",
      "qty": 500,
      "unit": "g",
@@ -6592,6 +7299,7 @@
     },
     {
      "id": "champignons-conserve",
+     "ref": "champignons-conserve",
      "nom": "champignons en conserve",
      "qty": 450,
      "unit": "g",
@@ -6600,6 +7308,7 @@
     },
     {
      "id": "jambon-cru",
+     "ref": "jambon-cru",
      "nom": "jambon cru fumé",
      "qty": 100,
      "unit": "g",
@@ -6608,6 +7317,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "gros oignon",
      "qty": 1,
      "unit": "pièce",
@@ -6616,6 +7326,7 @@
     },
     {
      "id": "ail",
+     "ref": "ail",
      "nom": "ail",
      "qty": 1,
      "unit": "gousse",
@@ -6624,6 +7335,7 @@
     },
     {
      "id": "thym-frais",
+     "ref": "thym-frais",
      "nom": "brins de thym frais",
      "qty": 3,
      "unit": "brin",
@@ -6632,6 +7344,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 6,
      "unit": "c. à s.",
@@ -6640,6 +7353,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -6648,6 +7362,7 @@
     },
     {
      "id": "poivre",
+     "ref": "poivre",
      "nom": "poivre",
      "qty": 1,
      "unit": "pincée",
@@ -6662,6 +7377,8 @@
      "minutes": 3,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": 720,
      "attenteRaison": "trempage",
      "attenteSouple": true,
@@ -6680,6 +7397,8 @@
      "minutes": 1,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6696,6 +7415,8 @@
       "simmer-large"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6712,6 +7433,8 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": "cuire-orge",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6728,6 +7451,8 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": "cuire-orge",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6742,6 +7467,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6756,6 +7483,8 @@
      "minutes": 3,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6766,6 +7495,8 @@
     }
    ],
    "bebe": "2 c. à s. d'orge et quelques champignons, AVANT l'ail, le poivre et le thym",
+   "bebePrep": "écraser à la fourchette ; écarter le jambon, trop salé",
+   "bebeApres": null,
    "actifMin": 20,
    "accepts": [],
    "creneaux": [
@@ -6816,6 +7547,7 @@
    "ingredients": [
     {
      "id": "poudre-amande",
+     "ref": "poudre-amande",
      "nom": "poudre d'amande",
      "qty": 125,
      "unit": "g",
@@ -6824,6 +7556,7 @@
     },
     {
      "id": "farine-complete",
+     "ref": "farine-complete",
      "nom": "farine semi-complète de blé ou de grand épeautre",
      "qty": 250,
      "unit": "g",
@@ -6832,6 +7565,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 80,
      "unit": "g",
@@ -6840,6 +7574,7 @@
     },
     {
      "id": "eau",
+     "ref": "eau",
      "nom": "eau",
      "qty": 80,
      "unit": "g",
@@ -6848,6 +7583,7 @@
     },
     {
      "id": "fleur-de-sel",
+     "ref": "fleur-de-sel",
      "nom": "fleur de sel",
      "qty": 7,
      "unit": "g",
@@ -6856,6 +7592,7 @@
     },
     {
      "id": "cebette",
+     "ref": "cebette",
      "nom": "cébettes (oignons tiges nouveaux)",
      "qty": 2,
      "unit": "botte",
@@ -6864,6 +7601,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 2,
      "unit": "c. à s.",
@@ -6872,6 +7610,7 @@
     },
     {
      "id": "faisselle",
+     "ref": "faisselle",
      "nom": "fromage frais en faisselle",
      "qty": 500,
      "unit": "g",
@@ -6880,6 +7619,7 @@
     },
     {
      "id": "fromage-rape",
+     "ref": "fromage-rape",
      "nom": "fromage râpé à pâte dure (parmesan, comté, tomme de chèvre ou de brebis)",
      "qty": 200,
      "unit": "g",
@@ -6888,6 +7628,7 @@
     },
     {
      "id": "oeufs",
+     "ref": "oeufs",
      "nom": "œufs",
      "qty": 2,
      "unit": "pièce",
@@ -6896,6 +7637,7 @@
     },
     {
      "id": "ciboulette",
+     "ref": "ciboulette",
      "nom": "ciboulette",
      "qty": 1,
      "unit": "petit bouquet",
@@ -6904,6 +7646,7 @@
     },
     {
      "id": "farine",
+     "ref": "farine",
      "nom": "farine (pour lier l'appareil)",
      "qty": 1,
      "unit": "c. à s.",
@@ -6912,6 +7655,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel (garniture)",
      "qty": 1,
      "unit": "c. à c.",
@@ -6920,6 +7664,7 @@
     },
     {
      "id": "poivre",
+     "ref": "poivre",
      "nom": "poivre du moulin",
      "qty": 1,
      "unit": "pincée",
@@ -6934,6 +7679,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6950,6 +7697,8 @@
       "bake"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6966,6 +7715,8 @@
       "pan-fry"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6980,6 +7731,8 @@
      "minutes": 8,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": "poeler-cebettes",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -6994,6 +7747,8 @@
      "minutes": 5,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": "poeler-cebettes",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7010,6 +7765,8 @@
       "blend-smooth"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7024,6 +7781,8 @@
      "minutes": 1,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7040,6 +7799,8 @@
       "bake"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7050,6 +7811,8 @@
     }
    ],
    "bebe": "2 c. à s. d'appareil faisselle-fromage AVANT d'ajouter le sel, plus une cébette étuvée",
+   "bebePrep": "écraser la cébette à la fourchette et la mélanger à l'appareil, puis cuire à part en ramequin",
+   "bebeApres": null,
    "actifMin": 25,
    "accepts": [],
    "creneaux": [
@@ -7102,6 +7865,7 @@
    "ingredients": [
     {
      "id": "courgettes",
+     "ref": "courgettes",
      "nom": "courgettes",
      "qty": 2,
      "unit": "pièce",
@@ -7110,6 +7874,7 @@
     },
     {
      "id": "aubergine",
+     "ref": "aubergine",
      "nom": "aubergine",
      "qty": 1,
      "unit": "pièce",
@@ -7118,6 +7883,7 @@
     },
     {
      "id": "poivron",
+     "ref": "poivron",
      "nom": "poivron rouge",
      "qty": 1,
      "unit": "pièce",
@@ -7126,6 +7892,7 @@
     },
     {
      "id": "tomates",
+     "ref": "tomates",
      "nom": "tomates",
      "qty": 4,
      "unit": "pièce",
@@ -7134,6 +7901,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "oignon",
      "qty": 1,
      "unit": "pièce",
@@ -7142,6 +7910,7 @@
     },
     {
      "id": "ail",
+     "ref": "ail",
      "nom": "ail",
      "qty": 2,
      "unit": "gousse",
@@ -7150,6 +7919,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 3,
      "unit": "c. à s.",
@@ -7158,6 +7928,7 @@
     },
     {
      "id": "thym",
+     "ref": "thym",
      "nom": "thym",
      "qty": 1,
      "unit": "c. à c.",
@@ -7166,6 +7937,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -7180,6 +7952,8 @@
      "minutes": 10,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7196,6 +7970,8 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7212,6 +7988,8 @@
       "simmer"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7226,6 +8004,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7236,6 +8016,8 @@
     }
    ],
    "bebe": "2 c. à s. de légumes fondus, avant salage",
+   "bebePrep": "écraser à la fourchette ou mixer court",
+   "bebeApres": null,
    "actifMin": 15,
    "accepts": [],
    "creneaux": [
@@ -7288,6 +8070,8 @@
      "minutes": 1,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7304,6 +8088,8 @@
       "reheat"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7318,6 +8104,8 @@
      "minutes": 1,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7328,6 +8116,8 @@
     }
    ],
    "bebe": "2 c. à s. du plat réchauffé, avant de rectifier le sel",
+   "bebePrep": "écraser à la fourchette, allonger d'un peu d'eau tiède si c'est compact",
+   "bebeApres": "rechauffer",
    "actifMin": null,
    "accepts": [
     {
@@ -7372,6 +8162,7 @@
    "ingredients": [
     {
      "id": "saumon",
+     "ref": "saumon",
      "nom": "saumon sauvage frais ou surgelé",
      "qty": 250,
      "unit": "g",
@@ -7380,6 +8171,7 @@
     },
     {
      "id": "echalote",
+     "ref": "echalote",
      "nom": "échalotes",
      "qty": 6,
      "unit": "pièce",
@@ -7388,6 +8180,7 @@
     },
     {
      "id": "carottes",
+     "ref": "carottes",
      "nom": "carotte",
      "qty": 1,
      "unit": "pièce",
@@ -7396,6 +8189,7 @@
     },
     {
      "id": "vin-blanc-sec",
+     "ref": "vin-blanc-sec",
      "nom": "vin blanc sec (ou eau)",
      "qty": 10,
      "unit": "cl",
@@ -7404,6 +8198,7 @@
     },
     {
      "id": "creme",
+     "ref": "creme",
      "nom": "crème fraîche épaisse (ou yaourt de brebis au lait entier)",
      "qty": 1,
      "unit": "c. à s.",
@@ -7412,6 +8207,7 @@
     },
     {
      "id": "concentre-tomate",
+     "ref": "concentre-tomate",
      "nom": "double concentré de tomate (facultatif)",
      "qty": 1,
      "unit": "c. à c.",
@@ -7420,6 +8216,7 @@
     },
     {
      "id": "ciboulette",
+     "ref": "ciboulette",
      "nom": "ciboulette",
      "qty": 0.5,
      "unit": "bouquet",
@@ -7428,6 +8225,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 2,
      "unit": "c. à s.",
@@ -7436,6 +8234,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -7452,6 +8251,8 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7468,6 +8269,8 @@
       "simmer"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7482,6 +8285,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7498,6 +8303,8 @@
       "chop-coarse"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7508,6 +8315,8 @@
     }
    ],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": 15,
    "accepts": [],
    "creneaux": [
@@ -7572,6 +8381,7 @@
    "ingredients": [
     {
      "id": "roti-porc",
+     "ref": "roti-porc",
      "nom": "rôti de porc",
      "qty": 1,
      "unit": "kg",
@@ -7580,6 +8390,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "oignon",
      "qty": 1,
      "unit": "pièce",
@@ -7588,6 +8399,7 @@
     },
     {
      "id": "carottes",
+     "ref": "carottes",
      "nom": "carottes",
      "qty": 3,
      "unit": "pièce",
@@ -7596,6 +8408,7 @@
     },
     {
      "id": "celeri-branche",
+     "ref": "celeri-branche",
      "nom": "branches de céleri bien tendres",
      "qty": 3,
      "unit": "côte",
@@ -7604,6 +8417,7 @@
     },
     {
      "id": "poireau",
+     "ref": "poireau",
      "nom": "poireau",
      "qty": 1,
      "unit": "pièce",
@@ -7612,6 +8426,7 @@
     },
     {
      "id": "herbes-fraiches",
+     "ref": "herbes-fraiches",
      "nom": "herbes fraîches, seules ou en mélange (romarin, sarriette, thym, serpolet, hysope, marjolaine, origan, sauge…)",
      "qty": 1,
      "unit": "poignée",
@@ -7620,6 +8435,7 @@
     },
     {
      "id": "persil",
+     "ref": "persil",
      "nom": "persil frais",
      "qty": 1,
      "unit": "poignée",
@@ -7628,6 +8444,7 @@
     },
     {
      "id": "eau",
+     "ref": "eau",
      "nom": "eau",
      "qty": 2,
      "unit": "l",
@@ -7636,6 +8453,7 @@
     },
     {
      "id": "clous-girofle",
+     "ref": "clous-girofle",
      "nom": "clous de girofle",
      "qty": 3,
      "unit": "pièce",
@@ -7644,6 +8462,7 @@
     },
     {
      "id": "laurier",
+     "ref": "laurier",
      "nom": "feuille de laurier",
      "qty": 1,
      "unit": "pièce",
@@ -7652,6 +8471,7 @@
     },
     {
      "id": "gros-sel",
+     "ref": "gros-sel",
      "nom": "gros sel",
      "qty": 2,
      "unit": "c. à s.",
@@ -7666,6 +8486,8 @@
      "minutes": 10,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7682,6 +8504,8 @@
       "simmer-large"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7698,6 +8522,8 @@
       "simmer-large"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7712,6 +8538,8 @@
      "minutes": 5,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": 720,
      "attenteRaison": "refroidissement",
      "attenteSouple": false,
@@ -7722,6 +8550,8 @@
     }
    ],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": 10,
    "accepts": [],
    "creneaux": [
@@ -7786,6 +8616,7 @@
    "ingredients": [
     {
      "id": "pois-chiches-cuits-ing",
+     "ref": "pois-chiches-cuits-ing",
      "nom": "pois chiches cuits",
      "qty": 500,
      "unit": "g",
@@ -7794,6 +8625,7 @@
     },
     {
      "id": "oeufs",
+     "ref": "oeufs",
      "nom": "œufs ultra frais",
      "qty": 6,
      "unit": "pièce",
@@ -7802,6 +8634,7 @@
     },
     {
      "id": "pousses-sauvages",
+     "ref": "pousses-sauvages",
      "nom": "jeunes pousses sauvages (pâquerette, pissenlit, plantain…), seules ou en mélange",
      "qty": 2,
      "unit": "grosse poignée",
@@ -7810,6 +8643,7 @@
     },
     {
      "id": "ail-des-ours",
+     "ref": "ail-des-ours",
      "nom": "ail des ours et/ou cébette",
      "qty": 1,
      "unit": "gousse",
@@ -7818,6 +8652,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 6,
      "unit": "c. à s.",
@@ -7826,6 +8661,7 @@
     },
     {
      "id": "vinaigre-balsamique",
+     "ref": "vinaigre-balsamique",
      "nom": "vinaigre balsamique",
      "qty": 3,
      "unit": "c. à s.",
@@ -7834,6 +8670,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -7842,6 +8679,7 @@
     },
     {
      "id": "poivre",
+     "ref": "poivre",
      "nom": "poivre du moulin",
      "qty": 1,
      "unit": "pincée",
@@ -7858,6 +8696,8 @@
       "simmer"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7872,6 +8712,8 @@
      "minutes": 8,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": "cuire-oeufs",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7886,6 +8728,8 @@
      "minutes": 3,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7900,6 +8744,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7914,6 +8760,8 @@
      "minutes": 3,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -7924,6 +8772,8 @@
     }
    ],
    "bebe": "2 c. à s. de pois chiches et un demi-œuf, AVANT l'assaisonnement de la salade",
+   "bebePrep": "écraser à la fourchette avec un filet d'huile d'olive ; pas d'herbes sauvages crues",
+   "bebeApres": null,
    "actifMin": 15,
    "accepts": [
     {
@@ -8001,6 +8851,7 @@
    "ingredients": [
     {
      "id": "feuilles-brick",
+     "ref": "feuilles-brick",
      "nom": "feuilles de brick rondes",
      "qty": 24,
      "unit": "pièce",
@@ -8009,6 +8860,7 @@
     },
     {
      "id": "courgettes",
+     "ref": "courgettes",
      "nom": "courgettes de taille moyenne",
      "qty": 2,
      "unit": "pièce",
@@ -8017,6 +8869,7 @@
     },
     {
      "id": "aubergine",
+     "ref": "aubergine",
      "nom": "grosse aubergine",
      "qty": 1,
      "unit": "pièce",
@@ -8025,6 +8878,7 @@
     },
     {
      "id": "poivron",
+     "ref": "poivron",
      "nom": "gros poivron",
      "qty": 1,
      "unit": "pièce",
@@ -8033,6 +8887,7 @@
     },
     {
      "id": "tomates-roma",
+     "ref": "tomates-roma",
      "nom": "tomates Roma",
      "qty": 3,
      "unit": "pièce",
@@ -8041,6 +8896,7 @@
     },
     {
      "id": "ail",
+     "ref": "ail",
      "nom": "ail",
      "qty": 3,
      "unit": "gousse",
@@ -8049,6 +8905,7 @@
     },
     {
      "id": "basilic",
+     "ref": "basilic",
      "nom": "feuilles de basilic",
      "qty": 15,
      "unit": "pièce",
@@ -8057,6 +8914,7 @@
     },
     {
      "id": "chevre-buche",
+     "ref": "chevre-buche",
      "nom": "bûche de chèvre",
      "qty": 70,
      "unit": "g",
@@ -8065,6 +8923,7 @@
     },
     {
      "id": "fromage-rape",
+     "ref": "fromage-rape",
      "nom": "tomme de brebis râpée (ou gruyère)",
      "qty": 70,
      "unit": "g",
@@ -8073,6 +8932,7 @@
     },
     {
      "id": "parmesan",
+     "ref": "parmesan",
      "nom": "parmesan",
      "qty": 50,
      "unit": "g",
@@ -8081,6 +8941,7 @@
     },
     {
      "id": "farine",
+     "ref": "farine",
      "nom": "farine",
      "qty": 1,
      "unit": "c. à s.",
@@ -8089,6 +8950,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 5,
      "unit": "c. à s.",
@@ -8097,6 +8959,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -8105,6 +8968,7 @@
     },
     {
      "id": "poivre",
+     "ref": "poivre",
      "nom": "poivre",
      "qty": 1,
      "unit": "pincée",
@@ -8121,6 +8985,8 @@
       "bake"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8135,6 +9001,8 @@
      "minutes": 8,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8149,6 +9017,8 @@
      "minutes": 7,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8163,6 +9033,8 @@
      "minutes": 5,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8179,6 +9051,8 @@
       "bake"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8195,6 +9069,8 @@
       "chop-coarse"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8211,6 +9087,8 @@
       "chop-coarse"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8227,6 +9105,8 @@
       "chop-coarse"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8241,6 +9121,8 @@
      "minutes": 20,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8255,6 +9137,8 @@
      "minutes": 5,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8271,6 +9155,8 @@
       "bake"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8281,6 +9167,8 @@
     }
    ],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": 60,
    "accepts": [],
    "creneaux": [
@@ -8338,6 +9226,7 @@
    "ingredients": [
     {
      "id": "bouillon-herbes-ing",
+     "ref": "bouillon-herbes-ing",
      "nom": "bouillon de cuisson du rôti",
      "qty": 1500,
      "unit": "ml",
@@ -8346,6 +9235,7 @@
     },
     {
      "id": "orge",
+     "ref": "orge",
      "nom": "orge mondé ou perlé",
      "qty": 200,
      "unit": "g",
@@ -8354,6 +9244,7 @@
     },
     {
      "id": "petits-pois",
+     "ref": "petits-pois",
      "nom": "petits pois frais écossés (ou surgelés)",
      "qty": 200,
      "unit": "g",
@@ -8362,6 +9253,7 @@
     },
     {
      "id": "ciboulette",
+     "ref": "ciboulette",
      "nom": "ciboulette (facultatif)",
      "qty": 1,
      "unit": "petit bouquet",
@@ -8370,6 +9262,7 @@
     },
     {
      "id": "eau",
+     "ref": "eau",
      "nom": "eau",
      "qty": 300,
      "unit": "ml",
@@ -8378,6 +9271,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -8392,6 +9286,8 @@
      "minutes": 3,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": 720,
      "attenteRaison": "trempage",
      "attenteSouple": true,
@@ -8410,6 +9306,8 @@
      "minutes": 1,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8424,6 +9322,8 @@
      "minutes": 4,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8440,6 +9340,8 @@
       "simmer-large"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8456,6 +9358,8 @@
       "simmer-large"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": "cuire-orge",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8470,6 +9374,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8480,6 +9386,8 @@
     }
    ],
    "bebe": "une petite louche d'orge et de petits pois avec un peu de liquide, AVANT de rectifier le sel",
+   "bebePrep": "écraser à la fourchette ; allonger d'eau, le bouillon du rôti étant salé",
+   "bebeApres": null,
    "actifMin": 10,
    "accepts": [
     {
@@ -8550,6 +9458,7 @@
    "ingredients": [
     {
      "id": "farine-complete",
+     "ref": "farine-complete",
      "nom": "farine T110 de blé ou de grand épeautre",
      "qty": 180,
      "unit": "g",
@@ -8558,6 +9467,7 @@
     },
     {
      "id": "beurre",
+     "ref": "beurre",
      "nom": "beurre mou",
      "qty": 90,
      "unit": "g",
@@ -8566,6 +9476,7 @@
     },
     {
      "id": "petits-suisses",
+     "ref": "petits-suisses",
      "nom": "petits suisses au lait entier",
      "qty": 180,
      "unit": "g",
@@ -8574,6 +9485,7 @@
     },
     {
      "id": "sucre-roux",
+     "ref": "sucre-roux",
      "nom": "sucre roux",
      "qty": 3,
      "unit": "c. à s.",
@@ -8582,6 +9494,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "bonne pincée",
@@ -8590,6 +9503,7 @@
     },
     {
      "id": "fraises",
+     "ref": "fraises",
      "nom": "fraises bien sucrées et parfumées",
      "qty": 350,
      "unit": "g",
@@ -8598,6 +9512,7 @@
     },
     {
      "id": "creme-coco",
+     "ref": "creme-coco",
      "nom": "crème de coco liquide",
      "qty": 20,
      "unit": "cl",
@@ -8606,6 +9521,7 @@
     },
     {
      "id": "sucre-vanille",
+     "ref": "sucre-vanille",
      "nom": "sucre vanillé",
      "qty": 3,
      "unit": "sachet",
@@ -8620,6 +9536,8 @@
      "minutes": 10,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8634,6 +9552,8 @@
      "minutes": 5,
      "needs": [],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": 60,
      "attenteRaison": "repos",
      "attenteSouple": true,
@@ -8650,6 +9570,8 @@
       "bake"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8664,6 +9586,8 @@
      "minutes": 5,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8680,6 +9604,8 @@
       "blend-smooth"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8694,6 +9620,8 @@
      "minutes": 8,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8704,6 +9632,8 @@
     }
    ],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": 25,
    "accepts": [],
    "creneaux": [
@@ -8750,6 +9680,7 @@
    "ingredients": [
     {
      "id": "pate-feuilletee",
+     "ref": "pate-feuilletee",
      "nom": "pâte feuilletée (aux petits suisses",
      "qty": 1,
      "unit": "pièce",
@@ -8758,6 +9689,7 @@
     },
     {
      "id": "tomates-roma",
+     "ref": "tomates-roma",
      "nom": "tomates Roma bien mûres — les autres variétés rendent trop d'eau",
      "qty": 3,
      "unit": "pièce",
@@ -8766,6 +9698,7 @@
     },
     {
      "id": "fromage-rape",
+     "ref": "fromage-rape",
      "nom": "gruyère râpé",
      "qty": 70,
      "unit": "g",
@@ -8774,6 +9707,7 @@
     },
     {
      "id": "moutarde",
+     "ref": "moutarde",
      "nom": "moutarde à l'ancienne",
      "qty": 2,
      "unit": "c. à s.",
@@ -8782,6 +9716,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 2,
      "unit": "c. à s.",
@@ -8790,6 +9725,7 @@
     },
     {
      "id": "origan",
+     "ref": "origan",
      "nom": "origan en poudre",
      "qty": 2,
      "unit": "c. à c.",
@@ -8798,6 +9734,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "c. à c.",
@@ -8806,6 +9743,7 @@
     },
     {
      "id": "poivre",
+     "ref": "poivre",
      "nom": "poivre",
      "qty": 1,
      "unit": "pincée",
@@ -8822,6 +9760,8 @@
       "bake"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8836,6 +9776,8 @@
      "minutes": 6,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8850,6 +9792,8 @@
      "minutes": 6,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8864,6 +9808,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8880,6 +9826,8 @@
       "bake"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -8890,6 +9838,8 @@
     }
    ],
    "bebe": "quelques tranches de tomate et un peu de gruyère, AVANT le sel et la moutarde",
+   "bebePrep": "cuire à part en ramequin et écraser à la fourchette",
+   "bebeApres": null,
    "actifMin": 15,
    "accepts": [],
    "creneaux": [
@@ -8937,6 +9887,7 @@
    "ingredients": [
     {
      "id": "farine-complete",
+     "ref": "farine-complete",
      "nom": "farine T80 à T110 de blé ou de grand épeautre",
      "qty": 300,
      "unit": "g",
@@ -8945,6 +9896,7 @@
     },
     {
      "id": "eau",
+     "ref": "eau",
      "nom": "eau",
      "qty": 15,
      "unit": "cl",
@@ -8953,6 +9905,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive-pate",
      "nom": "huile d'olive (pâte)",
      "qty": 5,
      "unit": "c. à s.",
@@ -8961,6 +9914,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel-pate",
      "nom": "sel (pâte)",
      "qty": 1,
      "unit": "pincée",
@@ -8969,6 +9923,7 @@
     },
     {
      "id": "courgettes",
+     "ref": "courgettes",
      "nom": "jeunes courgettes",
      "qty": 600,
      "unit": "g",
@@ -8977,6 +9932,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "oignon",
      "qty": 1,
      "unit": "pièce",
@@ -8985,6 +9941,7 @@
     },
     {
      "id": "riz",
+     "ref": "riz",
      "nom": "riz cru — il boit l'humidité qui reste et tient la farce",
      "qty": 20,
      "unit": "g",
@@ -8993,6 +9950,7 @@
     },
     {
      "id": "oeufs",
+     "ref": "oeufs",
      "nom": "œuf",
      "qty": 1,
      "unit": "pièce",
@@ -9001,6 +9959,7 @@
     },
     {
      "id": "parmesan",
+     "ref": "parmesan",
      "nom": "parmesan",
      "qty": 100,
      "unit": "g",
@@ -9009,6 +9968,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive-farce",
      "nom": "huile d'olive (farce)",
      "qty": 4,
      "unit": "c. à s.",
@@ -9017,6 +9977,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel-farce",
      "nom": "sel (farce)",
      "qty": 1,
      "unit": "c. à c.",
@@ -9025,6 +9986,7 @@
     },
     {
      "id": "poivre",
+     "ref": "poivre",
      "nom": "poivre",
      "qty": 1,
      "unit": "pincée",
@@ -9041,6 +10003,8 @@
       "bake"
      ],
      "surveille": false,
+     "uses": [],
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -9055,6 +10019,11 @@
      "minutes": 10,
      "needs": [],
      "surveille": true,
+     "uses": [
+      "oignon",
+      "courgettes"
+     ],
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -9071,6 +10040,12 @@
       "pan-fry"
      ],
      "surveille": true,
+     "uses": [
+      "huile-olive-farce",
+      "oignon",
+      "courgettes"
+     ],
+     "enParallele": null,
      "attente": 10,
      "attenteRaison": "refroidissement",
      "attenteSouple": true,
@@ -9085,6 +10060,13 @@
      "minutes": 6,
      "needs": [],
      "surveille": true,
+     "uses": [
+      "farine-complete",
+      "sel-pate",
+      "eau",
+      "huile-olive-pate"
+     ],
+     "enParallele": "poeler",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -9099,6 +10081,8 @@
      "minutes": 5,
      "needs": [],
      "surveille": true,
+     "uses": [],
+     "enParallele": "poeler",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -9113,6 +10097,13 @@
      "minutes": 3,
      "needs": [],
      "surveille": true,
+     "uses": [
+      "parmesan",
+      "riz",
+      "oeufs",
+      "poivre"
+     ],
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -9127,6 +10118,10 @@
      "minutes": 1,
      "needs": [],
      "surveille": true,
+     "uses": [
+      "sel-farce"
+     ],
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -9141,6 +10136,8 @@
      "minutes": 2,
      "needs": [],
      "surveille": true,
+     "uses": [],
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -9155,6 +10152,10 @@
      "minutes": 6,
      "needs": [],
      "surveille": true,
+     "uses": [
+      "huile-olive-pate"
+     ],
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -9171,6 +10172,8 @@
       "bake"
      ],
      "surveille": false,
+     "uses": [],
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -9187,6 +10190,8 @@
       "grill"
      ],
      "surveille": true,
+     "uses": [],
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -9197,6 +10202,8 @@
     }
    ],
    "bebe": "quelques cubes de courgette poêlée, prélevés AVANT le parmesan et le sel",
+   "bebePrep": "écraser à la fourchette",
+   "bebeApres": "poeler",
    "actifMin": 20,
    "accepts": [],
    "creneaux": [
@@ -9248,6 +10255,7 @@
    "ingredients": [
     {
      "id": "courgettes",
+     "ref": "courgettes",
      "nom": "courgettes",
      "qty": 4,
      "unit": "pièce",
@@ -9256,6 +10264,7 @@
     },
     {
      "id": "pomme-de-terre",
+     "ref": "pomme-de-terre",
      "nom": "pomme de terre",
      "qty": 1,
      "unit": "pièce",
@@ -9264,6 +10273,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "oignon",
      "qty": 1,
      "unit": "pièce",
@@ -9272,6 +10282,7 @@
     },
     {
      "id": "bouillon-legumes",
+     "ref": "bouillon-legumes",
      "nom": "cube de bouillon de légumes",
      "qty": 1,
      "unit": "pièce",
@@ -9280,6 +10291,7 @@
     },
     {
      "id": "creme",
+     "ref": "creme",
      "nom": "crème fraîche",
      "qty": 10,
      "unit": "cl",
@@ -9296,6 +10308,8 @@
       "simmer"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -9312,6 +10326,8 @@
       "blend-smooth"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -9326,6 +10342,8 @@
      "minutes": 3,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -9336,6 +10354,8 @@
     }
    ],
    "bebe": "3 c. à s. de velouté mixé, avant le bouillon et la crème",
+   "bebePrep": "détendre avec un peu d'eau de cuisson tiède",
+   "bebeApres": "mixer",
    "actifMin": 10,
    "accepts": [],
    "creneaux": [
@@ -9387,6 +10407,7 @@
    "ingredients": [
     {
      "id": "pomme-de-terre",
+     "ref": "pomme-de-terre",
      "nom": "pommes de terre",
      "qty": 400,
      "unit": "g",
@@ -9395,6 +10416,7 @@
     },
     {
      "id": "oignon",
+     "ref": "oignon",
      "nom": "oignons",
      "qty": 2,
      "unit": "pièce",
@@ -9403,6 +10425,7 @@
     },
     {
      "id": "orties",
+     "ref": "orties",
      "nom": "pointes d'orties (ou fanes de navets ou de radis, ou jeunes pousses d'épinards, ou roquette)",
      "qty": 200,
      "unit": "g",
@@ -9411,6 +10434,7 @@
     },
     {
      "id": "eau",
+     "ref": "eau",
      "nom": "eau",
      "qty": 1.25,
      "unit": "l",
@@ -9419,6 +10443,7 @@
     },
     {
      "id": "ail",
+     "ref": "ail",
      "nom": "ail frais",
      "qty": 2,
      "unit": "gousse",
@@ -9427,6 +10452,7 @@
     },
     {
      "id": "huile-olive",
+     "ref": "huile-olive",
      "nom": "huile d'olive",
      "qty": 4,
      "unit": "c. à s.",
@@ -9435,6 +10461,7 @@
     },
     {
      "id": "sel",
+     "ref": "sel",
      "nom": "sel",
      "qty": 1,
      "unit": "c. à s.",
@@ -9443,6 +10470,7 @@
     },
     {
      "id": "poivre",
+     "ref": "poivre",
      "nom": "poivre",
      "qty": 1,
      "unit": "pincée",
@@ -9459,6 +10487,8 @@
       "simmer-large"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -9475,6 +10505,8 @@
       "simmer-large"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -9489,6 +10521,8 @@
      "minutes": 5,
      "needs": [],
      "surveille": true,
+     "uses": null,
+     "enParallele": "cuire-pommes-de-terre",
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -9505,6 +10539,8 @@
       "simmer-large"
      ],
      "surveille": false,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -9521,6 +10557,8 @@
       "blend-smooth"
      ],
      "surveille": true,
+     "uses": null,
+     "enParallele": null,
      "attente": null,
      "attenteRaison": null,
      "attenteSouple": true,
@@ -9531,6 +10569,8 @@
     }
    ],
    "bebe": null,
+   "bebePrep": null,
+   "bebeApres": null,
    "actifMin": 10,
    "accepts": [],
    "creneaux": [
