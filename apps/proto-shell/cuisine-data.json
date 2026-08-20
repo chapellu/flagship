@@ -1910,6 +1910,225 @@
    "cuisinable": true
   },
   {
+   "id": "clafoutis-miel-abricot",
+   "titre": "Clafoutis super crémeux au miel et à l'abricot",
+   "minutes": 70,
+   "minutesSurPlace": 70,
+   "avanceMin": 138,
+   "anticipations": [],
+   "portions": 6,
+   "apports": {
+    "proteine": "aucune",
+    "feculent": "farine",
+    "legumes": [],
+    "profil": "four",
+    "origine": "francais"
+   },
+   "ingredients": [
+    {
+     "id": "lait-amande",
+     "nom": "lait d'amande",
+     "qty": 50,
+     "unit": "cl",
+     "base": false,
+     "assaisonnement": false
+    },
+    {
+     "id": "puree-amande-blanche",
+     "nom": "purée d'amande blanche",
+     "qty": 40,
+     "unit": "g",
+     "base": false,
+     "assaisonnement": false
+    },
+    {
+     "id": "oeufs",
+     "nom": "œufs fermiers ultra frais",
+     "qty": 4,
+     "unit": "pièce",
+     "base": false,
+     "assaisonnement": false
+    },
+    {
+     "id": "farine-petit-epeautre",
+     "nom": "farine T110 de petit épeautre",
+     "qty": 55,
+     "unit": "g",
+     "base": false,
+     "assaisonnement": false
+    },
+    {
+     "id": "miel-acacia",
+     "nom": "miel d'acacia",
+     "qty": 115,
+     "unit": "g",
+     "base": false,
+     "assaisonnement": false
+    },
+    {
+     "id": "abricots",
+     "nom": "abricots — ou tout autre fruit à noyau : cerises, pêches, nectarines, reines-claudes, mirabelles",
+     "qty": 350,
+     "unit": "g",
+     "base": false,
+     "assaisonnement": false
+    },
+    {
+     "id": "rhum",
+     "nom": "rhum",
+     "qty": 1,
+     "unit": "c. à s.",
+     "base": false,
+     "assaisonnement": false
+    },
+    {
+     "id": "extrait-amande-amere",
+     "nom": "extrait d'amande amère pour pâtisserie",
+     "qty": 0.5,
+     "unit": "c. à moka",
+     "base": false,
+     "assaisonnement": false
+    },
+    {
+     "id": "amandes-effilees",
+     "nom": "amandes effilées",
+     "qty": 2,
+     "unit": "c. à s.",
+     "base": false,
+     "assaisonnement": false
+    }
+   ],
+   "steps": [
+    {
+     "id": "denoyauter",
+     "action": "Dénoyauter les fruits et les recouper : en quatre pour des abricots, en deux pour des prunes, en huit pour des pêches",
+     "minutes": 6,
+     "needs": [],
+     "surveille": true,
+     "attente": null,
+     "attenteRaison": null,
+     "attenteSouple": true,
+     "rattrapage": null,
+     "enfant": "ouvrir les abricots en deux à la main et retirer le noyau",
+     "enfantDes": 30,
+     "porteAssaisonnement": false
+    },
+    {
+     "id": "prechauffer",
+     "action": "Préchauffer le four à 150 °C, en chaleur tournante de préférence — en statique, compter quelques minutes de cuisson en plus",
+     "minutes": 1,
+     "needs": [
+      "bake"
+     ],
+     "surveille": false,
+     "attente": null,
+     "attenteRaison": null,
+     "attenteSouple": true,
+     "rattrapage": null,
+     "enfant": null,
+     "enfantDes": null,
+     "porteAssaisonnement": false
+    },
+    {
+     "id": "huiler-moule",
+     "action": "Huiler un grand moule à clafoutis, ou 6 gros ramequins, ou 4 plats à gratin individuels — beurré plutôt qu'huilé, c'est meilleur, si le lactose n'est pas un sujet",
+     "minutes": 2,
+     "needs": [],
+     "surveille": true,
+     "attente": null,
+     "attenteRaison": null,
+     "attenteSouple": true,
+     "rattrapage": null,
+     "enfant": null,
+     "enfantDes": null,
+     "porteAssaisonnement": false
+    },
+    {
+     "id": "appareil",
+     "action": "Fouetter ensemble le lait d'amande, la purée d'amande, les œufs, la farine, le miel, le rhum et l'extrait d'amande amère, jusqu'à ce qu'il ne reste aucun grumeau",
+     "minutes": 5,
+     "needs": [],
+     "surveille": true,
+     "attente": null,
+     "attenteRaison": null,
+     "attenteSouple": true,
+     "rattrapage": null,
+     "enfant": null,
+     "enfantDes": null,
+     "porteAssaisonnement": false
+    },
+    {
+     "id": "garnir",
+     "action": "Verser l'appareil dans le moule, répartir les fruits par-dessus et parsemer d'amandes effilées",
+     "minutes": 3,
+     "needs": [],
+     "surveille": true,
+     "attente": null,
+     "attenteRaison": null,
+     "attenteSouple": true,
+     "rattrapage": null,
+     "enfant": "poser les quartiers d'abricot sur l'appareil et semer les amandes effilées",
+     "enfantDes": 30,
+     "porteAssaisonnement": false
+    },
+    {
+     "id": "cuire",
+     "action": "Enfourner — environ 30 min en ramequins, 45 min en plats individuels, 1 h en grand moule. C'est cuit quand l'appareil est bien pris et commence à dorer jusqu'au centre ; les fours varient, il faut surveiller",
+     "minutes": 60,
+     "needs": [
+      "bake"
+     ],
+     "surveille": true,
+     "attente": 60,
+     "attenteRaison": "refroidissement",
+     "attenteSouple": true,
+     "rattrapage": null,
+     "enfant": null,
+     "enfantDes": null,
+     "porteAssaisonnement": false
+    },
+    {
+     "id": "servir",
+     "action": "Servir refroidi, éventuellement sous un voile de sucre glace",
+     "minutes": 1,
+     "needs": [],
+     "surveille": true,
+     "attente": null,
+     "attenteRaison": null,
+     "attenteSouple": true,
+     "rattrapage": null,
+     "enfant": null,
+     "enfantDes": null,
+     "porteAssaisonnement": false
+    }
+   ],
+   "bebe": null,
+   "actifMin": 10,
+   "accepts": [],
+   "creneaux": [
+    "gouter"
+   ],
+   "transportable": true,
+   "sansReste": null,
+   "emits": [
+    {
+     "type": "clafoutis-abricot",
+     "kind": "reste-plat",
+     "qty": null,
+     "band": "lunchbox",
+     "espace": "frigo",
+     "note": "un appareil à base d'œufs et de lait végétal rend son eau à la décongélation — il se garde au frigo, il ne se congèle pas",
+     "gardeFrigo": 2,
+     "congelo": false
+    }
+   ],
+   "lotEntier": false,
+   "calibreMax": null,
+   "vaisselle": null,
+   "gainChainage": 0,
+   "cuisinable": true
+  },
+  {
    "id": "cocktail-gourmand-peche-coco",
    "titre": "Cocktail gourmand pêche-coco-vanille",
    "minutes": 25,
@@ -9453,6 +9672,7 @@
     "celeri-rave",
     "champignons-conserve",
     "basilic",
+    "abricots",
     "orties",
     "pousses-sauvages",
     "ail-des-ours",
@@ -9538,7 +9758,13 @@
     "pruneaux",
     "noix",
     "caissettes",
-    "pots-carton"
+    "pots-carton",
+    "lait-amande",
+    "puree-amande-blanche",
+    "farine-petit-epeautre",
+    "miel-acacia",
+    "extrait-amande-amere",
+    "amandes-effilees"
    ]
   },
   "placard": [
