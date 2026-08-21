@@ -137,8 +137,21 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
       s'ouvre sur le CANDIDAT, pas sur ce que le créneau porte encore.
       Mesuré au navigateur : une main sur une semaine pleine coûte **55 à
       62 ms** ici (voir T17).
-- [ ] **T12 — En cuisine.** Mode guidé, une étape par écran, chauffe et
-      minuteur, la liste d'ingrédients à un bouton.
+- [x] **T12 — En cuisine.** Mode guidé, une étape par écran, chauffe et
+      minuteur, la liste d'ingrédients à un bouton. Seul écran hors coquille :
+      ni barre du bas ni sous-navigation, on le lit à bout de bras. **Ce qui se
+      persiste ici n'est pas une décision mais un AVANCEMENT** — où l'on en est
+      dans la recette, et jusqu'à quand le minuteur court. C'est le seul état
+      dont la perte fasse vraiment mal : un téléphone qui se verrouille à
+      l'étape 5 sur 9 avec une casserole sur le feu. Le minuteur est une
+      **échéance, pas un compteur** : le proto décrémentait une seconde par
+      `setInterval`, ce qui est faux dès que l'onglet passe en arrière-plan —
+      les navigateurs mobiles y ralentissent les timers à un battement par
+      minute, c'est-à-dire exactement quand on repose le téléphone pour
+      cuisiner. Vérifié en décalant l'horloge de la page de dix minutes sans
+      laisser tourner un seul battement : le minuteur sonne.
+      Quinze plats du catalogue n'ont pas d'étapes ; la fiche s'ouvre alors sur
+      la liste d'ingrédients, ce qui est tout ce qu'on peut en dire.
 - [ ] **T13 — Courses.** Deux modes (magasin / maison), le hors-liste. Le
       premier écran de la direction qui vive sur la persistance : cocher,
       fermer, rouvrir. (La sonde de T6 l'a déjà prouvée hors direction.)
@@ -171,7 +184,9 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
       porte un `type` (`lentilles-vertes-cuites`, `puree-lentilles-carottes`) et
       une catégorie d'équilibre porte un id (`legumineuse`) — jamais de libellé.
       Les écrans les affichent donc tels quels, identifiants compris : « apporte
-      legumineuse, qui manque », « puree-lentilles-carottes ». Les
+      legumineuse, qui manque », « puree-lentilles-carottes » — alors que les
+      INGRÉDIENTS, eux, portent un `nom` lisible, ce qui prouve que le format
+      sait le faire. Les
       dé-tiretiser produirait du faux français (« puree » sans accent), ce qui
       est pire qu'un jeton qui s'assume. C'est une donnée qui manque au modèle
       Python : un `label` par type et par catégorie, et les huit écrans en

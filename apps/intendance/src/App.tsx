@@ -90,7 +90,7 @@ function rendre(route: Route, jeu: NonNullable<ReturnType<typeof useSemaine>["je
       // faite, et le premier à s'en désaligner.
       if (route.ecran === "poser") return <Poser creneau={route.creneau} />;
       if (route.ecran === "parts") return <Parts />;
-      return <Cuisiner />;
+      return <Cuisiner creneau={route.creneau} {...(route.plat ? { plat: route.plat } : {})} />;
     }
   }
 }

@@ -28,6 +28,17 @@ export const cleRappel = (jour: string, repas: string): string => `rappel|${jour
  */
 export const cleRepioche = (jour: string, repas: string): string => `repioche|${jour}|${repas}`;
 
+/** Où l'on en est dans une recette. Voir `ecrans/Cuisiner.tsx` : c'est le seul
+ *  état de l'app dont la perte fait vraiment mal — un téléphone qui se
+ *  verrouille à l'étape 5 sur 9, avec une casserole sur le feu. */
+export const cleEtape = (jour: string, repas: string, plat: string): string =>
+  `etape|${jour}|${repas}|${plat}`;
+
+/** Le minuteur d'UNE étape. Par étape, pour qu'avancer dans la recette ne
+ *  traîne pas la sonnerie de la précédente. */
+export const cleMinuteur = (jour: string, repas: string, plat: string, etape: string): string =>
+  `minuteur|${jour}|${repas}|${plat}|${etape}`;
+
 export async function poserReglage(cle: string, valeur: unknown): Promise<void> {
   if (valeur === false || valeur == null) await base.reglages.delete(cle);
   else await base.reglages.put({ cle, valeur, maj: Date.now() });
@@ -41,6 +52,15 @@ export function useNombre(cle: string | null): number | undefined {
   const r = useLiveQuery(async () => (cle ? ((await base.reglages.get(cle)) ?? null) : null), [cle]);
   if (r === undefined) return undefined;
   return typeof r?.valeur === "number" ? r.valeur : 0;
+}
+
+/** Un réglage qui porte une forme. `undefined` tant que la base n'a pas
+ *  répondu, `null` quand il n'y a rien. La forme n'est pas vérifiée : cette
+ *  table est un clé-valeur, et c'est le code qui lit qui sait ce qu'il a écrit. */
+export function useObjet<T>(cle: string | null): T | null | undefined {
+  const r = useLiveQuery(async () => (cle ? ((await base.reglages.get(cle)) ?? null) : null), [cle]);
+  if (r === undefined) return undefined;
+  return (r?.valeur as T | undefined) ?? null;
 }
 
 /** `undefined` tant que la base n'a pas répondu — distinct de « pas coché ». */
