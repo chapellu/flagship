@@ -123,6 +123,10 @@ function rendre(hote, rendreParent) {
     rafraichir();
   });
   sur("[data-fermer]", "click", () => { detail = null; rafraichir(); });
+  sur("[data-derouler]", "click", (b, e) => {
+    e.stopPropagation();
+    derouler(+b.dataset.derouler, calc, b.dataset.platEnVue || null);
+  });
   // La gamelle : le dîner de la veille grossit d'autant, et le midi part sur le
   // reste. Une action, parce que c'est un choix — le proto ne le fait pas seul.
   sur("[data-gamelle]", "click", b => {
@@ -148,6 +152,38 @@ function rendre(hote, rendreParent) {
     vue = vue === b.dataset.vue ? "main" : b.dataset.vue;
     rafraichir();
   });
+}
+
+// PASSER DU PLAN À LA CUISINE. Le déroulé prend TOUTE LA JOURNÉE, pas le seul
+// créneau sur lequel on a cliqué : le plat et son dessert partagent un four, et
+// c'est en les ouvrant ensemble qu'on s'en aperçoit. Chargé à la demande — un
+// écran de cuisson guidée n'a rien à faire dans le poids de la page tant que
+// personne ne cuisine.
+async function derouler(i, calc, platEnVue) {
+  const m = await import("./deroule.js");
+  const jour = jeu.creneaux[i].jour;
+  // `platEnVue` : on déroule aussi un plat qu'on REGARDE sans l'avoir joué —
+  // c'est l'entrée depuis la fiche, et c'est la plus utile des deux quand on
+  // veut simplement savoir à quoi la soirée ressemblerait.
+  const platDe = k => (k === i && platEnVue ? platEnVue : jeu.choix[k]);
+  const duJour = jeu.creneaux
+    .map((c, k) => ({ c, k }))
+    .filter(({ c, k }) => c.jour === jour && S.joue(platDe(k)))
+    .map(({ c, k }) => {
+      const plat = jeu.plats[platDe(k)];
+      return {
+        data: jeu.data, plat, creneau: k, parts: jeu.parts[k],
+        facteur: calc.facteurs[k] || S.facteurAffiche(plat, jeu.parts[k]),
+        // L'heure du repas est la seule ancre solide du déroulé : tout le reste
+        // se compte à rebours depuis elle.
+        heureRepas: (jeu.data.creneaux.repas[c.repas]?.heure ?? 19.5) * 60,
+      };
+    });
+  if (!duJour.length) return;
+  const h = document.createElement("div");
+  h.id = "dr-hote";
+  document.body.appendChild(h);
+  await m.ouvrir(h, duJour, duJour.findIndex(x => x.creneau === i));
 }
 
 // Le créneau suivant qui attend encore une décision — ni joué, ni sauté.
@@ -209,6 +245,8 @@ function creneau(c, calc) {
                <span class="vider" data-sauter="${c.i}">×</span>`
       : p ? `<span class="t">${p.titre}</span>
            <span class="pied">${p.minutes} min${parts}${chaine ? ' <b class="lien">↪</b>' : ""}</span>
+           ${p.steps?.length ? `<span class="derouler" data-derouler="${c.i}"
+             title="dérouler la recette">▸</span>` : ""}
            <span class="vider" data-vider="${c.i}">×</span>`
         : '<span class="vide">+</span>'}
   </button>`;
@@ -382,6 +420,8 @@ function ficheRecette(calc) {
       ${ing.map(x => `<div class="fi-l ${x.assaisonnement ? "assai" : ""}">
         ${S.echelleTexte(x, f)} — ${x.nom}</div>`).join("")}
     </div>
+    ${p.steps?.length && i != null ? `<button class="fiche-derouler" data-derouler="${i}"
+      data-plat-en-vue="${p.id}">▸ dérouler — un écran, un geste</button>` : ""}
     ${p.steps?.length ? `<div class="fiche-bloc"><h3>marche à suivre</h3>
       ${p.steps.map((s, n) => `<div class="fi-s">
         <b>${n + 1}.</b> ${s.action}
