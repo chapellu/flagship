@@ -1,0 +1,9 @@
+# Ce qui ne part PAS dans l'image. La liste inverse — énumérer les fichiers à
+# copier dans le Dockerfile — a laissé passer `deroule.js` : l'image contenait
+# le JSON régénéré et pas le module qui le lit, donc le bouton ne faisait rien
+# et rien ne le disait. Un oubli d'ajout est invisible ; un oubli d'exclusion
+# se voit tout de suite, parce que le fichier de trop est servi.
+Dockerfile
+.dockerignore
+README.md
+e2e/

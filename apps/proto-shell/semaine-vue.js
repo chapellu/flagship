@@ -160,15 +160,29 @@ function rendre(hote, rendreParent) {
 // écran de cuisson guidée n'a rien à faire dans le poids de la page tant que
 // personne ne cuisine.
 async function derouler(i, calc, platEnVue) {
-  const m = await import("./deroule.js");
+  // Un module chargé à la demande peut manquer À L'IMAGE sans manquer au dépôt,
+  // et c'est arrivé : le bouton ne faisait alors RIEN, en silence, sur le seul
+  // appareil qui compte — un téléphone en cuisine, sans console. Une erreur
+  // muette sur un chemin d'entrée est pire que pas de chemin du tout.
+  const m = await import("./deroule.js").catch(e => {
+    alert(`Le déroulé n'a pas pu se charger : ${e.message}`);
+    return null;
+  });
+  if (!m) return;
   const jour = jeu.creneaux[i].jour;
   // `platEnVue` : on déroule aussi un plat qu'on REGARDE sans l'avoir joué —
   // c'est l'entrée depuis la fiche, et c'est la plus utile des deux quand on
   // veut simplement savoir à quoi la soirée ressemblerait.
   const platDe = k => (k === i && platEnVue ? platEnVue : jeu.choix[k]);
+  // UN PLAT SANS ÉTAPES NE SE DÉROULE PAS. Quinze des 53 du catalogue sont
+  // saisis « au niveau plan » : ils ont des ingrédients et des apports, assez
+  // pour planifier la semaine et faire les courses, pas pour être cuisinés
+  // depuis l'écran. Sans ce filtre, une journée qui en contient un ouvrait un
+  // déroulé de zéro étape, qui affichait « c'est prêt » sans rien demander.
+  const cuisinable = k => S.joue(platDe(k)) && jeu.plats[platDe(k)]?.steps?.length > 0;
   const duJour = jeu.creneaux
     .map((c, k) => ({ c, k }))
-    .filter(({ c, k }) => c.jour === jour && S.joue(platDe(k)))
+    .filter(({ c, k }) => c.jour === jour && cuisinable(k))
     .map(({ c, k }) => {
       const plat = jeu.plats[platDe(k)];
       return {
