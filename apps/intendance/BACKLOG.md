@@ -152,13 +152,27 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
       laisser tourner un seul battement : le minuteur sonne.
       Quinze plats du catalogue n'ont pas d'étapes ; la fiche s'ouvre alors sur
       la liste d'ingrédients, ce qui est tout ce qu'on peut en dire.
-- [ ] **T13 — Courses.** Deux modes (magasin / maison), le hors-liste. Le
+- [x] **T13 — Courses.** Deux modes (magasin / maison), le hors-liste. Le
       premier écran de la direction qui vive sur la persistance : cocher,
-      fermer, rouvrir. (La sonde de T6 l'a déjà prouvée hors direction.)
+      fermer, rouvrir. **La liste est calculée, les marques sont stockées** —
+      aucun calcul ne peut retrouver ce qu'un doigt a mis dans un caddie. Le
+      mode, lui, n'est PAS persisté : c'est un endroit où l'on se trouve, et
+      rouvrir l'app trois jours plus tard sur « à la maison » parce qu'on y
+      était samedi serait pire que le tap qu'on économise. Ajouté au proto :
+      « Tout rentrer », le geste de vider le sac — on ne rentre pas douze
+      articles un par un en tenant un cabas — et le compte des marques
+      orphelines (voir ci-dessous). Corrigé au proto : son aide promettait
+      qu'un article rentré « rejoint le stock et le plat qui l'attendait passe
+      en trouvé », ce qu'il ne faisait pas. L'app non plus, pas encore : c'est
+      T15.
 - [ ] **T14 — Les parts.** Deux cibles de 64 px, pas de 0,5, l'aperçu de la
       semaine.
 - [ ] **T15 — L'inventaire.** Les catégories et leur fiabilité, les deux
-      plafonds par espace, les lots.
+      plafonds par espace, les lots. **C'est ici que la table `stock` entrera
+      enfin dans le calcul** : elle est semée depuis T6 et personne ne la lit —
+      `calculer` construit son dépôt depuis `catalogue.stock`. Tant que ce fil
+      n'est pas branché, rentrer un article des courses ne fait rien passer en
+      « trouvé », et T13 se garde bien de le promettre.
 - [ ] **T16 — Le cockpit.** La journée d'abord, les cartes de facette ensuite.
 
 ### Trouvé en portant, à décider
@@ -179,6 +193,16 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
       enseignes, et ne lit jamais le cooldown. Le port garde ce comportement,
       sinon la parité ne voudrait rien dire. Reste à trancher : la
       configuration a-t-elle raison, ou faut-il la retirer du catalogue ?
+
+- [ ] **Rien n'efface les marques de courses quand la semaine tourne.** Un
+      article coché la semaine dernière garde sa marque, et la liste peut
+      mentir par omission — la pire façon de mentir pour une liste de courses.
+      T13 les compte et offre « Repartir de zéro » plutôt que d'effacer tout
+      seul : effacer ce que quelqu'un a coché est un geste qui lui appartient.
+      Reste à trancher s'il faut une règle automatique — et alors la table
+      `courses` a besoin d'un marqueur de semaine, ce qu'elle n'a pas (elle
+      porte `maj`, un horodatage, et la fenêtre de sept jours glisse chaque
+      jour : « avant lundi » ne veut rien dire ici).
 
 - [ ] **Le catalogue n'a pas de nom lisible pour ce qu'il produit.** Un `emit`
       porte un `type` (`lentilles-vertes-cuites`, `puree-lentilles-carottes`) et
