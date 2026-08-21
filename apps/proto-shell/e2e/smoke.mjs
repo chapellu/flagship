@@ -15,6 +15,34 @@ const check = (nom, ok, detail = "") => {
   console.log(`  ${ok ? "✓" : "✗"} ${nom}${detail ? " — " + detail : ""}`);
 };
 
+// TOUT MODULE IMPORTÉ DOIT ÊTRE SERVI. Contrôle placé en tête parce qu'il est
+// le seul à valoir contre la PROD et pas seulement contre `python3 -m http.server` :
+// en local le serveur sert le dossier, en prod nginx sert une IMAGE, et le
+// Dockerfile énumérait ses fichiers un par un. `deroule.js` n'y a pas été
+// ajouté — le module manquait à l'image, l'import à la demande échouait sans
+// bruit, et le mode recette était injoignable alors que le smoke était vert.
+{
+  const p = await b.newPage();
+  await p.goto(BASE, { waitUntil: "domcontentloaded" });
+  // Parcours transitif depuis la racine : `app.js` importe `semaine-vue.js`,
+  // qui importe `deroule.js` à la demande. Un seul niveau n'aurait rien vu.
+  const mods = new Set(["app.js"]);
+  const file = ["app.js"];
+  while (file.length) {
+    const src = await p.evaluate(u => fetch(u).then(r => r.ok ? r.text() : ""),
+      `${BASE}/${file.shift()}`);
+    for (const m of src.matchAll(/(?:from|import\()\s*["']\.\/([\w.-]+\.js)["']/g)) {
+      if (!mods.has(m[1])) { mods.add(m[1]); file.push(m[1]); }
+    }
+  }
+  console.log("\nmodules servis");
+  for (const f of mods) {
+    const code = await p.evaluate(u => fetch(u).then(r => r.status), `${BASE}/${f}`);
+    check(`${f} est servi`, code === 200, `HTTP ${code}`);
+  }
+  await p.close();
+}
+
 for (const v of ["A", "B", "C"]) {
   const p = await b.newPage({ viewport: { width: 390, height: 844 } });
   const errs = [];
@@ -214,7 +242,10 @@ for (const v of ["A", "B", "C"]) {
     // trois propriétés qui le distinguent d'une fiche : les quantités arrivent
     // à l'étape qui les réclame, le prélèvement bébé tombe AVANT ce qui sale,
     // et un minuteur survit à la navigation.
-    await p.locator(".sem-slot .derouler").first().click();
+    // Le ▸ du DESSERT, pas le premier venu : le smoke a joué une carte plus
+    // haut, et elle atterrit sur la journée de l'amorce dès que celle-ci tombe
+    // aujourd'hui. Viser une cible stable plutôt que « la première ».
+    await p.locator(".sem-slot.optionnel.rempli .derouler").first().click();
     await p.waitForSelector(".dr", { timeout: 6000 });
     check("le déroulé s'ouvre sur la soirée quand il y a deux plats",
       (await p.locator(".dr-corps").innerText()).includes("un seul four"));

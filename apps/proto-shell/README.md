@@ -126,6 +126,14 @@ Deux manques nommés au passage, tous deux côté modèle :
   `e2e/smoke.mjs`, qui a déjà trouvé trois vrais bugs. Les courses rentrées et
   les parts réglées vivent **en mémoire** : recharger la page les efface, et
   c'est voulu — un proto qui gagne une persistance devient une app par la bande.
+- **Ajouter un fichier ne demande rien de plus.** Le `Dockerfile` copie tout le
+  dossier moins ce que `.dockerignore` retire. Il énumérait ses fichiers un par
+  un, et ça a coûté un déploiement : `deroule.js` n'y figurait pas, l'image
+  partait sans lui, l'import à la demande échouait **en silence** et le mode
+  recette était injoignable — alors que le smoke local était vert, parce qu'en
+  local le serveur sert le *dossier* et en prod nginx sert une *image*. Le smoke
+  commence donc maintenant par suivre les imports depuis `app.js` et vérifier
+  que chaque module répond 200 **là où on le vise**.
 - Pas de build : HTML/CSS/JS vanilla servis par nginx. La vraie app suivra la
   stack décidée (#6 : Vite + React + TS + Dexie) — ce code ne sera **pas** promu.
 - La barre de commutation reste visible en prod : le déploiement entier est le
