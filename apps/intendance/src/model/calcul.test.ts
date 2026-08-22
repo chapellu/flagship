@@ -285,3 +285,74 @@ describe("les minutes se comptent par journée", () => {
     expect(m[1]).toBe(0);
   });
 });
+
+// T15 : la table `stock` entre dans le calcul. Ces tests disent la chose la
+// plus simple et la plus facile à casser du ticket — le dépôt part de
+// `jeu.stock`, et rien d'autre. Le jour où quelqu'un relit `catalogue.stock`
+// « pour simplifier », un lot retiré de l'inventaire réapparaîtra dans le
+// chaînage sans que rien d'autre ne rougisse.
+describe("le dépôt part de ce que le foyer a constaté", () => {
+  test("un lot retiré du stock du jeu ne se chaîne plus", () => {
+    poser(0, "diner", "pates-bolognaise");
+    expect(calculer(jeu).chaine).toHaveLength(1);
+
+    jeu.stock = jeu.stock.filter((o) => o.type !== "sauce-bolognaise");
+    const c = calculer(jeu);
+    expect(c.chaine).toHaveLength(0);
+    // Et ce qui n'est plus trouvé se paie : les pâtes passent au plein tarif.
+    expect(c.pleinTarif.length + c.manques.length).toBeGreaterThan(0);
+  });
+
+  test("un lot ajouté au stock du jeu se chaîne, sans toucher au catalogue", () => {
+    // Les lentilles du catalogue sont trop vieilles (voir ci-dessus). Un bocal
+    // constaté aujourd'hui les remplace, et le plat les trouve.
+    poser(0, "diner", "burgers-de-lentilles");
+    expect(calculer(jeu).provenances.absent).toBeGreaterThan(0);
+
+    jeu.stock = [
+      ...jeu.stock,
+      {
+        type: "lentilles-vertes-cuites",
+        kind: "base",
+        qty: { amount: 800, unit: "g" },
+        qty_band: "2-repas",
+        born: "2026-08-17",
+        location: "frigo",
+      },
+    ];
+    expect(calculer(jeu).chaine.some((l) => l.type === "lentilles-vertes-cuites")).toBe(true);
+    // Le catalogue, lui, n'a pas bougé : c'est un asset, pas un état.
+    expect(catalogue.stock).toHaveLength(2);
+  });
+
+  test("le budget de rangement compte le stock du jeu, pas celui de l'export", () => {
+    const avant = calculer(jeu).stockage;
+    jeu.stock = [];
+    const apres = calculer(jeu).stockage;
+    expect(avant.congelo.debut).toBeGreaterThan(0);
+    expect(apres.congelo.debut).toBe(0);
+    expect(apres.frigo.debut).toBe(0);
+  });
+
+  test("un lot constaté sans être pesé part en entier, et le dit", () => {
+    // Ce que la base permet et que le catalogue ne permettait pas : `qty` à
+    // `null`. Le dépôt ne fait pas semblant de compter — il sert la ligne
+    // entière et marque la prise `approximatif`.
+    jeu.stock = [
+      {
+        type: "sauce-bolognaise",
+        kind: "base",
+        qty: null,
+        qty_band: "2-repas",
+        born: "2026-08-17",
+        location: "congelo",
+      },
+    ];
+    poser(0, "diner", "pates-bolognaise");
+    const c = calculer(jeu);
+    expect(c.chaine).toHaveLength(1);
+    expect(c.chaine[0]?.pris).toBeNull();
+    expect(c.chaine[0]?.manque).toBe(0);
+    expect(c.depot.lignes[0]?.epuise).toBe(true);
+  });
+});

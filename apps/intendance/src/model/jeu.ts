@@ -12,6 +12,7 @@
 // port ajoute, ce sont les types, et deux ou trois endroits où le JS se
 // reposait sur `undefined` là où TypeScript demande une décision.
 
+import type { LotInitial } from "./depot";
 import type { Catalogue, NatureCreneau, Plat, RepasId } from "./types";
 
 const JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"] as const;
@@ -46,6 +47,17 @@ export interface CreneauSemaine {
 
 export interface Jeu {
   catalogue: Catalogue;
+  /**
+   * CE QUE LA CUISINE PORTE DÉJÀ — et pas ce que le catalogue en disait le jour
+   * de l'export.
+   *
+   * `creerJeu` l'amorce avec `catalogue.stock`, parce qu'un jeu construit sans
+   * base doit rester calculable : c'est ce que font les tests du modèle et
+   * `npm run parite`, et c'est ce qui garde le port comparable au proto. Mais
+   * dès qu'il y a une base, c'est elle qui l'écrase (voir `db/stock.ts`) : un
+   * lot qu'on a fini n'existe plus, quoi qu'en dise l'export.
+   */
+  stock: LotInitial[];
   /** Les plats par identifiant — `catalogue.plats` est une liste, et l'écran
    *  fait des lookups par id à chaque rendu. */
   plats: Record<string, Plat>;
@@ -95,6 +107,7 @@ export function creerJeu(catalogue: Catalogue, nJours = 7, aujourdhui = new Date
 
   return {
     catalogue,
+    stock: [...catalogue.stock],
     plats: Object.fromEntries(catalogue.plats.map((p) => [p.id, p])),
     jours,
     creneaux,

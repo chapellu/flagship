@@ -163,8 +163,9 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
       articles un par un en tenant un cabas — et le compte des marques
       orphelines (voir ci-dessous). Corrigé au proto : son aide promettait
       qu'un article rentré « rejoint le stock et le plat qui l'attendait passe
-      en trouvé », ce qu'il ne faisait pas. L'app non plus, pas encore : c'est
-      T15.
+      en trouvé », ce qu'il ne faisait pas. L'app non plus, et T15 a montré
+      pourquoi ce n'est pas qu'un fil manquant — voir « Rentrer une course ne
+      peut pas faire un lot » ci-dessous.
 - [x] **T14 — Les parts.** Deux cibles de 64 px, pas de 0,5, l'aperçu de la
       semaine. Le levier le plus conséquent de l'app — les parts d'un créneau
       commandent le panier, les restes et le chaînage — et c'est le même que
@@ -189,12 +190,42 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
       64 px immobile se lit comme une panne. Corrigé au passage : la réserve
       annonçait « au-delà, ça ne tient pas » au moment précis où c'était déjà
       dépassé.
-- [ ] **T15 — L'inventaire.** Les catégories et leur fiabilité, les deux
-      plafonds par espace, les lots. **C'est ici que la table `stock` entrera
-      enfin dans le calcul** : elle est semée depuis T6 et personne ne la lit —
-      `calculer` construit son dépôt depuis `catalogue.stock`. Tant que ce fil
-      n'est pas branché, rentrer un article des courses ne fait rien passer en
-      « trouvé », et T13 se garde bien de le promettre.
+- [x] **T15 — L'inventaire.** Les catégories et leur fiabilité, les deux
+      plafonds par espace, les lots. **La table `stock` est entrée dans le
+      calcul** : `Jeu` porte désormais son propre stock, `calculer` et
+      `bilanStockage` le lisent là, et `db/stock.ts` l'y repose depuis la base
+      — `creerJeu` continue de l'amorcer avec `catalogue.stock` pour qu'un jeu
+      sans base reste calculable, ce qui garde `npm run parite` au vert. Le fil
+      est vérifié au navigateur de bout en bout : sur un dîner de pâtes qui
+      chaîne sur le bocal du congélo, la liste de courses passe de **2 à 5
+      articles** quand on retire le bocal, et le budget du congélo de 16 à 18
+      places libres. Trois choses que le catalogue ne permettait pas et que la
+      base demande : un lot peut être **constaté sans être pesé** (`qty` à
+      `null` — le dépôt le sert en entier et le dit `approximatif`, au lieu de
+      faire semblant de compter), une quantité sans unité ne chiffre rien, et
+      une ligne du dépôt porte une `ref` opaque — la clé de base — pour que
+      l'écran retrouve la ligne qu'un doigt touche **sans faire correspondre
+      deux listes par leur index**, la même erreur que la clé d'un créneau.
+      L'app attend l'amorce avant de dessiner : entre le premier rendu et la
+      fin de l'écriture, la table est vide, et une cuisine vide n'est pas un
+      état d'attente — c'est une réponse fausse, avec des manques qui
+      apparaissent puis disparaissent. **Un seul geste, et il est réversible :
+      « je n'en ai plus »**, parce que c'est le mensonge que la persistance
+      rendait possible — un bocal mangé hors de l'app restait au congélo pour
+      toujours et l'app continuait de chaîner dessus. Il ne s'offre que sur les
+      lots CONSTATÉS : ce que la semaine produit est un résultat de calcul, et
+      se retire en changeant la semaine. Le lot revient avec sa date de
+      naissance, pas celle d'aujourd'hui — annuler une bévue ne doit pas
+      rajeunir un bocal de trois semaines. Deux écarts au proto, tous deux
+      parce que le proto se contredisait ou criait dans le vide : le compte
+      d'un rangement disait « 3 lots » au-dessus d'une liste qui en montrait
+      cinq (les mangés comptent, ils se disent), et « dégager une étagère »
+      s'affichait sous les trois rangements en permanence — un impératif qui
+      est toujours là ne se distingue plus, le jour où il compte. Il ne paraît
+      maintenant que quand ça déborde ou qu'il reste moins d'une place.
+      Corrigé au passage : un filtre de rangement dont on retire le dernier lot
+      se relâche tout seul, au lieu de laisser l'écran sur une liste vide
+      titrée d'un rangement qui n'est plus offert.
 - [ ] **T16 — Le cockpit.** La journée d'abord, les cartes de facette ensuite.
 
 ### Trouvé en portant, à décider
@@ -215,6 +246,25 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
       enseignes, et ne lit jamais le cooldown. Le port garde ce comportement,
       sinon la parité ne voudrait rien dire. Reste à trancher : la
       configuration a-t-elle raison, ou faut-il la retirer du catalogue ?
+
+- [ ] **Rentrer une course ne peut pas faire un lot.** T15 a branché la table
+      `stock` sur le calcul, et la promesse du proto — « l'article rejoint le
+      stock, et le plat qui l'attendait passe en trouvé » — reste pourtant
+      intenable. Ce n'est pas un fil qui manque, c'est que les deux bouts ne
+      parlent pas de la même chose : une ligne de courses est un INGRÉDIENT
+      (`oignon`, `pâtes longues`, 140 identifiants), un lot du dépôt est une
+      SORTIE de plat (`sauce-bolognaise`, `lentilles-vertes-cuites`, 40 types),
+      et les `accepts` ne visent que les secondes. Sur les 140 identifiants
+      d'ingrédient du catalogue, un seul coïncide avec un `accepts.type`
+      (`parures-legumes`), et il ne s'achète pas. La règle du modèle le dit
+      d'ailleurs autrement : une base manquante est `absent`, « à cuisiner
+      d'avance », et `absent` ne produit pas de ligne de courses — on n'achète
+      nulle part 250 g de lentilles *cuites*. Trancher : ou bien rentrer une
+      course écrit un lot d'ingrédient BRUT que le dépôt ne sait pas encore
+      servir (et il faudrait alors que `calculer` prélève aussi sur les
+      ingrédients, ce qui est une autre modèle), ou bien la phrase du proto
+      était fausse et il faut la retirer d'où elle traîne encore. Question pour
+      le modèle Python.
 
 - [ ] **Rien n'efface les marques de courses quand la semaine tourne.** Un
       article coché la semaine dernière garde sa marque, et la liste peut

@@ -6,6 +6,7 @@
 // condition pour qu'on lui fasse confiance.
 
 import type { Manque } from "../model/calcul";
+import type { Espace } from "../model/types";
 import { fmt } from "./format";
 
 /**
@@ -17,3 +18,14 @@ export const phraseManque = (m: Manque): string =>
   ["manque", fmt(m.manque), m.unite, "de", m.acc.type ?? m.acc.kind]
     .filter((x): x is string => !!x)
     .join(" ");
+
+/**
+ * Le nom d'un espace de rangement.
+ *
+ * Le catalogue n'en porte pas — `frigo`, `congelo`, `placard` sont des
+ * identifiants, et le proto les traduisait dans deux fichiers à la fois. Trois
+ * mots, un seul endroit : « Congélo » écrit ici et « congélateur » ailleurs
+ * ferait chercher deux appareils.
+ */
+export const nomEspace = (e: Espace): string =>
+  e === "congelo" ? "Congélo" : e === "placard" ? "Placard" : "Frigo";

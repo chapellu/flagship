@@ -6,7 +6,8 @@ import type { Catalogue } from "../model/types";
 import { Base, VERSION, cleCreneau, jourISO, schemaDeclare } from "./schema";
 import { cocher, lireCourses, rentrer, rentrerLesCoches, viderCourses } from "./courses";
 import { hydrater, lireSemaine, oublier, poser, reglerParts } from "./semaine";
-import { ajouterLot, amorcer, corrigerLot, lireStock, reamorcer, retirerLot } from "./stock";
+import { ajouterLot, amorcer, auModele, corrigerLot, hydraterStock, lireStock, reamorcer, retirerLot } from "./stock";
+import { calculer } from "../model/calcul";
 
 const catalogue: Catalogue = lireCatalogue(
   JSON.parse(readFileSync("public/cuisine-data.json", "utf8")) as unknown,
@@ -239,6 +240,50 @@ describe("le stock", () => {
 
     await retirerLot(base, id);
     expect(await base.stock.get(id)).toBeUndefined();
+  });
+
+  test("un lot de la base arrive au modèle avec de quoi le retrouver", async () => {
+    await amorcer(base, catalogue);
+    const lot = (await lireStock(base))[0]!;
+    const vu = auModele(lot);
+    expect(vu).toMatchObject({
+      type: lot.type,
+      kind: lot.kind,
+      qty_band: lot.band,
+      born: lot.born,
+      location: lot.espace,
+      ref: String(lot.id),
+    });
+    expect(vu.qty).toEqual({ amount: lot.qty, unit: lot.unite });
+  });
+
+  test("une quantité sans unité ne chiffre rien — le lot part en bloc", async () => {
+    // « 3 » face à « 400 g » n'est pas une comparaison. Le dépôt le sait faire
+    // (il sert la ligne entière) à condition qu'on ne lui mente pas sur ce
+    // qu'on connaît.
+    const id = await ajouterLot(base, {
+      type: "bocal-mystere", kind: "base", qty: 3, unite: null,
+      band: "1-repas", espace: "placard", origine: null,
+    });
+    expect(auModele((await base.stock.get(id))!).qty).toBeNull();
+  });
+
+  test("retirer un lot le retire du calcul, pas seulement de l'écran", async () => {
+    // LE FIL DE T15, DE BOUT EN BOUT. La table est semée, le jeu l'emporte, le
+    // dépôt la sert ; un lot retiré cesse d'exister pour le chaînage. Tant que
+    // `calculer` lisait `catalogue.stock`, ce test passait au vert sans que
+    // rien ne marche.
+    await amorcer(base, catalogue);
+    const i = creneau(jeu, 0, "diner");
+    jeu.choix[i] = "pates-bolognaise";
+
+    hydraterStock(jeu, await lireStock(base));
+    expect(calculer(jeu).chaine).toHaveLength(1);
+
+    const bocal = (await lireStock(base)).find((l) => l.type === "sauce-bolognaise")!;
+    await retirerLot(base, bocal.id!);
+    hydraterStock(jeu, await lireStock(base));
+    expect(calculer(jeu).chaine).toHaveLength(0);
   });
 
   test("ré-amorcer jette ce que le foyer a constaté, et le dit en le faisant", async () => {

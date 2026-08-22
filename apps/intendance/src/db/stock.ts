@@ -9,6 +9,8 @@
 // D'où `amorcer()` : il ne s'exécute qu'une fois, et il le sait.
 
 import { jourISO, type Base, type LotStock } from "./schema";
+import type { LotInitial } from "../model/depot";
+import type { Jeu } from "../model/jeu";
 import type { Catalogue } from "../model/types";
 
 const CLE_AMORCE = "stock.amorce";
@@ -75,4 +77,44 @@ export async function reamorcer(base: Base, catalogue: Catalogue): Promise<void>
     await base.reglages.delete(CLE_AMORCE);
   });
   await amorcer(base, catalogue);
+}
+
+/* ────────────────────────────────────────────── de la base vers le modèle */
+
+/**
+ * Un lot de la base, vu par le dépôt.
+ *
+ * UNE QUANTITÉ SANS UNITÉ NE CHIFFRE RIEN. `LotStock` porte les deux
+ * séparément, parce qu'un lot peut se constater sans se peser ; le dépôt, lui,
+ * compare des grandeurs, et « 3 » face à « 400 g » n'est pas une comparaison.
+ * Il n'y a donc de quantité que quand les deux sont là — sinon le lot part en
+ * entier et `prelever` le dit (`approximatif`) au lieu de faire semblant.
+ *
+ * `ref` est la clé de base, pour que l'écran retrouve la ligne qu'un doigt
+ * touche sans faire correspondre deux listes par leur index.
+ */
+export const auModele = (l: LotStock): LotInitial => ({
+  type: l.type,
+  kind: l.kind,
+  qty: l.qty != null && l.unite ? { amount: l.qty, unit: l.unite } : null,
+  qty_band: l.band,
+  born: l.born,
+  location: l.espace,
+  ...(l.id == null ? {} : { ref: String(l.id) }),
+});
+
+/**
+ * Repose le stock de la base sur le jeu. MUTE `jeu` et le rend, comme
+ * `hydrater` le fait des créneaux — et pour la même raison : le modèle mute son
+ * état, et un second style ici ne rendrait pas le premier meilleur.
+ *
+ * L'ORDRE EST CELUI DE LA BASE, c'est-à-dire celui des `++id` : les lots se
+ * servent dans l'ordre où ils ont été constatés. C'est déjà l'ordre du
+ * catalogue, donc rien ne change de ce côté. Servir le plus vieux d'abord
+ * serait sans doute plus juste dans une cuisine — mais ce serait une décision
+ * sur le modèle, pas une traduction, et elle appartient au modèle Python.
+ */
+export function hydraterStock(jeu: Jeu, lots: LotStock[]): Jeu {
+  jeu.stock = lots.map(auModele);
+  return jeu;
 }

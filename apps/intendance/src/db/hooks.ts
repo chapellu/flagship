@@ -20,6 +20,7 @@ import { creerJeu, type Choix, type Jeu } from "../model/jeu";
 import type { Catalogue } from "../model/types";
 import { lireCourses } from "./courses";
 import { base, jourISO, type EtatCourse, type LotStock } from "./schema";
+import { amorcer, hydraterStock } from "./stock";
 import { hydrater, oublier, poser, prevoirGamelle, reglerParts } from "./semaine";
 
 /** Le catalogue, chargé une fois pour la vie de l'onglet. Il ne change pas en
@@ -43,6 +44,35 @@ export function useCatalogue(): { catalogue: Catalogue | null; erreur: Error | n
   }, []);
 
   return { catalogue, erreur };
+}
+
+/**
+ * L'amorce du stock, et le fait de SAVOIR qu'elle est passée.
+ *
+ * Le calcul lit maintenant la table `stock` (voir `model/calcul.ts`). Entre le
+ * premier rendu et la fin de l'amorce, cette table est vide — et une cuisine
+ * vide n'est pas un état d'attente, c'est une réponse fausse : la semaine se
+ * calculerait un instant sans le bocal du congélo, l'écran afficherait des
+ * manques, puis ils disparaîtraient. On attend donc, comme on attend le
+ * catalogue.
+ *
+ * `finally` et pas `then` : une amorce qui échoue doit laisser l'app démarrer
+ * sur ce que la base porte déjà — un écran bloqué sur « chargement… » ne dit
+ * rien à personne, alors qu'un inventaire vide se voit.
+ */
+export function useAmorce(catalogue: Catalogue | null): boolean {
+  const [faite, setFaite] = useState(false);
+  useEffect(() => {
+    if (!catalogue) return;
+    let vivant = true;
+    void amorcer(base, catalogue).finally(() => {
+      if (vivant) setFaite(true);
+    });
+    return () => {
+      vivant = false;
+    };
+  }, [catalogue]);
+  return faite;
 }
 
 export interface SemaineVivante {
@@ -88,12 +118,19 @@ export function useSemaine(catalogue: Catalogue | null, aujourdhui = new Date())
     [debut, fin],
   );
 
+  // LE STOCK EST UNE ENTRÉE DU CALCUL, au même titre que les décisions. Il n'est
+  // pas là pour le seul écran « L'inventaire » : c'est lui que le dépôt sert,
+  // donc c'est lui qui décide de ce qui se chaîne, de ce qui manque et de ce
+  // qui part aux courses.
+  const lots = useStock();
+
   const jeu = useMemo(() => {
-    if (!squelette || !decisions) return null;
+    if (!squelette || !decisions || !lots) return null;
     const frais = creerJeu(squelette.catalogue, 7, new Date(aujourdhui));
+    hydraterStock(frais, lots);
     return hydrater(frais, new Map(decisions.map((d) => [d.cle, d])));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- même raison que ci-dessus
-  }, [squelette, decisions, jour0]);
+  }, [squelette, decisions, lots, jour0]);
 
   const calc = useMemo(() => (jeu ? calculer(jeu) : null), [jeu]);
 
@@ -125,7 +162,7 @@ export function useSemaine(catalogue: Catalogue | null, aujourdhui = new Date())
   return {
     jeu,
     calc,
-    chargement: !catalogue || decisions === undefined,
+    chargement: !catalogue || decisions === undefined || lots === undefined,
     poserPlat,
     reglerLesParts,
     prevoirLaGamelle,

@@ -19,7 +19,7 @@
 // même chose : `espace` dit OÙ ÇA SE RANGE (le budget de rangement le compte),
 // `location` dit COMMENT ÇA VIEILLIT (le congélo ignore la fenêtre du frigo).
 
-import type { Accept, Emit, EmitKind, Espace, LigneStock, Quantite } from "./types";
+import type { Accept, Emit, EmitKind, Espace, Quantite } from "./types";
 
 /** Un `accepts` vise soit une sortie précise (`type`), soit toute une CLASSE de
  *  sorties (`kind`). C'est ce qui permet à une seule carte « reste réchauffé »
@@ -45,6 +45,37 @@ export function bandRepas(b: string | null | undefined): number {
 export const fmtQte = (v: number, u: string | null): string =>
   `${Math.round(v * 10) / 10} ${u ?? ""}`.trim();
 
+/**
+ * Un lot déjà là quand la semaine commence.
+ *
+ * LE CATALOGUE N'EST PLUS LE SEUL À EN FOURNIR. `LigneStock` en est un cas
+ * particulier — l'amorce exportée du modèle Python — et la table `stock` de la
+ * base en est un autre, celui qui fait foi dès qu'un doigt y a touché. D'où
+ * deux différences avec le catalogue, toutes deux réelles :
+ *
+ *  — `qty` peut être `null`. Un bocal trouvé au fond du placard se constate
+ *    sans se peser : « il y en a » est une information, et le dépôt sait déjà
+ *    quoi en faire — `prelever` fait partir la ligne entière et le dit
+ *    (`approximatif`), au lieu de faire semblant de compter.
+ *  — `ref` porte l'identité du lot CHEZ CELUI QUI L'A FOURNI. Le modèle ne s'en
+ *    sert jamais et ne la lit pas ; il la transporte pour que l'écran retrouve
+ *    la ligne de base qu'un doigt touche, sans faire correspondre deux listes
+ *    par leur index — la même erreur que la clé d'un créneau (voir
+ *    `db/schema.ts`), et elle ne se verrait pas davantage ici.
+ */
+export interface LotInitial {
+  type: string;
+  kind: EmitKind;
+  /** `null` = constaté sans être compté. */
+  qty: Quantite | null;
+  /** En repas — l'unité du budget de rangement. */
+  qty_band: string;
+  /** ISO `AAAA-MM-JJ`. */
+  born: string;
+  location: Espace;
+  ref?: string;
+}
+
 /** Une ligne du dépôt : un lot réel, présent avant la semaine ou produit par
  *  elle, avec ce qu'il en reste. */
 export interface LigneDepot {
@@ -62,6 +93,9 @@ export interface LigneDepot {
   congelo: boolean;
   /** L'identifiant du plat qui l'a produit, s'il vient de cette semaine. */
   from: string | null;
+  /** L'identité du lot chez son fournisseur — la clé de base d'un lot constaté,
+   *  `null` pour ce que la semaine produit. Opaque au modèle. */
+  ref: string | null;
   /** Ce qu'il en reste. `null` = lot non chiffré, qui part en entier. */
   reste: number | null;
   unite: string | null;
@@ -132,7 +166,7 @@ export class Depot {
   constructor(
     /** Jours au bout desquels un reste au frigo cesse d'être proposé. */
     private readonly fenetre: number,
-    initial: LigneStock[] = [],
+    initial: readonly LotInitial[] = [],
   ) {
     for (const o of initial) {
       this.lignes.push({
@@ -146,8 +180,12 @@ export class Depot {
         gardeFrigo: null,
         congelo: o.location === "congelo",
         from: null,
-        reste: o.qty.amount,
-        unite: o.qty.unit,
+        ref: o.ref ?? null,
+        // Un lot non chiffré n'a pas de reste : il part en entier ou pas du
+        // tout. C'est déjà le cas des restes de plat produits par la semaine ;
+        // ce qui change, c'est qu'un lot CONSTATÉ peut l'être aussi.
+        reste: o.qty?.amount ?? null,
+        unite: o.qty?.unit ?? null,
         epuise: false,
       });
     }
@@ -172,6 +210,7 @@ export class Depot {
       gardeFrigo: sortie.gardeFrigo,
       congelo: sortie.congelo,
       from: source ?? null,
+      ref: null,
       reste: amount,
       unite: unit,
       epuise: false,

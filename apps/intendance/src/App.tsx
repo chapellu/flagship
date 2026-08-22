@@ -6,10 +6,8 @@
 // — un App qui distribuerait les props de dix écrans deviendrait le seul
 // fichier que personne ne peut plus lire.
 
-import { useEffect } from "react";
-import { base, indexDuCreneau } from "./db";
-import { useCatalogue, useSemaine } from "./db/hooks";
-import { amorcer } from "./db/stock";
+import { indexDuCreneau } from "./db";
+import { useAmorce, useCatalogue, useSemaine } from "./db/hooks";
 import { vueAPrevoir } from "./ecrans/prevoir.vue";
 import { pleinEcran, type Route } from "./nav/routes";
 import { useRoute } from "./nav/useRoute";
@@ -31,16 +29,15 @@ const MOIS = (d: Date) => d.toLocaleDateString("fr-FR", { month: "long" });
 export function App() {
   const route = useRoute();
   const { catalogue, erreur } = useCatalogue();
+  // Le stock du catalogue n'entre en base qu'une fois ; à partir de là c'est le
+  // foyer qui fait foi. Voir `db/stock.ts`. Depuis T15, c'est aussi ce que le
+  // dépôt sert : on n'affiche rien avant que la table ait sa réponse, sinon le
+  // premier rendu montre une cuisine vide qui n'existe pas.
+  const amorce = useAmorce(catalogue);
   const { jeu, calc, chargement } = useSemaine(catalogue);
 
-  // Le stock du catalogue n'entre en base qu'une fois ; à partir de là c'est le
-  // foyer qui fait foi. Voir `db/stock.ts`.
-  useEffect(() => {
-    if (catalogue) void amorcer(base, catalogue);
-  }, [catalogue]);
-
   if (erreur) return <Panne message={erreur.message} />;
-  if (chargement || !jeu || !calc) return <Chargement />;
+  if (chargement || !amorce || !jeu || !calc) return <Chargement />;
 
   // CE QUI ATTEND UNE RÉPONSE. Le chiffre vient de l'écran qui y répondra —
   // « À prévoir » — et pas d'un compte refait ici. Une pastille qui annonce un

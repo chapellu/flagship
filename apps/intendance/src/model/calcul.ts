@@ -153,9 +153,19 @@ export function calculer(
   parts = jeu.parts,
 ): Calcul {
   const { catalogue } = jeu;
+  // LE DÉPÔT PART DE `jeu.stock`, PAS DE `catalogue.stock`. L'export dit ce que
+  // la cuisine portait le jour où il a été produit ; la base dit ce qu'elle
+  // porte. Tant que le calcul lisait le catalogue, retirer un lot fini de
+  // l'inventaire ne changeait rien — et l'app continuait de chaîner sur un
+  // bocal que personne n'avait plus. Voir `Jeu.stock` et `db/stock.ts`.
+  //
+  // `jetes` reste ce qu'il était : le levier « ET SI je n'avais plus ça ? »,
+  // une simulation qui ne touche à rien. Retirer un lot de la table, c'est le
+  // constat. Les deux passent par le même filtre, et c'est normal — la
+  // différence est dans qui s'en souvient demain.
   const depot = new Depot(
     catalogue.foyer.fenetreFrigo,
-    catalogue.stock.filter((o) => !jetes.includes(o.type)),
+    jeu.stock.filter((o) => !jetes.includes(o.type)),
   );
 
   const panier = new Map<string, LignePanier>();
@@ -261,7 +271,7 @@ export function bilanStockage(
     acc[e] = (acc[e] ?? 0) + n;
   };
 
-  for (const o of catalogue.stock) {
+  for (const o of jeu.stock) {
     if (jetes.includes(o.type)) continue;
     add(debut, o.location, bandRepas(o.qty_band));
   }
