@@ -89,7 +89,7 @@ function rendre(route: Route, jeu: NonNullable<ReturnType<typeof useSemaine>["je
       // hash lui-même serait le second endroit à savoir comment une URL est
       // faite, et le premier à s'en désaligner.
       if (route.ecran === "poser") return <Poser creneau={route.creneau} />;
-      if (route.ecran === "parts") return <Parts />;
+      if (route.ecran === "parts") return <Parts creneau={route.creneau} />;
       return <Cuisiner creneau={route.creneau} {...(route.plat ? { plat: route.plat } : {})} />;
     }
   }

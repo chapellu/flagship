@@ -165,8 +165,30 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
       qu'un article rentré « rejoint le stock et le plat qui l'attendait passe
       en trouvé », ce qu'il ne faisait pas. L'app non plus, pas encore : c'est
       T15.
-- [ ] **T14 — Les parts.** Deux cibles de 64 px, pas de 0,5, l'aperçu de la
-      semaine.
+- [x] **T14 — Les parts.** Deux cibles de 64 px, pas de 0,5, l'aperçu de la
+      semaine. Le levier le plus conséquent de l'app — les parts d'un créneau
+      commandent le panier, les restes et le chaînage — et c'est le même que
+      « À prévoir » actionne pour agrandir un lot ou prévoir une gamelle :
+      rien de ce que l'app propose ne passe par un chemin qui ne se relise pas
+      ici. **La taille du foyer s'écrit `null`**, jamais 2,5 : régler un
+      créneau sur exactement le foyer n'est pas une décision sur ce créneau,
+      c'est l'absence de décision, et y figer un chiffre priverait ce créneau
+      du jour où un mangeur s'ajoute. **Le nombre bouge sous le pouce et la
+      base suit** — deux cibles de 64 px sont faites pour être tapées vite, et
+      sans ça deux taps rapprochés partent du même état, donc le second se
+      perd ; vérifié au navigateur, cinq taps rapides font bien +2,5. Quatre
+      écarts au proto : l'aperçu est CLIQUABLE (régler la semaine, c'est régler
+      plusieurs créneaux d'affilée) et il contient le créneau courant, marqué,
+      au lieu des six premiers de la semaine — on réglait un chiffre au-dessus
+      d'une liste où il ne figurait pas ; la règle de crans suit toujours la
+      valeur, alors que le proto la figeait sur foyer ± 2 et n'allumait plus
+      rien à huit parts, c'est-à-dire exactement le soir où on la regarde ;
+      « Cuisiné » dit POURQUOI il ne bouge pas quand on descend le nombre (un
+      lot entier ne se coupe pas, un plat qui se garde se fait en entier) ; et
+      le « – » se désactive au plancher au lieu de ne rien faire — un rond de
+      64 px immobile se lit comme une panne. Corrigé au passage : la réserve
+      annonçait « au-delà, ça ne tient pas » au moment précis où c'était déjà
+      dépassé.
 - [ ] **T15 — L'inventaire.** Les catégories et leur fiabilité, les deux
       plafonds par espace, les lots. **C'est ici que la table `stock` entrera
       enfin dans le calcul** : elle est semée depuis T6 et personne ne la lit —

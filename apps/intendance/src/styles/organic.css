@@ -546,6 +546,9 @@ button { font-family: var(--font-body); color: inherit; }
   background: var(--color-bg); font-family: var(--font-heading); font-size: 28px; cursor: pointer;
 }
 .co-parts .rond.plus { background: var(--color-accent); color: var(--color-bg); }
+/* Au plancher, le « – » se voit désactivé. Un rond de 64 px qui ne fait rien
+   se lit comme une panne ; grisé, il se lit comme une borne. */
+.co-parts .rond:disabled { opacity: .38; cursor: default; }
 .co-parts .n { font-family: var(--font-heading); font-size: 42px; line-height: 1; }
 .co-crans { display: flex; gap: var(--space-1); margin-top: var(--space-3); justify-content: center; }
 .co-crans i { width: 7px; height: 7px; border-radius: 999px; background: var(--color-neutral-300); }
@@ -558,9 +561,19 @@ button { font-family: var(--font-body); color: inherit; }
 .co-duo .t { font-size: 13px; line-height: 1.35; margin-top: 2px; }
 .co-apercu { display: flex; gap: var(--space-2); align-items: center;
   border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); background: var(--color-surface); }
+/* Une ligne d'aperçu est un LIEN vers les parts de son créneau : régler la
+   semaine, c'est en régler plusieurs d'affilée. Elle se lit comme une ligne,
+   pas comme un lien — trois soulignements par ligne feraient une page de
+   liens là où il n'y a qu'une liste. */
+a.co-apercu { color: inherit; text-decoration: none; }
+/* Le créneau qu'on est en train de régler. Sans lui, on manipule un chiffre
+   au-dessus d'une liste où il ne figure pas. */
+.co-apercu.ici { outline: 2px solid var(--color-accent); }
 .co-apercu + .co-apercu { margin-top: var(--space-2); }
 .co-apercu.saute { background: var(--color-neutral-200); }
-.co-apercu .quand { width: 62px; flex: none; font-size: 12px; font-weight: 700; color: var(--color-neutral-700); text-transform: capitalize; }
+/* Assez large pour « Dim Déjeuner » : à 62 px, un déjeuner sur deux passait à
+   la ligne et les lignes n'avaient plus la même hauteur. */
+.co-apercu .quand { width: 84px; flex: none; font-size: 12px; font-weight: 700; color: var(--color-neutral-700); text-transform: capitalize; }
 .co-apercu .plat { font-size: 14px; font-weight: 600; }
 .co-apercu .note { font-size: 11.5px; margin-top: 1px; color: var(--color-neutral-700); }
 .co-apercu .note.souci { color: var(--color-accent-800); font-weight: 700; }
