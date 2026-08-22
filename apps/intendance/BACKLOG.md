@@ -226,7 +226,41 @@ Un ticket = un commit qui laisse l'app fonctionnelle. `[ ]` à faire,
       Corrigé au passage : un filtre de rangement dont on retire le dernier lot
       se relâche tout seul, au lieu de laisser l'écran sur une liste vide
       titrée d'un rangement qui n'est plus offert.
-- [ ] **T16 — Le cockpit.** La journée d'abord, les cartes de facette ensuite.
+- [x] **T16 — Le cockpit.** La journée d'abord, les cartes de facette ensuite.
+      L'écran d'ouverture de l'app : ce qu'on voit en la lançant n'est pas une
+      facette, c'est la journée — sinon la cuisine devient la seule chose qui
+      compte, et le jour où le jardin existe il faut rouvrir l'app ailleurs.
+      **Le jardin ne produit aucune tâche, et c'est le principal écart au
+      proto** : ses trois lignes (« semer la mâche », « observer le bac 2 »,
+      « récolter le basilic ») viennent de `data.js`, écrites à la main pour le
+      canevas. Aucun modèle ne les calcule, aucune base ne les porte, rien ne
+      saurait dire qu'elles sont faites — et un cockpit qui réclame de semer la
+      mâche tous les jours de l'année apprend à ne plus lire le cockpit. La
+      facette garde sa carte et dit qu'elle n'a pas de modèle. **La pastille de
+      la barre du bas est la liste elle-même**, comme celle de « À prévoir »
+      depuis T10 : `App` monte la coquille dans un composant à part pour
+      pouvoir lire la base au-dessus d'elle, plutôt que de deviner un compte
+      que l'écran contredirait. Ajouté au proto : « Poser le dîner de ce soir »
+      — le proto pré-remplissait sa semaine au démarrage et ne voyait donc
+      jamais un créneau vide, alors que c'est le premier état d'une app qu'on
+      installe ; et « on ne mange pas là » retire la ligne, parce que c'est une
+      réponse et pas un trou. Le geste du jour a déménagé dans
+      `aujourdhui.vue.ts` : deux écrans le disent maintenant, et deux écrans qui
+      déduisent chacun de leur côté « sortir le bocal du congélo » finissent par
+      le déduire différemment. Trois phrases du proto corrigées, toutes fausses
+      pour la même raison — elles décrivaient un état sans le lire : « La
+      semaine est posée jusqu'à dimanche » était écrit en dur (faux dès le
+      premier créneau vide, et son « dimanche » l'était dès qu'on ouvrait l'app
+      un mardi — la fenêtre part d'aujourd'hui) ; « 14 créneaux » comptait les
+      créneaux CHOISISSABLES de la semaine, une constante déguisée en chiffre,
+      là où ce qui bouge est le nombre de créneaux répondus ; et la ligne des
+      courses annonçait « rien de rentré au stock » quel que soit le nombre
+      d'articles rentrés — elle lisait les cochés et concluait sur les rentrés.
+      Corrigé au navigateur : sur une semaine vide, la carte cuisine affichait
+      « 0 article » et « 0 min de cuisine » en pastilles — trois choses à lire
+      pour n'en dire aucune. Vérifié au navigateur sur une semaine de cinq
+      plats : trois tâches, pastille à 3, et chaque ligne ouvre l'écran qui y
+      répond.
 
 ### Trouvé en portant, à décider
 

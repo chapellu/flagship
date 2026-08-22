@@ -22,6 +22,7 @@ import { Corps } from "../ui/Coquille";
 import { duree, fmt, hhmm } from "../ui/format";
 import { phraseManque } from "../ui/phrases";
 import { Icone } from "../ui/icones";
+import { detailDuGeste, gesteDuJour, titreDuGeste, type GesteDuJour } from "./aujourdhui.vue";
 import { vueAPrevoir } from "./prevoir.vue";
 
 export function Aujourdhui() {
@@ -176,32 +177,6 @@ function CeSoir({ jeu, calc, i }: { jeu: Jeu; calc: Calcul; i: number }) {
 
 /* ─────────────────────────────────────────────────────────── le geste du jour */
 
-interface GesteDuJour {
-  type: string;
-  quand: string;
-  titre: string;
-}
-
-/**
- * LE GESTE DU SOIR, dérivé du chaînage. Un plat de demain qui prend dans le
- * congélo demande une décision ce soir : sortir le lot, sinon il sera pris en
- * bloc à 19 h. Le canevas de design l'écrivait en dur ; c'est en réalité une
- * lecture du dépôt, et c'est ce qui la rend juste tous les jours.
- */
-function gesteDuJour(jeu: Jeu, calc: Calcul): GesteDuJour | null {
-  for (const [i, c] of jeu.creneaux.entries()) {
-    if (c.jour !== 1) continue;
-    const rid = jeu.choix[i];
-    if (!joue(rid ?? null)) continue;
-    const ch = calc.chaine.find((x) => x.creneau === i);
-    if (!ch) continue;
-    const lot = calc.depot.lignes.find((l) => l.type === ch.type && l.espace === "congelo");
-    if (!lot) continue;
-    return { type: ch.type, quand: `${c.label} de demain`, titre: jeu.plats[rid as string]?.titre ?? "" };
-  }
-  return null;
-}
-
 function Geste({ jour, geste }: { jour: string; geste: GesteDuJour }) {
   const cle = cleGeste(jour, geste.type);
   const fait = useDrapeau(cle);
@@ -209,10 +184,8 @@ function Geste({ jour, geste }: { jour: string; geste: GesteDuJour }) {
     <div className="co-geste">
       <span className="rond" />
       <div style={{ flex: 1 }}>
-        <div className="t">Sortir {geste.type} du congélo</div>
-        <div className="d">
-          Pour {geste.titre} — {geste.quand}
-        </div>
+        <div className="t">{titreDuGeste(geste)}</div>
+        <div className="d">{detailDuGeste(geste)}</div>
       </div>
       <button className={fait ? "fait" : ""} onClick={() => void poserReglage(cle, !fait)}>
         {fait ? "Fait ✓" : "Fait"}

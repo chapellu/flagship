@@ -13,7 +13,7 @@ import { pleinEcran, type Route } from "./nav/routes";
 import { useRoute } from "./nav/useRoute";
 import { Coquille, Corps, type Pastilles } from "./ui/Coquille";
 import { Aujourdhui } from "./ecrans/Aujourdhui";
-import { Cockpit } from "./ecrans/Cockpit";
+import { Cockpit, useCockpit } from "./ecrans/Cockpit";
 import { Courses } from "./ecrans/Courses";
 import { Cuisiner } from "./ecrans/Cuisiner";
 import { Jardin } from "./ecrans/Jardin";
@@ -39,15 +39,27 @@ export function App() {
   if (erreur) return <Panne message={erreur.message} />;
   if (chargement || !amorce || !jeu || !calc) return <Chargement />;
 
-  // CE QUI ATTEND UNE RÉPONSE. Le chiffre vient de l'écran qui y répondra —
-  // « À prévoir » — et pas d'un compte refait ici. Une pastille qui annonce un
-  // autre nombre que la liste qu'elle ouvre est pire que pas de pastille.
+  // Les hooks de la coquille ne peuvent pas vivre au-dessus de ces gardes : ils
+  // ont besoin d'un jeu. On monte donc la coquille dans un composant à part,
+  // dont le premier rendu a déjà tout — plutôt que d'appeler des hooks sous une
+  // condition, ce qui les désaligne au premier écran qui change de branche.
+  return <Monte route={route} jeu={jeu} calc={calc} />;
+}
+
+type Jeu = NonNullable<ReturnType<typeof useSemaine>["jeu"]>;
+type Calcul = NonNullable<ReturnType<typeof useSemaine>["calc"]>;
+
+function Monte({ route, jeu, calc }: { route: Route; jeu: Jeu; calc: Calcul }) {
+  // CE QUI ATTEND UNE RÉPONSE. Les deux chiffres viennent de l'écran qui y
+  // répondra — « À prévoir » pour la cuisine, le cockpit pour la journée — et
+  // pas d'un compte refait ici. Une pastille qui annonce un autre nombre que la
+  // liste qu'elle ouvre est pire que pas de pastille.
+  const cockpit = useCockpit(jeu, calc);
   const pastilles: Pastilles = {
     cuisine: vueAPrevoir(jeu, calc).enAttente,
-    // Le cockpit compte les choses à faire de la journée, toutes facettes
-    // confondues. Cette liste est le sujet de T16 : la deviner ici produirait
-    // un chiffre que l'écran contredirait en arrivant.
-    cockpit: 0,
+    // `null` tant que la base n'a pas répondu : la pastille apparaît alors,
+    // au lieu d'afficher un zéro qu'elle corrige aussitôt.
+    cockpit: cockpit?.taches.length ?? 0,
   };
 
   const j0 = jeu.jours[0]!;
@@ -65,7 +77,7 @@ export function App() {
   );
 }
 
-function rendre(route: Route, jeu: NonNullable<ReturnType<typeof useSemaine>["jeu"]>) {
+function rendre(route: Route, jeu: Jeu) {
   switch (route.ecran) {
     case "cockpit": return <Cockpit />;
     case "jardin": return <Jardin />;
