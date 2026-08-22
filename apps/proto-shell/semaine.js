@@ -23,15 +23,24 @@ const JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dim
 // semaine sans dessert n'est pas une semaine incomplète.
 export const remplissable = c => c.nature === "choisi" || c.nature === "optionnel";
 
-// AMORCE DU TEST GRANDEUR NATURE DU 21/08/2026 — À RETIRER APRÈS.
-// Le dîner d'invité et son dessert, posés en dur pour ce soir-là. Ancré sur la
-// DATE et non sur un indice de créneau : la fenêtre de 7 jours glisse, donc
-// l'amorce cesse d'elle-même de s'appliquer dès que la date sort de la semaine
-// affichée. Pas de code mort à nettoyer, pas de piège la semaine suivante.
+// AMORCE DU TEST GRANDEUR NATURE — À RETIRER APRÈS.
+// Le dîner d'invité posé en dur, ancré sur la DATE et non sur un indice de
+// créneau : la fenêtre de 7 jours glisse, donc l'amorce cesse d'elle-même de
+// s'appliquer dès que la date sort de la semaine affichée. Pas de code mort à
+// nettoyer, pas de piège la semaine suivante.
+//
+// DÉPLACÉE DU 21 AU 22 — la tourte n'a pas été cuisinée, faute de temps. Et le
+// geste qu'il a fallu faire pour ça — rouvrir ce fichier, changer une date,
+// fusionner, attendre une image — EST le manque. Le plan sait dire « ce soir,
+// ça » ; il ne sait pas dire **« pas ce soir, demain »**. Un repas qui ne s'est
+// pas fait n'est ni un repas sauté (`SAUTE` = on a DÉCIDÉ de ne pas manger là,
+// donc rien à acheter et rien à cuisiner) ni un créneau vide : c'est un plat
+// qui GARDE SA PLACE et change de jour, avec ses courses déjà faites derrière
+// lui et ses ingrédients qui vieillissent d'un jour. Aucune des trois natures
+// de créneau ne porte ça.
 const AMORCE = {
-  "2026-08-21": {
+  "2026-08-22": {
     diner: { plat: "tourte-nicoise-courgettes", parts: 3.5 },
-    dessert: { plat: "clafoutis-miel-abricot", parts: 3.5 },
   },
 };
 const cleJour = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
