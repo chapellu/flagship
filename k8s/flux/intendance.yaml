@@ -1,0 +1,50 @@
+# intendance.chapellu.fr — l'app vit dans SON PROPRE DÉPÔT
+# (github.com/chapellu/intendance), manifestes compris. Ce fichier est tout ce
+# que le monodépôt en sait : où la chercher, et quoi en appliquer.
+#
+# POURQUOI LES MANIFESTES NE SONT PAS ICI, contrairement au blog et au
+# prototype. Le CI de l'app épingle le SHA de l'image dans son deployment après
+# publication sur GHCR. Si ce manifeste vivait ici, ce CI devrait committer dans
+# CE dépôt — donc porter un jeton d'écriture sur un autre dépôt que le sien.
+# Les manifestes chez l'app, il n'écrit que chez lui.
+#
+# Ce qui reste ici est ce qui n'appartient pas à l'app : le listener
+# `https-intendance` du Gateway partagé (`k8s/infrastructure-config`) et le
+# rrset `intendance_a` (`infra/dns.tf`).
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: intendance
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  ref:
+    branch: main
+  # Dépôt public : pas de `secretRef`, contrairement à `flux-system` qui lit
+  # celui-ci. Un dépôt public en lecture n'a pas besoin d'identifiants, et un
+  # secret de moins est un secret de moins à faire tourner.
+  url: https://github.com/chapellu/intendance.git
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: intendance
+  namespace: flux-system
+spec:
+  interval: 10m
+  retryInterval: 1m
+  timeout: 5m
+  sourceRef:
+    kind: GitRepository
+    name: intendance
+  path: ./k8s
+  prune: true
+  # Pas de wait, pour la même raison que le prototype : la première
+  # réconciliation précède la première image GHCR (le CI épingle le SHA après
+  # coup) et wait bloquerait sur l'ImagePull initial.
+  wait: false
+  # Gateway + ClusterIssuer d'abord : sans le listener, l'HTTPRoute n'a pas de
+  # parent, et sans le ClusterIssuer il n'y a pas de certificat.
+  dependsOn:
+    - name: infrastructure-config
+  # Rien de secret : pas de bloc decryption.

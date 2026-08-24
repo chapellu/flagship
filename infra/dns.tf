@@ -58,6 +58,23 @@ resource "oci_dns_rrset" "proto_a" {
   }
 }
 
+# A record for the app (chapellu/intendance, its own repository). Like the
+# prototype's, a separate rrset rather than a CNAME: the prototype's record is
+# meant to be deleted one day, and neither should depend on the other.
+resource "oci_dns_rrset" "intendance_a" {
+  zone_name_or_id = oci_dns_zone.chapellu.id
+  domain          = "intendance.${var.dns_zone_name}"
+  rtype           = "A"
+  compartment_id  = local.dns_compartment_id
+
+  items {
+    domain = "intendance.${var.dns_zone_name}"
+    rtype  = "A"
+    ttl    = 300
+    rdata  = oci_core_instance.main.public_ip
+  }
+}
+
 resource "oci_dns_rrset" "grafana_a" {
   zone_name_or_id = oci_dns_zone.chapellu.id
   domain          = "grafana.${var.dns_zone_name}"
