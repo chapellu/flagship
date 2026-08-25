@@ -60,3 +60,15 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
+    - name: https-intendance
+      protocol: HTTPS
+      port: 443
+      hostname: intendance.chapellu.fr
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: intendance-tls
+      allowedRoutes:
+        namespaces:
+          from: All
