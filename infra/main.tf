@@ -201,7 +201,10 @@ resource "oci_core_instance" "main" {
   metadata = {
     ssh_authorized_keys = var.ssh_public_key
     user_data = base64encode(templatefile("${path.module}/cloud-init.yaml", {
-      github_token = var.github_token
+      github_token     = var.github_token
+      velero_bucket    = var.backup_bucket_name
+      velero_s3_region = var.region
+      velero_s3_url    = "https://${data.oci_objectstorage_namespace.ns.namespace}.compat.objectstorage.${var.region}.oraclecloud.com"
     }))
   }
 }
