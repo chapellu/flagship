@@ -5,6 +5,20 @@
 # of provisioning — no SSH remote-exec provisioner needed. A boot-volume
 # re-image counts as a fresh first boot, so the cluster is reinstalled
 # automatically instead of silently going missing.
+#
+# NOTE FOR EDITORS: this file is a Terraform template. Terraform interpolates
+# every dollar-brace reference before cloud-init ever sees it, so shell
+# variables must be written with a doubled dollar sign to survive
+# templatefile(). Only the github_token reference in k3s-flux-bootstrap.sh is
+# meant to be substituted by Terraform.
+#
+# SECURITY: the github_token is rendered in plaintext into instance user-data,
+# which the OCI metadata service serves unauthenticated to *any* local process:
+#   curl -H "Authorization: Bearer Oracle" \
+#     http://169.254.169.254/opc/v2/instance/metadata/user_data | base64 -d
+# File permissions on /var/lib/cloud/ do not mitigate this. Prefer an SSH deploy
+# key pulled from OCI Vault with instance-principal auth, or bootstrapping Flux
+# out-of-band, and rotate this token when you do.
 
 package_update: true
 package_upgrade: true
@@ -14,6 +28,10 @@ packages:
   - curl
   - ca-certificates
   - unattended-upgrades
+  # git is required for Claude Code remote-control worktree spawning;
+  # tmux is for attaching to ad-hoc sessions over SSH.
+  - git
+  - tmux
 
 write_files:
   - path: /usr/local/bin/k3s-flux-bootstrap.sh
@@ -60,11 +78,256 @@ write_files:
         --personal \
         --token-auth
 
+  # ---------------------------------------------------------------------------
+  # Claude Code: installed by cloud-init so a VM recreate no longer means
+  # reinstalling and reconfiguring it by hand. Only `claude auth login` is left
+  # as a manual step — OAuth credentials are deliberately not baked into
+  # user-data, since anything here is readable via the metadata service.
+  # ---------------------------------------------------------------------------
+  - path: /usr/local/bin/claude-code-bootstrap.sh
+    permissions: "0700"
+    owner: root:root
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+
+      CLAUDE_BIN=/home/ubuntu/.local/bin/claude
+
+      # Restore prior Claude Code state (memory, settings, credentials) if a
+      # persistent volume survived the recreate. See STATE VOLUME note below;
+      # this is a no-op when nothing is mounted there.
+      if [ -d /mnt/claude-state/.claude ]; then
+        cp -a /mnt/claude-state/.claude /home/ubuntu/
+        [ -f /mnt/claude-state/.claude.json ] \
+          && cp -a /mnt/claude-state/.claude.json /home/ubuntu/.claude.json
+        [ -f /mnt/claude-state/.credentials.json ] \
+          && cp -a /mnt/claude-state/.credentials.json /home/ubuntu/.claude/.credentials.json
+        chown -R ubuntu:ubuntu /home/ubuntu/.claude /home/ubuntu/.claude.json \
+          /home/ubuntu/.claude/.credentials.json 2>/dev/null || true
+      fi
+
+      # Native install, as the ubuntu user (not root — it installs into ~/.local).
+      if [ ! -x "$${CLAUDE_BIN}" ]; then
+        sudo -u ubuntu -H bash -lc 'curl -fsSL https://claude.ai/install.sh | bash'
+      fi
+
+      # The installer does not touch .bashrc, and ~/.local/bin is not on the
+      # default PATH for non-login shells, so `claude` is otherwise not found.
+      if ! grep -q '.local/bin' /home/ubuntu/.bashrc 2>/dev/null; then
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> /home/ubuntu/.bashrc
+        chown ubuntu:ubuntu /home/ubuntu/.bashrc
+      fi
+
+      # Remote-control worktree spawning requires the working directory to be a
+      # git repository with at least one commit, or every new session fails.
+      if [ ! -d /home/ubuntu/workspace/.git ]; then
+        install -d -o ubuntu -g ubuntu -m 0755 /home/ubuntu/workspace
+        sudo -u ubuntu -H bash -lc '
+          set -e
+          cd /home/ubuntu/workspace
+          git init -q -b main
+          git config user.email "ludovic.chapelet@outlook.com"
+          git config user.name "chapellu"
+          [ -f README.md ] || printf "# workspace\n\nScratch workspace for Claude Code remote-control sessions.\n" > README.md
+          git add -A
+          git commit -qm "init workspace"
+        '
+      fi
+
+      # Pre-accept the workspace trust dialog. It is interactive-only, and
+      # `claude remote-control` refuses to start without it, which would
+      # otherwise make the service impossible to start unattended.
+      sudo -u ubuntu -H /usr/local/bin/claude-trust-workspace /home/ubuntu/workspace || true
+
+      systemctl daemon-reload
+      systemctl enable --now claude-remote-control.path
+      # Starts immediately if credentials were restored above; otherwise the
+      # .path unit waits for ~/.claude/.credentials.json to appear after
+      # `claude auth login`.
+      systemctl start claude-remote-control.service || true
+
+  - path: /usr/local/bin/claude-trust-workspace
+    permissions: "0755"
+    owner: root:root
+    content: |
+      #!/usr/bin/env python3
+      """Idempotently mark a directory as a trusted Claude Code workspace.
+
+      `claude remote-control` refuses to start in a directory whose trust dialog
+      has never been accepted, and that dialog is interactive-only — which makes
+      it a hard blocker for running remote control as a systemd service. This
+      pre-seeds the `hasTrustDialogAccepted` flag in ~/.claude.json so the unit
+      can start unattended.
+
+      Run as the same user the service runs as.
+      Usage: claude-trust-workspace <dir>...
+      """
+      import json
+      import os
+      import sys
+      import tempfile
+
+      CONFIG = os.path.expanduser("~/.claude.json")
+
+
+      def main(dirs):
+          if not dirs:
+              print("usage: claude-trust-workspace <dir>...", file=sys.stderr)
+              return 2
+
+          try:
+              with open(CONFIG) as fh:
+                  config = json.load(fh)
+          except FileNotFoundError:
+              config = {}
+          except json.JSONDecodeError as exc:
+              print(f"{CONFIG} is not valid JSON: {exc}", file=sys.stderr)
+              return 1
+
+          projects = config.setdefault("projects", {})
+          changed = False
+          for d in dirs:
+              path = os.path.abspath(os.path.expanduser(d))
+              entry = projects.setdefault(path, {})
+              if entry.get("hasTrustDialogAccepted") is not True:
+                  entry["hasTrustDialogAccepted"] = True
+                  entry.setdefault("allowedTools", [])
+                  entry.setdefault("mcpServers", {})
+                  changed = True
+                  print(f"trusted {path}")
+              else:
+                  print(f"already trusted {path}")
+
+          if not changed:
+              return 0
+
+          # Write via a temp file in the same directory so an interrupted write
+          # can never leave a truncated ~/.claude.json behind.
+          directory = os.path.dirname(CONFIG) or "."
+          fd, tmp = tempfile.mkstemp(dir=directory, prefix=".claude.json.")
+          try:
+              with os.fdopen(fd, "w") as fh:
+                  json.dump(config, fh, indent=2)
+              os.chmod(tmp, 0o600)
+              os.replace(tmp, CONFIG)
+          except BaseException:
+              os.unlink(tmp)
+              raise
+          return 0
+
+
+      if __name__ == "__main__":
+          sys.exit(main(sys.argv[1:]))
+
+  - path: /etc/claude-remote-control.env
+    permissions: "0644"
+    owner: root:root
+    content: |
+      # Configuration for the claude-remote-control systemd service.
+      # Edit, then: sudo systemctl restart claude-remote-control
+
+      # Directory the server runs in. Must be a git repository for CLAUDE_RC_SPAWN=worktree.
+      # Point this at a real project clone when you have one.
+      CLAUDE_RC_WORKDIR=/home/ubuntu/workspace
+
+      # Session title shown in the session list at claude.ai/code and in the mobile app.
+      CLAUDE_RC_NAME=vm-main
+
+      # How on-demand sessions are created:
+      #   worktree  - each new session gets its own git worktree (isolated, safe to run in parallel)
+      #   same-dir  - all sessions share CLAUDE_RC_WORKDIR (they can conflict on the same files)
+      CLAUDE_RC_SPAWN=worktree
+
+      # Maximum concurrent sessions (upstream default is 32).
+      CLAUDE_RC_CAPACITY=8
+
+      # Prefix for auto-generated session names, e.g. vm-main-graceful-unicorn.
+      CLAUDE_REMOTE_CONTROL_SESSION_NAME_PREFIX=vm-main
+
+  - path: /etc/systemd/system/claude-remote-control.service
+    permissions: "0644"
+    owner: root:root
+    content: |
+      [Unit]
+      Description=Claude Code Remote Control (server mode)
+      Documentation=https://code.claude.com/docs/en/remote-control
+      # Remote Control is outbound-HTTPS only, so it needs working DNS/routing
+      # before it can register with the Anthropic API. Without this it
+      # start-loops on early boot.
+      After=network-online.target
+      Wants=network-online.target
+      # Don't give up after repeated restarts during a long network outage.
+      # This key only takes effect in [Unit]; systemd ignores it under [Service].
+      StartLimitIntervalSec=0
+
+      [Service]
+      Type=simple
+      User=ubuntu
+      Group=ubuntu
+      WorkingDirectory=/home/ubuntu/workspace
+      EnvironmentFile=/etc/claude-remote-control.env
+      Environment=HOME=/home/ubuntu
+      Environment=PATH=/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
+
+      # Remote Control requires a full-scope claude.ai OAuth login. Without one
+      # the process exits immediately, so on a freshly recreated VM this would
+      # restart-loop forever. Skip cleanly instead; claude-remote-control.path
+      # starts the unit as soon as `claude auth login` writes the credentials.
+      ExecCondition=/usr/bin/test -s /home/ubuntu/.claude/.credentials.json
+
+      # The workspace trust dialog is interactive-only and blocks server mode
+      # from starting unattended, so pre-seed the flag on every start. Idempotent.
+      ExecStartPre=/usr/local/bin/claude-trust-workspace $${CLAUDE_RC_WORKDIR}
+
+      ExecStart=/home/ubuntu/.local/bin/claude remote-control \
+          --name $${CLAUDE_RC_NAME} \
+          --spawn $${CLAUDE_RC_SPAWN} \
+          --capacity $${CLAUDE_RC_CAPACITY}
+
+      # No TTY under systemd. Server mode runs fine headless; stdin is only used
+      # for the space/w hotkeys, which are irrelevant here.
+      StandardInput=null
+      StandardOutput=journal
+      StandardError=journal
+
+      # Claude Code exits on its own after roughly 10 minutes without network,
+      # and the remote environment ID is preserved across restarts, so
+      # restarting always reconnects existing sessions rather than orphaning them.
+      Restart=always
+      RestartSec=10s
+
+      # Give in-flight tool calls a chance to finish before the process is killed.
+      TimeoutStopSec=30s
+      KillSignal=SIGINT
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - path: /etc/systemd/system/claude-remote-control.path
+    permissions: "0644"
+    owner: root:root
+    content: |
+      [Unit]
+      Description=Start Claude Code Remote Control once credentials exist
+      Documentation=https://code.claude.com/docs/en/remote-control
+
+      [Path]
+      # After a recreate the service can't run until someone runs
+      # `claude auth login`. Watch for the credentials file so the service comes
+      # up on its own the moment that happens, with no manual systemctl start.
+      PathExists=/home/ubuntu/.claude/.credentials.json
+      Unit=claude-remote-control.service
+
+      [Install]
+      WantedBy=multi-user.target
+
 runcmd:
   # Host firewall (defence-in-depth on top of the OCI Security Lists).
   # 'default allow routed' lets the k3s CNI forward pod/service traffic —
   # without it ufw's default-deny FORWARD chain drops cluster ingress on
   # 80/443 even though those ports are allowed inbound.
+  # Remote Control needs no inbound rule: it is outbound HTTPS only and never
+  # opens a listening port.
   - ufw default deny incoming
   - ufw default allow outgoing
   - ufw default allow routed
@@ -74,3 +337,15 @@ runcmd:
   - ufw --force enable
   - systemctl enable unattended-upgrades
   - /usr/local/bin/k3s-flux-bootstrap.sh
+  - /usr/local/bin/claude-code-bootstrap.sh
+
+# STATE VOLUME (optional, recommended)
+# ------------------------------------
+# claude-code-bootstrap.sh restores ~/.claude, ~/.claude.json and
+# ~/.claude/.credentials.json from /mnt/claude-state if something is mounted
+# there, which would carry Claude's memory and login across a recreate and
+# remove the last manual step. That requires a Terraform-side change this file
+# cannot make: an oci_core_volume with `lifecycle { prevent_destroy = true }`,
+# attached to the instance and mounted at /mnt/claude-state, plus a periodic
+# copy back to it.
+# Until that exists the restore block is simply skipped.
