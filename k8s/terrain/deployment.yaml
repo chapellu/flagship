@@ -1,0 +1,74 @@
+# terrain.chapellu.fr — coquille statique (apps/terrain) + données montées
+# depuis le disque du nœud.
+#
+# POURQUOI UN hostPath. Le dépôt et l'image sont publics ; les données (lieux
+# de la famille, parcelles visées) ne doivent être ni dans l'un ni dans
+# l'autre. Elles sont déposées à la main dans /srv/terrain/data sur vm-main et
+# montées en lecture seule. Cluster à un seul nœud : pas de question de
+# planification. Contrepartie : Velero ne les sauvegarde pas.
+#
+# Le tag d'image est épinglé par le CI (.github/workflows/terrain-image.yml).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: terrain
+  namespace: terrain
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: terrain
+  template:
+    metadata:
+      labels:
+        app: terrain
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: nginx
+          image: ghcr.io/chapellu/terrain:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          securityContext:
+            runAsUser: 101
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: data
+              mountPath: /usr/share/nginx/html/data
+              readOnly: true
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: data
+          hostPath:
+            path: /srv/terrain/data
+            type: Directory

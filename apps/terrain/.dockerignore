@@ -1,0 +1,5 @@
+# Même logique que proto-shell : on exclut, on n'énumère pas.
+Dockerfile
+.dockerignore
+README.md
+data/

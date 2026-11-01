@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Terrain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Public+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!--
+  Coquille publique : aucune donnée personnelle ici. Tout ce qui nomme un lieu,
+  une personne ou une parcelle vient de /data/, monté depuis le serveur et
+  derrière la connexion Google (voir k8s/terrain).
+-->
+<header class="apphead">
+  <div class="brand"><span class="eyebrow" id="eyebrow">Recherche de terrain</span><h1 id="title">Terrain</h1></div>
+  <nav class="tabs" role="tablist" aria-label="Vues">
+    <button role="tab" data-tab="carte" aria-selected="true">Carte</button>
+    <button role="tab" data-tab="classement">Classement</button>
+    <button role="tab" data-tab="parcelles">Parcelles</button>
+    <button role="tab" data-tab="annonces">Annonces</button>
+    <button role="tab" data-tab="analyse">Analyse</button>
+    <button role="tab" data-tab="visite">Visite &amp; plan</button>
+  </nav>
+</header>
+
+<div id="received" class="banner" hidden></div>
+
+<div class="layout">
+  <aside class="side" id="side" aria-label="Réglages">
+    <section class="box">
+      <h2>Qui règle ?</h2>
+      <div class="seg" role="radiogroup" aria-label="Profil" id="profiles"></div>
+      <p class="hint" id="profile-hint"></p>
+      <div class="row"><button class="ghost" id="share" type="button">Envoyer mon réglage</button><button class="ghost" id="reset" type="button">Réglages par défaut</button></div>
+      <p class="hint" id="share-out" hidden></p>
+    </section>
+
+    <section class="box">
+      <h2>Zone atteignable</h2>
+      <p class="hint">La zone verte réunit tous les points qui respectent les quatre seuils. Les lignes montrent chaque trajet seul.</p>
+      <div class="w"><label for="i-work"><span class="key k-work"></span><span data-place="work">Travail</span></label><input type="range" id="i-work" min="20" max="90" step="5"><output for="i-work"></output></div>
+      <div class="w"><label for="i-famA"><span class="key k-famA"></span><span data-place="famA">Famille 1</span></label><input type="range" id="i-famA" min="10" max="90" step="5"><output for="i-famA"></output></div>
+      <div class="w"><label for="i-famB"><span class="key k-famB"></span><span data-place="famB">Famille 2</span></label><input type="range" id="i-famB" min="10" max="120" step="5"><output for="i-famB"></output></div>
+      <div class="w"><label for="i-alt"><span class="key k-alt"></span>Altitude min.</label><input type="range" id="i-alt" min="0" max="800" step="25"><output for="i-alt"></output></div>
+      <div class="w"><label for="i-rush">Heure de pointe</label><input type="range" id="i-rush" min="1" max="1.8" step="0.05"><output for="i-rush"></output></div>
+      <p class="hint" id="zone-count"></p>
+    </section>
+
+    <section class="box">
+      <h2>Jours au travail</h2>
+      <div class="seg" role="radiogroup" aria-label="Jours par semaine" id="days"></div>
+      <p class="hint" id="weekly"></p>
+    </section>
+
+    <section class="box">
+      <h2>Ce qui compte <span class="who" id="who"></span></h2>
+      <div id="weights"></div>
+      <div class="w"><label for="famshare">Famille 1 ↔ 2</label><input type="range" id="famshare" min="0" max="100" step="10"><output for="famshare"></output></div>
+    </section>
+
+    <section class="box">
+      <h2>Filtres</h2>
+      <label class="chk"><input type="checkbox" id="f-fibre"> Fibre ≥ 80 % des logements</label>
+      <label class="chk"><input type="checkbox" id="f-ecole"> École dans le village</label>
+      <label class="chk"><input type="checkbox" id="f-zone"> Seulement dans la zone verte</label>
+      <div class="w"><label for="f-prix">Terrain médian max</label><input type="range" id="f-prix" min="80" max="300" step="10"><output for="f-prix"></output></div>
+    </section>
+  </aside>
+
+  <main id="main">
+    <section class="view" data-view="carte">
+      <div class="mapwrap"><div id="map" role="application" aria-label="Carte des communes et des zones atteignables"></div></div>
+      <div class="maplegend" id="maplegend"></div>
+      <div id="top5" class="top5"></div>
+    </section>
+
+    <section class="view" data-view="classement" hidden>
+      <p class="hint" id="count"></p>
+      <div class="tablewrap"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+      <button class="ghost" id="more" type="button"></button>
+    </section>
+
+    <section class="view" data-view="parcelles" hidden>
+      <div class="seg" role="radiogroup" aria-label="Type de parcelle" id="pkind"></div>
+      <div id="pintro" class="prose"></div>
+      <div class="parcels" id="plist"></div>
+    </section>
+
+    <section class="view" data-view="annonces" hidden>
+      <h2>Les annonces à regarder en premier</h2>
+      <div class="parcels" id="atop"></div>
+      <div id="aintro" class="prose"></div>
+      <h2>Toutes les annonces relevées</h2>
+      <div class="filters">
+        <div class="w"><label for="a-m2">Surface min.</label><input type="range" id="a-m2" min="0" max="3000" step="100" value="600"><output for="a-m2"></output></div>
+        <div class="w"><label for="a-prix">Prix max</label><input type="range" id="a-prix" min="40" max="250" step="10" value="170"><output for="a-prix"></output></div>
+        <label class="chk"><input type="checkbox" id="a-zone"> Dans la zone verte</label>
+      </div>
+      <div class="tablewrap"><table id="atbl"><thead></thead><tbody></tbody></table></div>
+    </section>
+
+    <section class="view prose-view" data-view="analyse" hidden><div id="analyse"></div></section>
+    <section class="view prose-view" data-view="visite" hidden><div id="visite"></div></section>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
