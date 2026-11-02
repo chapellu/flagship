@@ -1,0 +1,16 @@
+# Autorise la SecurityPolicy de `terrain` à lire le secret du client OAuth
+# Google, qui vit dans `monitoring` (créé pour Grafana). Seul ce secret-là.
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: terrain-oidc-secret
+  namespace: monitoring
+spec:
+  from:
+    - group: gateway.envoyproxy.io
+      kind: SecurityPolicy
+      namespace: terrain
+  to:
+    - group: ""
+      kind: Secret
+      name: oidc-google

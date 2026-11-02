@@ -1,0 +1,31 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: terrain
+  namespace: flux-system
+spec:
+  interval: 10m
+  retryInterval: 1m
+  timeout: 5m
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./k8s/terrain
+  prune: true
+  # Pas de wait : la première réconciliation précède la première image GHCR.
+  wait: false
+  # Gateway + ClusterIssuer d'abord ; monitoring pour le secret OAuth que la
+  # SecurityPolicy lit par ReferenceGrant.
+  dependsOn:
+    - name: infrastructure-config
+    - name: monitoring
+  # Adresses autorisées (données personnelles, dépôt public) : OWNER_EMAIL vient
+  # de cluster-vars ; PARTNER_EMAIL de terrain-vars, facultatif tant qu'il
+  # n'existe pas (la SecurityPolicy a une valeur par défaut inerte).
+  postBuild:
+    substituteFrom:
+      - kind: Secret
+        name: cluster-vars
+      - kind: Secret
+        name: terrain-vars
+        optional: true

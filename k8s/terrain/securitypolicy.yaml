@@ -1,0 +1,62 @@
+# Connexion Google + autorisation à la passerelle, comme Grafana
+# (k8s/monitoring/grafana-securitypolicy.yaml, qui explique le montage
+# oidc → cookie → jwt). Deux comptes autorisés au lieu d'un.
+#
+# Le client OAuth est le même que Grafana : son secret reste dans `monitoring`
+# et cette politique le lit par une ReferenceGrant (referencegrant.yaml) plutôt
+# que d'en garder une seconde copie chiffrée.
+#
+# Requiert, côté Google : https://terrain.chapellu.fr/oauth2/callback ajoutée
+# aux URI de redirection autorisées du client OAuth.
+#
+# Les adresses viennent de Secrets SOPS substitués par Flux (dépôt public) :
+# OWNER_EMAIL de `cluster-vars`, PARTNER_EMAIL de `terrain-vars`. Tant que
+# PARTNER_EMAIL n'existe pas, sa valeur par défaut ne correspond à aucun compte.
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: terrain-oidc
+  namespace: terrain
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: terrain
+  oidc:
+    provider:
+      issuer: "https://accounts.google.com"
+    clientID: "95800983069-n5fq0hfquou312q84o8oq60icn1nbval.apps.googleusercontent.com"
+    clientSecret:
+      name: oidc-google
+      namespace: monitoring
+    redirectURL: "https://terrain.chapellu.fr/oauth2/callback"
+    logoutPath: "/logout"
+    scopes:
+      - openid
+      - email
+      - profile
+    cookieNames:
+      idToken: "terrain-id-token"
+  jwt:
+    providers:
+      - name: google
+        issuer: "https://accounts.google.com"
+        remoteJWKS:
+          uri: https://www.googleapis.com/oauth2/v3/certs
+        extractFrom:
+          cookies:
+            - "terrain-id-token"
+  authorization:
+    defaultAction: Deny
+    rules:
+      - name: allow-household
+        action: Allow
+        principal:
+          jwt:
+            provider: google
+            claims:
+              - name: email
+                valueType: String
+                values:
+                  - ${OWNER_EMAIL}
+                  - ${PARTNER_EMAIL:=nobody@invalid.invalid}

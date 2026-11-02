@@ -75,6 +75,22 @@ resource "oci_dns_rrset" "intendance_a" {
   }
 }
 
+# A record for the land-search tool (apps/terrain, k8s/terrain). Separate
+# rrset like the others: DNS-only change, no effect on the instance.
+resource "oci_dns_rrset" "terrain_a" {
+  zone_name_or_id = oci_dns_zone.chapellu.id
+  domain          = "terrain.${var.dns_zone_name}"
+  rtype           = "A"
+  compartment_id  = local.dns_compartment_id
+
+  items {
+    domain = "terrain.${var.dns_zone_name}"
+    rtype  = "A"
+    ttl    = 300
+    rdata  = oci_core_instance.main.public_ip
+  }
+}
+
 resource "oci_dns_rrset" "grafana_a" {
   zone_name_or_id = oci_dns_zone.chapellu.id
   domain          = "grafana.${var.dns_zone_name}"

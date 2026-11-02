@@ -72,3 +72,16 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
+    # Outil terrain (k8s/terrain) — protégé par Google OIDC sur sa route.
+    - name: https-terrain
+      protocol: HTTPS
+      port: 443
+      hostname: terrain.chapellu.fr
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: terrain-tls
+      allowedRoutes:
+        namespaces:
+          from: All
