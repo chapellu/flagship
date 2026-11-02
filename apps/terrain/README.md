@@ -22,6 +22,43 @@ lit en `fetch` :
 | `ads.json` | annonces relevées |
 | `notes.json` | textes d'analyse, en HTML |
 | `img/` | photos aériennes des parcelles |
+| `creches.json` | crèches (INSEE BPE) et minutes de voiture vers la plus proche, par commune et sur la grille ; facultatif, fait apparaître l'option « travail en crèche » |
+| `schools.json` | écoles et collèges par commune : public/privé, contrat, élèves, IPS, cantine, rythme, brevet et valeur ajoutée ; facultatif |
+| `market.json` | relevé quotidien des annonces et leur historique (première/dernière vue, prix, départ) ; écrit par le CronJob `terrain-refresh` |
+
+`config.json` porte aussi le bloc `search` lu par le relevé :
+`{"maxPrice": 250000, "minM2": 300, "bienici": {"zoneIds": ["-4850451", "-4850450", "-7420"]}}`
+(identifiants Bien'ici des départements, via `res.bienici.com/suggest.json?q=Rhône`).
+
+## Relevé quotidien des annonces
+
+`k8s/terrain/cronjob.yaml`, chaque matin à 6 h 30 : `k8s/terrain/refresh/refresh.py`
+interroge chaque source (`src_<nom>.py`, liste dans `TERRAIN_SOURCES`), garde les
+annonces des communes de `communes.json`, et met à jour `market.json`. Une annonce
+absente d'un relevé **complet** est notée partie ce jour-là ; un relevé incomplet ne
+marque rien. Les doublons entre sites (même commune, surface et prix à quelques %
+près) sont fusionnés. L'onglet Annonces en tire « Le marché » : nouvelles, baisses de
+prix, ce qui part vite, ce qui traîne, par secteur.
+
+Lancer un relevé à la main : `kubectl -n terrain create job --from=cronjob/terrain-refresh refresh-now`.
+
+Le job tourne en utilisateur 101 (comme nginx) : le dossier `/data` du volume doit lui
+appartenir (`chown 101:101 /data` depuis le pod temporaire ci-dessous, une fois).
+
+## Crèches et écoles
+
+Calculés à la main, une fois par an suffit (sources publiques, rien de personnel) :
+
+```bash
+curl -O https://www.insee.fr/fr/statistiques/fichier/8217525/BPE25.zip
+python3 tools/creches.py BPE25.zip ./data   # ~5 min (OSRM, serveur de démonstration)
+python3 tools/ecoles.py  BPE25.zip ./data
+```
+
+Il n'existe pas de classement officiel des écoles primaires : la fiche école montre
+l'IPS (milieu social des élèves, comparé au département) et, pour les collèges, la
+valeur ajoutée du brevet (« fait mieux / moins bien qu'attendu »). Les lignes de car
+scolaire du Rhône (SYTRAL) ne sont pas en open data ; seul le RPI dispersé est signalé.
 
 **Sauvegarde.** Velero sauvegarde le volume chaque nuit (Kopia, 7 jours),
 avec le reste du cluster. Jusqu'au 2026-11-02 c'était un `hostPath`
@@ -38,9 +75,11 @@ kubectl -n terrain run terrain-seed --restart=Never --image=busybox:1.37 \
     "volumeMounts":[{"name":"d","mountPath":"/data"}]}],
     "volumes":[{"name":"d","persistentVolumeClaim":{"claimName":"terrain-data"}}]}}'
 kubectl -n terrain wait --for=condition=Ready pod/terrain-seed
-kubectl -n terrain exec terrain-seed -- sh -c 'rm -rf /data/*'
+# on garde market.json : c'est l'historique du marché, il ne se reconstruit pas
+kubectl -n terrain exec terrain-seed -- sh -c 'find /data -mindepth 1 -maxdepth 1 ! -name market.json -exec rm -rf {} +'
 tar -C ./data -cf - . | kubectl -n terrain exec -i terrain-seed -- tar -C /data -xf -
 kubectl -n terrain exec terrain-seed -- chmod -R a+rX /data
+kubectl -n terrain exec terrain-seed -- chown 101:101 /data   # le relevé quotidien écrit ici
 kubectl -n terrain delete pod terrain-seed
 ```
 

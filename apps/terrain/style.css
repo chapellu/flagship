@@ -182,9 +182,54 @@ td .gap{font:12px var(--f-data);color:var(--warn)}
 .leaflet-tooltip.ilabel:before{display:none}
 .pmark{width:12px;height:12px;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
 .pmark.repere{background:#ffcf33}.pmark.mixte{background:#ff7ad1;transform:rotate(45deg)}
-.amark{width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid #333}
-.amark.top{background:#ffcf33;width:14px;height:14px}
+/* Annonces : pastille bleue « € », bien distincte des parcelles repérées (carré jaune) et mixtes (losange rose). */
+.amark{position:relative;width:18px;height:18px;border-radius:50% 50% 50% 0;background:#2f62c8;color:#fff;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.45);
+  display:grid;place-items:center;font:700 10px/1 var(--f-data)}
+.amark.top{width:22px;height:22px;background:#17306b;color:#ffcf33;font-size:12px}
+.amark.new{box-shadow:0 0 0 2px #35b36b}
+.amark.drop::after{content:"";position:absolute;transform:translate(8px,-8px);width:7px;height:7px;border-radius:50%;background:#e8833a;border:1px solid #fff}
+.amark.sm,.amark.lg{display:inline-grid;width:15px;height:15px;font-size:9px;vertical-align:-3px;margin-right:5px;border-width:1px}
+.pmark.sm{display:inline-block;width:11px;height:11px;vertical-align:-1px;margin-right:5px;border-width:1px}
+.cmark{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--work);border:1px solid #fff;vertical-align:-1px;margin-right:5px}
 .place{font:700 11px var(--f-data);background:var(--ink);color:var(--bg);padding:3px 6px;border-radius:4px;white-space:nowrap}
 
 #tbl td,#tbl th,#atbl td{white-space:nowrap}
 #tbl td .sub{white-space:nowrap}
+
+/* barre « afficher » de la carte */
+.maptoggles{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:13px;margin-bottom:8px}
+.maptoggles .chk{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+/* popups : étiquette de type et liens rapides */
+.pop .tag{display:inline-block;font:500 10.5px/1 var(--f-data);text-transform:uppercase;letter-spacing:.05em;padding:4px 6px;border-radius:4px;margin-bottom:6px;background:#fff3c2;color:#6b5200}
+.pop .tag.ad{background:#dfe8fb;color:#17306b}
+.pop .act{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin-top:8px;font-size:12.5px}
+.pop .act button{font:500 12.5px var(--f-body);background:transparent;color:#2f6b4f;border:0;padding:0;cursor:pointer;text-decoration:underline}
+.pop .act a.go,.parcel .act a.go{font-weight:600;background:#2f62c8;color:#fff;padding:5px 9px;border-radius:5px;text-decoration:none}
+.pop details.school{margin:6px 0;font-size:12.5px}
+.pop details.school summary{cursor:pointer;font-weight:600}
+.pop details.school ul{margin:4px 0;padding-left:16px;display:grid;gap:4px}
+.pop details.school .chip{margin:2px 0 0}
+.parcel.sel,figure.sel{outline:3px solid var(--accent);outline-offset:2px}
+tr.gone td{color:var(--muted);text-decoration-color:var(--muted)}
+tr.gone td:nth-child(4){text-decoration:line-through}
+button.linkish{font:500 12px var(--f-body);background:transparent;color:var(--accent);border:0;padding:0 0 0 8px;cursor:pointer;text-decoration:underline}
+/* marché */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.kpis div{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;display:grid;gap:2px}
+.kpis b{font:500 20px var(--f-data)}.kpis span{font-size:12px;color:var(--muted)}
+.cols2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.cols2 ul{margin:6px 0 0;padding-left:18px;display:grid;gap:4px;font-size:13.5px}
+#market{max-width:none}
+
+/* liste synchronisée sous la carte */
+.maplist{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;align-items:start}
+.mcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:6px}
+.mcard.out{opacity:.6}
+.mcard button{all:unset;cursor:pointer}
+.mcard button:focus-visible,.mcard button:hover{text-decoration:underline}
+.mcard .mhead{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;align-items:center}
+.mcard .mhead b{font:700 15px var(--f-display)}
+.mcard .mhead span:last-child{grid-column:1/-1;font-size:12.5px;color:var(--muted)}
+.mcard ul{list-style:none;margin:0;padding:6px 0 0;border-top:1px solid var(--line);display:grid;gap:4px;font-size:13px}
+.mcard li{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.mcard li a{text-decoration:none;color:var(--accent);font-weight:600}

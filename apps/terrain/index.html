@@ -40,6 +40,12 @@
       <p class="hint" id="share-out" hidden></p>
     </section>
 
+    <section class="box" id="workat-box">
+      <h2>Lieu de travail</h2>
+      <div class="seg" role="radiogroup" aria-label="Lieu de travail" id="workat"></div>
+      <p class="hint">Plan B si le trajet devient trop lourd : travailler dans une crèche près de la maison. Le trajet, la zone verte et le score suivent ce choix.</p>
+    </section>
+
     <section class="box">
       <h2>Zone atteignable</h2>
       <p class="hint">La zone verte réunit tous les points qui respectent les quatre seuils. Les lignes montrent chaque trajet seul.</p>
@@ -74,9 +80,11 @@
 
   <main id="main">
     <section class="view" data-view="carte">
+      <div class="maptoggles" id="maptoggles" role="group" aria-label="Afficher sur la carte"></div>
       <div class="mapwrap"><div id="map" role="application" aria-label="Carte des communes et des zones atteignables"></div></div>
       <div class="maplegend" id="maplegend"></div>
-      <div id="top5" class="top5"></div>
+      <p class="hint" id="maplist-head"></p>
+      <div id="top5" class="maplist"></div>
     </section>
 
     <section class="view" data-view="classement" hidden>
@@ -95,11 +103,14 @@
       <h2>Les annonces à regarder en premier</h2>
       <div class="parcels" id="atop"></div>
       <div id="aintro" class="prose"></div>
+      <h2>Le marché</h2>
+      <div id="market" class="prose"></div>
       <h2>Toutes les annonces relevées</h2>
       <div class="filters">
         <div class="w"><label for="a-m2">Surface min.</label><input type="range" id="a-m2" min="0" max="3000" step="100" value="600"><output for="a-m2"></output></div>
         <div class="w"><label for="a-prix">Prix max</label><input type="range" id="a-prix" min="40" max="250" step="10" value="170"><output for="a-prix"></output></div>
         <label class="chk"><input type="checkbox" id="a-zone"> Dans la zone verte</label>
+        <label class="chk" id="a-gone-wrap" hidden><input type="checkbox" id="a-gone"> Montrer aussi les annonces parties</label>
       </div>
       <div class="tablewrap"><table id="atbl"><thead></thead><tbody></tbody></table></div>
     </section>

@@ -14,3 +14,4 @@ infra/.terraform.lock.hcl
 apps/blog/node_modules/
 apps/blog/dist/
 apps/blog/.astro/
+__pycache__/
