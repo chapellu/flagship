@@ -43,9 +43,22 @@ write_files:
 
       # Install k3s — Traefik disabled, servicelb (Klipper) kept for
       # LoadBalancer -> HostPort. kubeconfig is root-only (0600).
+      #
+      # The version is pinned. Unpinned, the installer first asks
+      # update.k3s.io which release "stable" is; on 2026-11-02 that host
+      # refused connections from vm-main and the whole bootstrap died on first
+      # boot. A pinned version downloads straight from GitHub releases.
+      # Bump it deliberately.
+      #
+      # gateway-api-crd is disabled: since 1.37 k3s ships standard-channel
+      # Gateway API CRDs plus a "safe-upgrades" ValidatingAdmissionPolicy that
+      # forbids the experimental CRDs Envoy Gateway installs, so the
+      # envoy-gateway HelmRelease fails and every app behind it with it.
+      # Envoy Gateway brings its own CRDs.
       if ! systemctl is-active --quiet k3s 2>/dev/null; then
         curl -sfL https://get.k3s.io \
-          | INSTALL_K3S_EXEC='server --disable traefik --write-kubeconfig-mode 600' sh -
+          | INSTALL_K3S_VERSION='v1.37.1+k3s1' \
+            INSTALL_K3S_EXEC='server --disable traefik --disable gateway-api-crd --write-kubeconfig-mode 600' sh -
       fi
 
       # Copy kubeconfig for the ubuntu user (restricted perms).
@@ -63,9 +76,12 @@ write_files:
       done
       k3s kubectl wait --for=condition=Ready nodes --all --timeout=180s
 
-      # Install flux CLI.
+      # Install flux CLI, pinned to the version of k8s/flux/flux-system/
+      # gotk-components.yaml. A newer CLI makes `flux bootstrap` regenerate the
+      # components and push a commit to main, which needs a token with write
+      # access and silently upgrades Flux during a rebuild. Bump both together.
       if ! command -v flux >/dev/null 2>&1; then
-        curl -s https://fluxcd.io/install.sh | bash
+        curl -s https://fluxcd.io/install.sh | FLUX_VERSION=2.9.3 bash
       fi
 
       # Bootstrap FluxCD — idempotent, safe to re-run.
