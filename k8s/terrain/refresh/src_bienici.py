@@ -12,7 +12,7 @@ from refresh import http_json, is_constructeur
 
 NAME = "bienici"
 PAGE = 100
-VENDEUR = {"mandatary": "mandataire", "agency": "agence", "private": "particulier"}
+VENDEUR = {"mandatary": "mandataire", "agency": "agence", "private": "particulier", "builder": "constructeur"}
 
 
 def fetch(search, communes):

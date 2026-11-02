@@ -465,10 +465,39 @@ function parcelPopup(p) {
   <div class="act"><button type="button" onclick="window.__goParcel('${esc(p.id)}')">Fiche de la parcelle</button>
   <a href="${cadastreUrl(p.lat, p.lon)}" target="_blank" rel="noopener">Cadastre ↗</a><a href="${plu(p.lat, p.lon)}" target="_blank" rel="noopener">Zonage ↗</a></div></div>`;
 }
+// Prix d'une annonce face au marché : son €/m² contre le €/m² médian des ventes
+// de la commune (communes.json, au moins 5 ventes). À défaut, les annonces en ligne
+// du même secteur (au moins 5) ; sinon 2 à 4 ventes, marqué « indicatif ». Seuils : ±15 %.
+function priceVerdict(a) {
+  if (!a.m2 || !a.prix) return null;
+  const e = a.prix / a.m2, c = C.find((x) => x.code === a.insee);
+  if (!c) return null;
+  const peers = () => ALLADS.filter((x) => x !== a && !x.gone && !x.stale && x.m2 && C.find((y) => y.code === x.insee)?.sect === c.sect).map((x) => x.prix / x.m2);
+  let ref, src, typ, weak = false;
+  if (c.eurm2 && c.nv >= 5) { ref = c.eurm2; src = `médiane de ${c.nv} ventes à ${c.nom}`; typ = c.m2; }
+  else if (peers().length >= 5) { const p = peers(); ref = median(p); src = `médiane de ${p.length} annonces en ligne, secteur ${c.sect}`; }
+  else if (c.eurm2 && c.nv >= 2) { ref = c.eurm2; src = `${c.nv} ventes seulement à ${c.nom}`; typ = c.m2; weak = true; }
+  else return null;
+  const pct = Math.round(100 * (e / ref - 1));
+  const v = pct <= -15 ? { cls: "g", label: "bon prix" } : pct >= 15 ? { cls: "wa", label: "cher" } : { cls: "", label: "dans le prix" };
+  const size = typ && (a.m2 > 2 * typ ? "terrain bien plus grand que la moyenne vendue : le €/m² baisse naturellement avec la surface"
+    : a.m2 < typ / 2 ? "terrain bien plus petit que la moyenne vendue : le €/m² monte naturellement" : "");
+  return { ...v, label: weak ? v.label + " (indicatif)" : v.label, pct, eurm2: Math.round(e), ref: Math.round(ref), src, size };
+}
+const pctTxt = (p) => (p > 0 ? "+" : p < 0 ? "−" : "±") + Math.abs(p) + " %";
+function priceBadge(a, full = true) {
+  const v = priceVerdict(a);
+  if (!v) return "";
+  if (!full) return `<span class="chip ${v.cls}" title="${esc(v.src)} : ${v.ref} €/m²">${esc(v.label)} ${pctTxt(v.pct)}</span>`;
+  const x = Math.max(0, Math.min(100, 50 + v.pct)); // jauge de −50 % à +50 %
+  return `<div class="pverdict"><span class="chip ${v.cls}">${esc(v.label)} · ${pctTxt(v.pct)}</span>
+    <div class="pgauge" role="img" aria-label="${esc(v.label)}, ${pctTxt(v.pct)} par rapport au marché"><span style="left:${x}%"></span></div>
+    <div class="sub">${v.eurm2} €/m² contre ${v.ref} €/m² (${esc(v.src)})${v.size ? `. Attention : ${esc(v.size)}.` : ""}</div></div>`;
+}
 function adPopup(a) {
   return `<div class="pop"><span class="tag ad">Annonce${a.top ? " mise en avant" : ""}</span>${a.photo ? `<img src="${esc(a.photo)}" alt="">` : ""}<h3>${esc(a.commune)} · ${fmtk(a.prix)}</h3>
   <div class="sub">${a.m2} m² · ${a.eurm2} €/m²${a.vendeur ? " · " + esc(a.vendeur) : ""}${a.top ? " · " + esc(a.top) : ""}</div>
-  ${marketLine(a)}${a.analyse ? `<p>${esc(a.analyse)}</p>` : ""}
+  ${priceBadge(a)}${marketLine(a)}${a.analyse ? `<p>${esc(a.analyse)}</p>` : ""}
   <div class="act"><a class="go" href="${esc(a.url)}" target="_blank" rel="noopener">Voir l'annonce ↗</a><button type="button" onclick="window.__goAd('${esc(a.id)}')">Dans la liste</button>
   ${a.lat ? `<a href="${cadastreUrl(a.lat, a.lon)}" target="_blank" rel="noopener">Cadastre ↗</a>` : ""}</div></div>`;
 }
@@ -546,7 +575,7 @@ function renderMapList() {
   $("top5").innerHTML = list.map(({ c, ads, parcels }) => `<article class="mcard${c.why.length ? " out" : ""}">
     <button type="button" class="mhead" data-code="${c.code}">${sc(c)}<b>${esc(c.nom)}</b><span>${c.alt} m · ${esc(workShort())} ${c.wt} min · ${esc(place("famA").short)} ${c.famA} · ${esc(place("famB").short)} ${c.famB} min${c.zone ? "" : " · hors zone"}${c.why.length ? " · exclue : " + esc(c.why.join(", ")) : ""}</span></button>
     ${ads.length || parcels.length ? `<ul>${parcels.map((p) => `<li><button type="button" data-pid="${esc(p.id)}"><span class="pmark ${p.kind} sm"></span>${esc(p.kind === "mixte" ? `${p.constr} m² + ${p.agri} m² A/N` : p.surface)} · ${esc(p.zone)}</button></li>`).join("")}
-      ${ads.sort((x, y) => (!!y.top - !!x.top) || x.prix - y.prix).map((a) => `<li><button type="button" data-aid="${esc(a.id)}"><span class="amark sm${a.top ? " top" : ""}">${a.top ? "★" : "€"}</span>${a.m2} m² · ${fmtk(a.prix)}${a.drop ? ` <span class="chip wa">−${fmtk(a.drop)}</span>` : ""}${isNew(a) ? ' <span class="chip g">nouvelle</span>' : ""}</button>
+      ${ads.sort((x, y) => (!!y.top - !!x.top) || x.prix - y.prix).map((a) => `<li><button type="button" data-aid="${esc(a.id)}"><span class="amark sm${a.top ? " top" : ""}">${a.top ? "★" : "€"}</span>${a.m2} m² · ${fmtk(a.prix)}${a.drop ? ` <span class="chip wa">−${fmtk(a.drop)}</span>` : ""}${isNew(a) ? ' <span class="chip g">nouvelle</span>' : ""} ${priceBadge(a, false)}</button>
         <a href="${esc(a.url)}" target="_blank" rel="noopener" aria-label="Ouvrir l'annonce">↗</a></li>`).join("")}</ul>` : ""}
   </article>`).join("");
   $("top5").onclick = (e) => {
@@ -709,7 +738,7 @@ function renderAds() {
     return `<figure class="parcel ad" data-aid="${esc(a.id)}"><div class="adph">${a.photo ? `<img src="${esc(a.photo)}" alt="" loading="lazy">` : ""}</div>
     <figcaption><span class="tag go">${esc(a.top)}</span><div class="ptop"><b>${esc(a.commune)}</b><span class="price">${fmtk(a.prix)}</span></div>
     <dl><div><dt>Surface</dt><dd>${a.m2} m²</dd></div>${c ? `<div><dt>${esc(workShort())}</dt><dd>${c.wt} min</dd></div><div><dt>${esc(place("famA").short)}</dt><dd>${c.famA} min</dd></div><div><dt>${esc(place("famB").short)}</dt><dd>${c.famB} min</dd></div>` : ""}</dl>
-    ${marketLine(a)}<p>${esc(a.analyse)}</p><div class="act"><a class="go" href="${esc(a.url)}" target="_blank" rel="noopener">Voir l'annonce ↗</a>${a.lat ? `<button type="button" data-ll="${a.lat},${a.lon}">Voir sur la carte</button>` : ""}</div></figcaption></figure>`;
+    ${priceBadge(a)}${marketLine(a)}<p>${esc(a.analyse)}</p><div class="act"><a class="go" href="${esc(a.url)}" target="_blank" rel="noopener">Voir l'annonce ↗</a>${a.lat ? `<button type="button" data-ll="${a.lat},${a.lon}">Voir sur la carte</button>` : ""}</div></figcaption></figure>`;
   }).join("");
   if (hiddenTops) $("atop").insertAdjacentHTML("beforeend", `<p class="hint">${hiddenTops} annonce${hiddenTops > 1 ? "s" : ""} mise${hiddenTops > 1 ? "s" : ""} en avant masquée${hiddenTops > 1 ? "s" : ""} par les filtres (${S.f.prix} k€ max${S.f.m2 ? `, ${S.f.m2} m² min.` : ""}).</p>`);
   const m2 = S.f.m2, px = S.f.prix * 1000, z = $("a-zone").checked, g = $("a-gone").checked;
@@ -718,7 +747,7 @@ function renderAds() {
   $("atbl").tHead.innerHTML = `<tr><th>Score commune</th><th>Commune</th><th>Surface</th><th>Prix</th><th>€/m²</th><th>${esc(workShort())}</th><th>Alt. bourg</th>${MARKET ? "<th>En ligne</th>" : ""}<th>Annonce</th></tr>`;
   $("atbl").tBodies[0].innerHTML = rows.map(({ a, c }) => `<tr data-aid="${esc(a.id)}"${a.gone || a.stale ? ' class="gone"' : ""}><td class="num">${c ? c.score : "–"}${c?.zone ? '<span class="sub">zone verte</span>' : ""}</td>
     <td><strong>${esc(a.commune)}</strong>${a.top ? ' <span class="chip g">★</span>' : ""}<span class="sub">${esc(a.titre || "")}</span></td><td class="num">${a.m2} m²</td>
-    <td class="num">${fmtk(a.prix)}${a.drop ? `<span class="sub">−${fmtk(a.drop)}</span>` : ""}</td><td class="num">${a.eurm2 ?? "–"}</td>
+    <td class="num">${fmtk(a.prix)}${a.drop ? `<span class="sub">−${fmtk(a.drop)}</span>` : ""}</td><td class="num">${a.eurm2 ?? "–"}<span class="sub">${priceBadge(a, false)}</span></td>
     <td class="num">${c ? c.wt + " min" : "–"}</td><td class="num">${c ? c.alt + " m" : "–"}</td>
     ${MARKET ? `<td class="num">${a.stale ? "–" : daysOn(a) + " j"}<span class="sub">${a.stale ? "plus vue" : a.gone ? "partie le " + fmtd(a.gone) : isNew(a) ? "nouvelle" : "depuis le " + fmtd(since(a))}</span></td>` : ""}
     <td><a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.agence || a.vendeur || "voir")} ↗</a>${a.src ? `<span class="sub">${esc(a.src)}${a.constructeur ? " · constructeur" : ""}</span>` : a.constructeur ? '<span class="sub">constructeur</span>' : ""}
