@@ -31,7 +31,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: nginx
-          image: ghcr.io/chapellu/terrain:d7a2451c5e8722dd6abf23412bb81b93624bc82c
+          image: ghcr.io/chapellu/terrain:ec2fa5c9d6b136c4bdfade71a68062d8963f30a8
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
