@@ -204,6 +204,35 @@ resource "oci_core_instance" "main" {
       github_token = var.github_token
     }))
   }
+
+  lifecycle {
+    # The OCI provider marks a change to metadata["user_data"] as ForceNew:
+    #
+    #   // Updates of 'ssh_authorized_keys' and 'user_data' in Instance
+    #   // 'metadata' should result in Force New
+    #   customdiff.ForceNewIfChange("metadata", ...)
+    #
+    # (the registry docs say "(Updatable)", which is wrong for these two keys).
+    # Combined with the terraform-apply workflow's `paths: infra/**` trigger,
+    # that made *editing cloud-init.yaml and merging to main* silently destroy
+    # and recreate vm-main — and with preserve_boot_volume = false the boot
+    # volume goes with it, taking /home/ubuntu, k3s and Flux. That has already
+    # happened twice.
+    #
+    # Ignoring user_data costs nothing: cloud-init only reads it on first boot,
+    # so pushing new user_data to a *running* instance has no effect anyway.
+    # Edits here therefore take effect on the next deliberate rebuild:
+    #
+    #   terraform apply -replace=oci_core_instance.main
+    #
+    # which is a destructive operation — see the STATE VOLUME note in
+    # cloud-init.yaml before running it.
+    #
+    # NOTE: ssh_authorized_keys is deliberately NOT ignored. It is ForceNew for
+    # the same reason, but rotating the SSH key is rare and deserves the
+    # explicit plan output rather than being silently dropped.
+    ignore_changes = [metadata["user_data"]]
+  }
 }
 
 # k3s + FluxCD are bootstrapped by cloud-init on the instance's first boot
