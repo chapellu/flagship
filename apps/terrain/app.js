@@ -25,7 +25,7 @@ const DEF = {
   profiles: { A: { w: { ...DEF_W }, famshare: 80 }, B: { w: { ...DEF_W }, famshare: 80 } },
   days: 4,
   iso: { work: 55, famA: 40, famB: 75, alt: 350, rush: 1.4 },
-  f: { fibre: true, ecole: true, zone: false, prix: 200 },
+  f: { fibre: true, ecole: true, zone: false, prix: 200, m2: 0 },
   show: { parcels: true, topads: true, ads: false, creches: false, cadastre: false, outside: false },
   workAt: "qg", // "qg" : le lieu de travail de config.json ; "creche" : la crèche la plus proche de chez soi
 };
@@ -128,7 +128,10 @@ function buildControls() {
     $("f-" + k).addEventListener("change", (e) => { S.f[k] = e.target.checked; render(); });
   }
   $("f-prix").value = S.f.prix;
-  $("f-prix").addEventListener("input", (e) => { S.f.prix = +e.target.value; render(); });
+  // un seul filtre prix (S.f.prix) : curseur latéral et curseur de l'onglet Annonces restent liés
+  for (const id of ["f-prix", "a-prix"]) $(id).addEventListener("input", (e) => { S.f.prix = +e.target.value; render(); });
+  // idem pour la surface minimale (S.f.m2)
+  for (const id of ["f-m2", "a-m2"]) $(id).addEventListener("input", (e) => { S.f.m2 = +e.target.value; render(); });
 
   $("reset").addEventListener("click", () => {
     const keep = S.profile;
@@ -478,7 +481,8 @@ function doRender() {
   for (const k of ["work", "famA", "famB"]) document.querySelector(`output[for=i-${k}]`).textContent = S.iso[k] + " min";
   document.querySelector("output[for=i-alt]").textContent = S.iso.alt + " m";
   document.querySelector("output[for=i-rush]").textContent = "×" + S.iso.rush.toFixed(2).replace(/0$/, "");
-  document.querySelector("output[for=f-prix]").textContent = S.f.prix + " k";
+  for (const id of ["f-prix", "a-prix"]) { $(id).value = S.f.prix; document.querySelector(`output[for=${id}]`).textContent = S.f.prix + " k"; }
+  for (const id of ["f-m2", "a-m2"]) { $(id).value = S.f.m2; document.querySelector(`output[for=${id}]`).textContent = S.f.m2 ? S.f.m2 + " m²" : "toutes"; }
   const p = effW(S.profile);
   WKEYS.forEach((k) => { if (S.profile === "mix") $("w-" + k).value = p.w[k]; document.querySelector(`output[for=w-${k}]`).textContent = Math.round(p.w[k]); });
   document.querySelector("output[for=famshare]").textContent = `${Math.round(p.famshare)}/${100 - Math.round(p.famshare)}`;
@@ -504,16 +508,22 @@ function doRender() {
 // (ou si « hors zone verte aussi » est coché).
 const byCodeC = () => Object.fromEntries(C.map((c) => [c.code, c]));
 const parcelCommune = (p) => C.find((x) => x.nom === p.commune);
+const priceOk = (a) => !a.prix || a.prix <= S.f.prix * 1000;
+// surface d'une parcelle repérée : « 3 002 m² » ; terrain mixte : constructible + zone A/N
+const parcelM2 = (p) => (p.kind === "mixte" ? (+p.constr || 0) + (+p.agri || 0) : +String(p.surface || "").replace(/[^0-9]/g, "") || 0);
+const sizeOk = (a) => !a.m2 || a.m2 >= S.f.m2;
+const adOk = (a) => priceOk(a) && sizeOk(a);
+const parcelOk = (p) => !S.f.m2 || parcelM2(p) >= S.f.m2;
 function syncMarkers() {
   const bc = byCodeC();
   for (const a of ALLADS) {
     if (!a._m) continue;
-    const lay = a.top ? layers.topads : layers.ads, ok = S.show.outside || !!bc[a.insee]?.zone;
+    const lay = a.top ? layers.topads : layers.ads, ok = (S.show.outside || !!bc[a.insee]?.zone) && adOk(a);
     if (ok) lay.addLayer(a._m); else lay.removeLayer(a._m);
   }
   for (const p of PARCELS) {
     if (!p._m) continue;
-    const ok = S.show.outside || !!parcelCommune(p)?.zone;
+    const ok = (S.show.outside || !!parcelCommune(p)?.zone) && parcelOk(p);
     if (ok) layers.parcels.addLayer(p._m); else { layers.parcels.removeLayer(p._m); if (p._poly) { layers.parcels.removeLayer(p._poly); p._poly = null; } }
   }
 }
@@ -632,7 +642,8 @@ function buildParcels() {
 }
 function renderParcels() {
   $("pintro").innerHTML = pkind === "mixte" ? NOTES.mixtes_intro : pkind === "repere" ? NOTES.reperes_intro : NOTES.mixtes_intro;
-  const list = PARCELS.filter((p) => pkind === "tout" || p.kind === pkind)
+  const kind = PARCELS.filter((p) => pkind === "tout" || p.kind === pkind);
+  const list = kind.filter(parcelOk)
     .map((p) => ({ p, c: C.find((x) => x.nom === p.commune) }))
     .sort((a, b) => (b.c?.score ?? 0) - (a.c?.score ?? 0));
   $("plist").innerHTML = list.map(({ p, c }) => `<figure class="parcel" data-pid="${esc(p.id)}">
@@ -643,6 +654,8 @@ function renderParcels() {
     ${c ? `<div><dt>${esc(workShort())}</dt><dd>${c.wt} min</dd></div><div><dt>Score</dt><dd>${c.score}${c.zone ? " ✓" : ""}</dd></div>` : ""}</dl>
     <div class="act"><button type="button" data-ll="${p.lat},${p.lon}">Voir sur la carte</button><a href="${cadastreUrl(p.lat, p.lon)}" target="_blank" rel="noopener">Cadastre ↗</a><a href="${plu(p.lat, p.lon)}" target="_blank" rel="noopener">Zonage ↗</a><span class="sub">${esc(parcelRef(p.id))}</span></div>
     </figcaption></figure>`).join("");
+  const hidden = kind.length - list.length;
+  if (hidden) $("plist").insertAdjacentHTML("afterbegin", `<p class="hint">${hidden} parcelle${hidden > 1 ? "s" : ""} sous ${S.f.m2} m², masquée${hidden > 1 ? "s" : ""} par le filtre surface.</p>`);
   $("plist").onclick = (e) => { const b = e.target.closest("button[data-ll]"); if (!b) return; const [la, lo] = b.dataset.ll.split(",").map(Number); showTab("carte"); setTimeout(() => { map.invalidateSize(); map.setView([la, lo], 16); }, 50); };
 }
 
@@ -681,7 +694,6 @@ function marketLine(a) {
 }
 function buildAds() {
   $("aintro").innerHTML = NOTES.annonces_intro;
-  ["a-m2", "a-prix"].forEach((id) => $(id).addEventListener("input", renderAds));
   $("a-zone").addEventListener("change", renderAds);
   $("a-gone").addEventListener("change", renderAds);
   $("a-gone-wrap").hidden = !MARKET;
@@ -689,9 +701,9 @@ function buildAds() {
 }
 function renderAds() {
   document.querySelector("output[for=a-m2]").textContent = $("a-m2").value + " m²";
-  document.querySelector("output[for=a-prix]").textContent = $("a-prix").value + " k";
   const byCode = Object.fromEntries(C.map((c) => [c.code, c]));
-  const tops = ALLADS.filter((a) => a.top);
+  const allTops = ALLADS.filter((a) => a.top), tops = allTops.filter(adOk);
+  const hiddenTops = allTops.length - tops.length;
   $("atop").innerHTML = tops.map((a) => {
     const c = byCode[a.insee];
     return `<figure class="parcel ad" data-aid="${esc(a.id)}"><div class="adph">${a.photo ? `<img src="${esc(a.photo)}" alt="" loading="lazy">` : ""}</div>
@@ -699,7 +711,8 @@ function renderAds() {
     <dl><div><dt>Surface</dt><dd>${a.m2} m²</dd></div>${c ? `<div><dt>${esc(workShort())}</dt><dd>${c.wt} min</dd></div><div><dt>${esc(place("famA").short)}</dt><dd>${c.famA} min</dd></div><div><dt>${esc(place("famB").short)}</dt><dd>${c.famB} min</dd></div>` : ""}</dl>
     ${marketLine(a)}<p>${esc(a.analyse)}</p><div class="act"><a class="go" href="${esc(a.url)}" target="_blank" rel="noopener">Voir l'annonce ↗</a>${a.lat ? `<button type="button" data-ll="${a.lat},${a.lon}">Voir sur la carte</button>` : ""}</div></figcaption></figure>`;
   }).join("");
-  const m2 = +$("a-m2").value, px = +$("a-prix").value * 1000, z = $("a-zone").checked, g = $("a-gone").checked;
+  if (hiddenTops) $("atop").insertAdjacentHTML("beforeend", `<p class="hint">${hiddenTops} annonce${hiddenTops > 1 ? "s" : ""} mise${hiddenTops > 1 ? "s" : ""} en avant masquée${hiddenTops > 1 ? "s" : ""} par les filtres (${S.f.prix} k€ max${S.f.m2 ? `, ${S.f.m2} m² min.` : ""}).</p>`);
+  const m2 = S.f.m2, px = S.f.prix * 1000, z = $("a-zone").checked, g = $("a-gone").checked;
   const rows = ALLADS.filter((a) => a.m2 >= m2 && a.prix <= px && (!z || byCode[a.insee]?.zone) && (g || (!a.gone && !a.stale)))
     .map((a) => ({ a, c: byCode[a.insee] })).sort((x, y) => (!!x.a.gone - !!y.a.gone) || (y.c?.score ?? 0) - (x.c?.score ?? 0));
   $("atbl").tHead.innerHTML = `<tr><th>Score commune</th><th>Commune</th><th>Surface</th><th>Prix</th><th>€/m²</th><th>${esc(workShort())}</th><th>Alt. bourg</th>${MARKET ? "<th>En ligne</th>" : ""}<th>Annonce</th></tr>`;
