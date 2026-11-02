@@ -1,11 +1,13 @@
 # terrain.chapellu.fr — coquille statique (apps/terrain) + données montées
-# depuis le disque du nœud.
+# depuis un volume.
 #
-# POURQUOI UN hostPath. Le dépôt et l'image sont publics ; les données (lieux
-# de la famille, parcelles visées) ne doivent être ni dans l'un ni dans
-# l'autre. Elles sont déposées à la main dans /srv/terrain/data sur vm-main et
-# montées en lecture seule. Cluster à un seul nœud : pas de question de
-# planification. Contrepartie : Velero ne les sauvegarde pas.
+# Le dépôt et l'image sont publics ; les données (lieux de la famille,
+# parcelles visées) ne doivent être ni dans l'un ni dans l'autre. Elles vivent
+# dans le PVC terrain-data (pvc.yaml), monté en lecture seule, et Velero les
+# sauvegarde chaque nuit. Pour les remplacer : voir apps/terrain/README.md.
+#
+# Avant le 2026-11-02 c'était un hostPath (/srv/terrain/data), que Velero ne
+# sait pas sauvegarder : la recréation du disque de vm-main les a effacées.
 #
 # Le tag d'image est épinglé par le CI (.github/workflows/terrain-image.yml).
 apiVersion: apps/v1
@@ -69,6 +71,6 @@ spec:
         - name: tmp
           emptyDir: {}
         - name: data
-          hostPath:
-            path: /srv/terrain/data
-            type: Directory
+          persistentVolumeClaim:
+            claimName: terrain-data
+            readOnly: true

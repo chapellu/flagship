@@ -1,0 +1,14 @@
+# Données privées de terrain (config, communes, grille, parcelles, annonces,
+# notes, photos). Volume local-path : Velero le sauvegarde chaque nuit avec le
+# reste (Kopia, defaultVolumesToFsBackup), contrairement à l'ancien hostPath.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: terrain-data
+  namespace: terrain
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi
