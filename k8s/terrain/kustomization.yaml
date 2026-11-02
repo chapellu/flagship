@@ -8,3 +8,16 @@ resources:
   - httproute.yaml
   - securitypolicy.yaml
   - referencegrant.yaml
+  - cronjob.yaml
+# Le code du relevé quotidien, monté dans le CronJob. Le suffixe de hash fait
+# suivre le CronJob à chaque changement de code.
+configMapGenerator:
+  - name: terrain-refresh
+    namespace: terrain
+    options:
+      annotations:
+        # Flux ne doit pas interpréter les ${…} éventuels du code Python
+        kustomize.toolkit.fluxcd.io/substitute: disabled
+    files:
+      - refresh/refresh.py
+      - refresh/src_bienici.py

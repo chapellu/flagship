@@ -3,3 +3,4 @@ Dockerfile
 .dockerignore
 README.md
 data/
+tools/

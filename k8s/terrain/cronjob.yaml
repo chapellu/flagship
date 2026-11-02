@@ -1,0 +1,80 @@
+# Relevé quotidien des annonces (k8s/terrain/refresh/) → data/market.json.
+#
+# Écrit sur le même volume que le site (terrain-data). Le PVC est RWO, mais le
+# cluster n'a qu'un nœud : le pod du site (lecture seule) et celui du relevé
+# peuvent le monter en même temps. L'écriture est atomique (fichier temporaire
+# puis rename) : nginx ne sert jamais un JSON à moitié écrit.
+#
+# Le code est public et ne contient aucun lieu : la zone de recherche vient du
+# bloc "search" de data/config.json et de data/communes.json.
+#
+# Lancer à la main : kubectl -n terrain create job --from=cronjob/terrain-refresh refresh-now
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: terrain-refresh
+  namespace: terrain
+spec:
+  schedule: "30 6 * * *"
+  timeZone: Europe/Paris
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 1800
+      ttlSecondsAfterFinished: 604800
+      template:
+        metadata:
+          labels:
+            app: terrain-refresh
+        spec:
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            # même utilisateur que nginx ; le dossier data lui appartient (voir apps/terrain/README.md)
+            runAsUser: 101
+            runAsGroup: 101
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: refresh
+              image: python:3.13-alpine
+              command: ["python3", "/app/refresh.py"]
+              env:
+                - name: TERRAIN_DATA
+                  value: /data
+                - name: TERRAIN_SOURCES
+                  value: bienici
+                - name: PYTHONDONTWRITEBYTECODE
+                  value: "1"
+              resources:
+                requests:
+                  cpu: 20m
+                  memory: 48Mi
+                limits:
+                  cpu: 500m
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              volumeMounts:
+                - name: app
+                  mountPath: /app
+                  readOnly: true
+                - name: data
+                  mountPath: /data
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: app
+              configMap:
+                name: terrain-refresh
+            - name: data
+              persistentVolumeClaim:
+                claimName: terrain-data
+            - name: tmp
+              emptyDir: {}
