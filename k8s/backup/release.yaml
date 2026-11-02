@@ -56,16 +56,18 @@ spec:
             checksumAlgorithm: ""
       # No cloud volume snapshots — file-system backup handles PV data instead.
       volumeSnapshotLocation: []
+      # Back up PV contents by default; opt out per-volume with the
+      # backup.velero.io/backup-volumes-excludes annotation if ever needed.
+      # Must live under `configuration`: the chart only renders
+      # --default-volumes-to-fs-backup from here. Until 2026-11-02 it sat at
+      # the top level of `values`, was ignored, and no backup held PV data.
+      defaultVolumesToFsBackup: true
 
     # Disable CSI/cloud volume snapshotting entirely.
     snapshotsEnabled: false
 
     # node-agent runs the Kopia data movement for PV file-system backups.
     deployNodeAgent: true
-
-    # Back up PV contents by default; opt out per-volume with the
-    # backup.velero.io/backup-volumes-excludes annotation if ever needed.
-    defaultVolumesToFsBackup: true
 
     schedules:
       daily:
@@ -77,6 +79,8 @@ spec:
           # 7-day retention (matches the bucket lifecycle backstop).
           ttl: "168h"
           storageLocation: default
+          # Explicit as well, so the schedule doesn't depend on the server flag.
+          defaultVolumesToFsBackup: true
           # Monitoring data is short-retention and reproducible — skip it, and
           # skip Velero's own namespace.
           excludedNamespaces:
