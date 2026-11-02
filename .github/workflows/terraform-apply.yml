@@ -12,6 +12,11 @@ on:
         description: 'OCI region override. Leave empty to use OCI_REGION secret.'
         required: false
         default: ''
+      allow_instance_rebuild:
+        description: 'Allow a plan that destroys vm-main or re-images its boot disk (wipes k3s, PVs, /home/ubuntu).'
+        type: boolean
+        required: false
+        default: false
 
 # Least privilege: applies only need to read the repo. All cloud credentials
 # come from environment secrets, not the GITHUB_TOKEN.
@@ -83,6 +88,8 @@ jobs:
 
       - name: Plan & Apply (with capacity retry)
         shell: bash
+        env:
+          ALLOW_INSTANCE_REBUILD: ${{ inputs.allow_instance_rebuild && 'true' || 'false' }}
         run: |
           # Retry up to 100 times with 120s between attempts.
           # AD index cycles 0/1/2 with modulo so single-AD regions stay valid.
@@ -98,6 +105,25 @@ jobs:
 
             terraform plan -out=tfplan -input=false \
               -var "availability_domain_index=${ad_index}"
+
+            # Guard: never wipe vm-main as a side effect. On 2026-11-02 a
+            # DNS-only push re-imaged the boot disk because a newer Ubuntu image
+            # changed source_details.source_id. That is an in-place "update" on
+            # OCI, not a delete, so both cases are checked.
+            if [ "${ALLOW_INSTANCE_REBUILD}" != "true" ]; then
+              danger=$(terraform show -json tfplan | jq -r '
+                .resource_changes[]?
+                | select(.address == "oci_core_instance.main")
+                | select((.change.actions | index("delete"))
+                         or ((.change.actions | index("update"))
+                             and (.change.before.source_details[0].source_id != .change.after.source_details[0].source_id)))
+                | .change.actions | join("+")')
+              if [ -n "$danger" ]; then
+                echo "::error::This plan would destroy or re-image vm-main (${danger}). Refusing to apply."
+                echo "If that is intended, run this workflow by hand with allow_instance_rebuild=true."
+                exit 1
+              fi
+            fi
 
             apply_exit=0
             terraform apply -input=false tfplan > /tmp/tf_apply.log 2>&1 || apply_exit=$?
