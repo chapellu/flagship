@@ -233,3 +233,10 @@ button.linkish{font:500 12px var(--f-body);background:transparent;color:var(--ac
 .mcard ul{list-style:none;margin:0;padding:6px 0 0;border-top:1px solid var(--line);display:grid;gap:4px;font-size:13px}
 .mcard li{display:flex;justify-content:space-between;gap:8px;align-items:center}
 .mcard li a{text-decoration:none;color:var(--accent);font-weight:600}
+
+/* prix d'une annonce face au marché */
+.pverdict{display:grid;gap:4px;margin:6px 0}
+.pverdict .chip{justify-self:start;margin:0;font-size:12px}
+.pgauge{position:relative;height:8px;border-radius:4px;background:linear-gradient(90deg,#3f8a6c 0 35%,#d6ddd5 35% 65%,#e3a26a 65% 100%)}
+.pgauge span{position:absolute;top:-3px;width:4px;height:14px;margin-left:-2px;border-radius:2px;background:#1d2621;box-shadow:0 0 0 1px #fff}
+.chip:not(.g):not(.wa):not(.b){background:#e7ebe6;color:#3b463f}
