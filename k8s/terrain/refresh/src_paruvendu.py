@@ -184,10 +184,9 @@ def fetch(search, communes):
                 inconnues.append(g["nom"])
         if inconnues:
             print(f"paruvendu {dep}: communes inconnues du site : {', '.join(inconnues)}")
-    maxp = search.get("maxPrice", 250000)
-    out = []
+    out = []  # pas de prix max : le budget se règle dans l'app
     for k, (a, insee_page) in raw.items():
-        if not a["prix"] or a["prix"] > maxp:
+        if not a["prix"]:
             continue  # sans prix : encart « programme / lotissement » (ni prix ni surface)
         insee = index.get((norm(a["ville"]), a["dep"])) or insee_page
         c = communes.get(insee) or {}

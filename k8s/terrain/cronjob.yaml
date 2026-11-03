@@ -6,7 +6,7 @@
 # puis rename) : nginx ne sert jamais un JSON à moitié écrit.
 #
 # Le code est public et ne contient aucun lieu : la zone de recherche vient du
-# bloc "search" de data/config.json et de data/communes.json.
+# bloc "search" de data/config.json, de data/communes.json et de data/grid.json.
 #
 # Lancer à la main : kubectl -n terrain create job --from=cronjob/terrain-refresh refresh-now
 apiVersion: batch/v1
@@ -23,7 +23,8 @@ spec:
   jobTemplate:
     spec:
       backoffLimit: 2
-      activeDeadlineSeconds: 1800
+      # ParuVendu lit aussi les pages des communes voisines de la zone : ~25 min les jours chargés
+      activeDeadlineSeconds: 3600
       ttlSecondsAfterFinished: 604800
       template:
         metadata:
