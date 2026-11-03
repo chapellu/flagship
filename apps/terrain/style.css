@@ -109,9 +109,9 @@ section h3{font-size:18px}
 a{color:var(--accent)}
 
 /* ---- App : un panneau de réglages à gauche, la vue à droite ---- */
-:root{--tpd:#b0306a;--tpe:#0d7f86;--work:#c2570c;--famA:#2563a8;--famB:#7c3aa8;--zone:#2f8a5c;--grey:#9aa49e}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--tpd:#f07aae;--tpe:#4fd0d6;--work:#f0954f;--famA:#7fb2ec;--famB:#c69cf0;--zone:#5fcf93;--grey:#5d6a62}}
-:root[data-theme="dark"]{--tpd:#f07aae;--tpe:#4fd0d6;--work:#f0954f;--famA:#7fb2ec;--famB:#c69cf0;--zone:#5fcf93;--grey:#5d6a62}
+:root{--tpd:#b0306a;--city:#5b3fd0;--tpe:#0d7f86;--work:#c2570c;--famA:#2563a8;--famB:#7c3aa8;--zone:#2f8a5c;--grey:#9aa49e}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--tpd:#f07aae;--city:#a891ff;--tpe:#4fd0d6;--work:#f0954f;--famA:#7fb2ec;--famB:#c69cf0;--zone:#5fcf93;--grey:#5d6a62}}
+:root[data-theme="dark"]{--tpd:#f07aae;--city:#a891ff;--tpe:#4fd0d6;--work:#f0954f;--famA:#7fb2ec;--famB:#c69cf0;--zone:#5fcf93;--grey:#5d6a62}
 [hidden]{display:none!important}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body);padding-inline:16px;padding-block:0 32px}
@@ -135,7 +135,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body)
 .w output{font:12.5px var(--f-data);text-align:right;white-space:nowrap}
 .key{flex:none;width:14px;height:4px;border-radius:2px;display:inline-block}
 .k-work{background:var(--work)}.k-famA{background:var(--famA)}.k-famB{background:var(--famB)}.k-alt{background:var(--muted)}
-.k-tpd{background:var(--tpd)}.k-tpe{background:var(--tpe)}
+.k-tpd{background:var(--tpd)}.k-city{background:var(--city)}.k-tpe{background:var(--tpe)}
 .sub-chk{margin:-2px 0 4px 0;font-size:12.5px;color:var(--muted)}
 input[type=range]{width:100%;accent-color:var(--accent)}
 input[type=range]:disabled{opacity:.45}
@@ -260,3 +260,5 @@ button.linkish{font:500 12px var(--f-body);background:transparent;color:var(--ac
 .age{border-bottom:1px dotted currentColor;cursor:help}
 .pop details.commune-in-ad{border-top:1px solid #d6ddd5;padding-top:6px}
 .pop details.commune-in-ad summary .score{display:inline-block;min-width:22px;text-align:center;padding:1px 4px;border-radius:4px;font:600 11px var(--f-data)}
+
+.route ol.steps{margin:4px 0 4px 18px;padding:0;font-size:12px}.route ol.steps li{margin:2px 0}.route .rt-res+.rt-res,.route .rt-res+button,.route button+.rt-res{margin-top:6px}

@@ -25,7 +25,7 @@ const DEF = {
   profile: "A",
   profiles: { A: { w: { ...DEF_W }, famshare: 80 }, B: { w: { ...DEF_W }, famshare: 80 } },
   days: 4,
-  iso: { work: 55, famA: 40, famB: 75, alt: 350, rush: 1.4, tpd: 60, tpe: 60, zpd: false, zpe: false },
+  iso: { work: 55, famA: 40, famB: 75, alt: 350, rush: 1.4, tpd: 60, tpe: 60, zpd: false, zpe: false, workTr: 70, city: 45, cityTr: 60, zcity: true },
   f: { fibre: true, ecole: true, zone: false, prix: 200, m2: 0, constr: true },
   show: { parcels: true, topads: true, ads: false, creches: false, cadastre: false, outside: false, tpd: true, tpe: true, rail: false },
   workAt: "qg", // "qg" : le lieu de travail de config.json ; "creche" : la crèche la plus proche de chez soi
@@ -120,11 +120,18 @@ function buildControls() {
   WKEYS.forEach((k) => $("w-" + k).addEventListener("input", (e) => { prof().w[k] = +e.target.value; render(); }));
   $("famshare").addEventListener("input", (e) => { prof().famshare = +e.target.value; render(); });
 
-  for (const k of ["work", "famA", "famB", "alt", "rush"]) {
+  for (const k of ISO_KEYS) {
     $("i-" + k).value = S.iso[k];
     $("i-" + k).addEventListener("input", (e) => { S.iso[k] = +e.target.value; render(); });
   }
   buildTrain();
+  $("i-zcity").checked = S.iso.zcity;
+  $("i-zcity").addEventListener("change", (e) => { S.iso.zcity = e.target.checked; render(); });
+  if (COM()) {
+    $("commute-box").hidden = false;
+    $("lbl-work").textContent = who("work") + " · voiture";
+    $("lbl-city").textContent = who("city") + " · voiture";
+  }
   for (const k of ["fibre", "ecole", "zone", "constr"]) {
     $("f-" + k).checked = S.f[k];
     $("f-" + k).addEventListener("change", (e) => { S.f[k] = e.target.checked; render(); });
@@ -138,7 +145,8 @@ function buildControls() {
   $("reset").addEventListener("click", () => {
     const keep = S.profile;
     S = structuredClone(DEF); S.profile = keep === "mix" ? "A" : keep;
-    for (const k of ["work", "famA", "famB", "alt", "rush"]) $("i-" + k).value = S.iso[k];
+    for (const k of ISO_KEYS) $("i-" + k).value = S.iso[k];
+    $("i-zcity").checked = S.iso.zcity;
     for (const k of ["fibre", "ecole", "zone", "constr"]) $("f-" + k).checked = S.f[k];
     $("f-prix").value = S.f.prix;
     syncTrain(); syncProfile(); syncWeights(); render();
@@ -223,15 +231,60 @@ function readShared() {
   $("rcv-ok").onclick = () => {
     S.profiles[into] = { w: { ...DEF_W, ...r.w }, famshare: r.famshare ?? 80 };
     if (r.workAt) { S.workAt = r.workAt; syncWork(); }
-    if (r.iso) { S.iso = { ...S.iso, ...r.iso }; for (const k of ["work", "famA", "famB", "alt", "rush"]) $("i-" + k).value = S.iso[k]; syncTrain(); }
+    if (r.iso) { S.iso = { ...S.iso, ...r.iso }; for (const k of ISO_KEYS) $("i-" + k).value = S.iso[k]; $("i-zcity").checked = S.iso.zcity; syncTrain(); }
     S.profile = "mix"; syncProfile(); syncWeights(); render();
     b.hidden = true; history.replaceState(null, "", location.pathname);
   };
   $("rcv-no").onclick = () => { b.hidden = true; history.replaceState(null, "", location.pathname); };
 }
 
+// ---------------------------------------------------------------- trajets domicile-travail
+// train.json « commute » : pour « work » et « city », les gares de départ utiles
+// [nom, lat, lon, train + fin de trajet, arrivées utiles 7 h–9 h], et pour chaque
+// point ses gares candidates [gare, minutes de voiture, …]. Chacun a deux limites,
+// voiture et train : un trajet mixte consomme une part de chacune (minutes au
+// volant / limite voiture + reste du trajet / limite train ≤ 1). Gare à pied ou à
+// vélo : pas de voiture, tout compte côté train. Attente selon la fréquence.
+const ISO_KEYS = ["work", "famA", "famB", "alt", "rush", "workTr", "city", "cityTr"];
+const COM = () => TRAIN?.commute?.work ? TRAIN.commute : null;
+const who = (k) => (CFG.commuters?.[k] ? `${CFG.commuters[k]} → ${place(k).short}` : place(k).short);
+const lim = (k) => (k === "work" ? { car: S.iso.work, train: S.iso.workTr } : { car: S.iso.city, train: S.iso.cityTr });
+function kmTo(la1, lo1, la2, lo2) {
+  const r = Math.PI / 180, h = Math.sin((la2 - la1) * r / 2) ** 2 + Math.cos(la1 * r) * Math.cos(la2 * r) * Math.sin((lo2 - lo1) * r / 2) ** 2;
+  return 12742 * Math.asin(Math.sqrt(h));
+}
+// meilleur trajet depuis (lat, lon) : { f : part des limites consommée (≤ 1 : acceptable), t : minutes, mode }
+function tripAt(k, lat, lon, cand, carMin) {
+  const R = COM().rules, D = COM()[k], L = lim(k);
+  let b = null;
+  const take = (f, t, mode, how) => { if (!b || f < b.f) b = { f, t: Math.round(t), mode, ...how }; };
+  if (carMin != null) { const m = carMin * S.iso.rush; take(m / L.car, m, "voiture", { car: Math.round(m) }); }
+  if (D && cand) for (let x = 0; x < cand.length; x += 2) {
+    const s = D.st[cand[x]], car = cand[x + 1];
+    const wait = Math.min(R.wait_cap, R.window / Math.max(1, s[4]) / 2); // moitié de l'intervalle entre trains
+    const rail = s[3] + wait, d = kmTo(lat, lon, s[1], s[2]);
+    const tr = `train depuis ${s[0]} (${s[3]} min + ${Math.round(wait)} min d'attente)`;
+    const how = (acc, a) => ({ st: cand[x], acc, a: Math.round(a), wait: Math.round(wait) });
+    if (d <= R.walk_km) { const a = (d * R.detour / R.walk_kmh) * 60; take((a + rail) / L.train, a + rail, `${Math.round(a)} min à pied + ${tr}`, how("pied", a)); }
+    else if (d <= R.bike_km) { const a = (d * R.detour / R.bike_kmh) * 60 + R.park_bike; take((a + rail) / L.train, a + rail, `${Math.round(a)} min à vélo + ${tr}`, how("vélo", a)); }
+    if (car != null) { const side = R.park_car + rail; take(car / L.car + side / L.train, car + side, `${car} min de voiture + ${tr}`, how("voiture", car)); }
+  }
+  return b ?? { f: 99, t: 999, mode: "pas de trajet connu" };
+}
+const gridLL = (i) => [GRID.lat0 + Math.floor(i / GRID.nx) * GRID.dlat, GRID.lon0 + (i % GRID.nx) * GRID.dlon];
+function commuteGrid(k, i) {
+  const D = COM()[k], [la, lo] = gridLL(i);
+  return tripAt(k, la, lo, D.grid[i], D.car.grid[i] ?? (k === "work" ? GRID.work[i] : null));
+}
+function commuteCom(c, k) {
+  const D = COM()[k];
+  return tripAt(k, c.lat, c.lon, D.com[c.code], D.car.com[c.code] ?? (k === "work" ? c.workcar : null));
+}
+const useCity = () => !!COM()?.city;
+
 // ---------------------------------------------------------------- score
 function workTime(c) {
+  if (COM() && !crecheMode()) return commuteCom(c, "work");
   if (crecheMode()) {
     const t = CRECHE.com[c.code];
     return { t: t ?? 999, mode: "voiture, crèche la plus proche" }; // trajet local : pas de facteur heure de pointe
@@ -250,7 +303,7 @@ function parts(c, wt) {
   const p = 0.3 * clip(c.inond, 2, 10) + 0.2 * (c.sech ? 1 : 0) + 0.15 * clip(c.mvt, 0, 4) + 0.15 * c.feu + 0.2 * c.indus;
   s.risques = 1 - Math.min(1, p);
   s.offre = clip(c.big, 0, 6);
-  s.work = 1 - clip(wt, 30, 75);
+  s.work = 1 - clip(c.lt != null ? (wt + c.lt) / 2 : wt, 30, 75); // deux trajets : la moyenne
   return s;
 }
 function scoreWith(s, c, prof) {
@@ -265,7 +318,9 @@ function scoreWith(s, c, prof) {
 const pxMax = () => (S.f.prix >= +$("f-prix").max ? Infinity : S.f.prix * 1000);
 const pxTxt = () => (pxMax() === Infinity ? "sans limite" : S.f.prix + " k");
 function inZone(c, wt) {
-  return wt <= S.iso.work && c.famA <= S.iso.famA && c.famB <= S.iso.famB && c.alt >= S.iso.alt && trainOk(c);
+  const ok = COM() && !crecheMode() ? c.wf <= 1 : wt <= S.iso.work;
+  if (useCity() && S.iso.zcity && !(c.lf <= 1)) return false;
+  return ok && c.famA <= S.iso.famA && c.famB <= S.iso.famB && c.alt >= S.iso.alt && trainOk(c);
 }
 // critères train cochés « dans la zone verte » : sans donnée, la commune n'y est pas
 function trainOk(c) {
@@ -275,7 +330,8 @@ function trainOk(c) {
 function compute() {
   for (const c of C) {
     const w = workTime(c);
-    c.wt = w.t; c.wmode = w.mode; c.walt = w.alt;
+    c.wt = w.t; c.wmode = w.mode; c.walt = w.alt; c.wf = w.f;
+    if (useCity()) { const l = commuteCom(c, "city"); c.lt = l.t; c.lmode = l.mode; c.lf = l.f; } else c.lt = c.lmode = c.lf = null;
     const s = parts(c, c.wt);
     c.sA = scoreWith(s, c, S.profiles.A);
     c.sB = scoreWith(s, c, S.profiles.B);
@@ -402,7 +458,8 @@ function buildToggles(extra) {
 }
 function drawLegend() {
   $("maplegend").innerHTML = `<span><span class="sq" style="background:var(--zone);opacity:.5"></span>Zone verte : tous les seuils respectés</span>
-    <span><span class="ln" style="background:var(--work)"></span>${esc(workShort())}</span>
+    <span><span class="ln" style="background:var(--work)"></span>${esc(COM() && !crecheMode() ? who("work") : workShort())}</span>
+    ${useCity() ? `<span><span class="ln" style="background:var(--city)"></span>${esc(who("city"))}${S.iso.zcity ? "" : " (hors zone verte)"}</span>` : ""}
     <span><span class="ln" style="background:var(--famA)"></span>${esc(place("famA").short)}</span>
     <span><span class="ln" style="background:var(--famB)"></span>${esc(place("famB").short)}</span>
     ${TRAIN ? Object.entries(TKEYS).map(([k, n]) => `<span title="${esc(trainHow())}"><span class="ln dot" style="color:var(--t${k})"></span>→ ${esc(n)} ${S.iso["t" + k]} min${S.iso["z" + k] ? " (zone verte)" : ""}</span>`).join("") : ""}
@@ -433,26 +490,30 @@ function contour(values, thr) {
 let gridCache = null;
 const gridGet = (k, i) => (GRID[k][i] == null ? 999 : GRID[k][i]);
 const gridWork = (i) => (crecheMode() ? CRECHE.grid[i] ?? 999 : gridGet("work", i) * S.iso.rush);
-// valeur combinée au point i : le pire des quatre rapports « valeur / seuil » ; la zone est là où il vaut ≤ 1
+// part de la limite « travail » consommée au point i (voiture seule, ou trajet mixte)
+const gridWorkF = (i) => (COM() && !crecheMode() ? commuteGrid("work", i).f : gridWork(i) / S.iso.work);
+// valeur combinée au point i : le pire des rapports « valeur / seuil » ; la zone est là où il vaut ≤ 1
 function gridRatio(i) {
   const I = S.iso;
-  const m = Math.max(gridWork(i) / I.work, gridGet("famA", i) / I.famA, gridGet("famB", i) / I.famB);
+  let m = Math.max(gridWorkF(i), gridGet("famA", i) / I.famA, gridGet("famB", i) / I.famB);
+  if (useCity() && I.zcity) m = Math.max(m, commuteGrid("city", i).f);
   let r = I.alt > 0 ? Math.max(m, I.alt / Math.max(1, GRID.alt[i])) : m;
   if (TRAIN) for (const k in TKEYS) if (I["z" + k]) r = Math.max(r, tripGrid(k, i) / I["t" + k]); // Part-Dieu / Perrache cochés : critère de zone
   return r;
 }
 function drawIso() {
   const n = GRID.nx * GRID.ny, I = S.iso;
-  const comb = new Float64Array(n), w = new Float64Array(n), a = new Float64Array(n), b = new Float64Array(n);
+  const comb = new Float64Array(n), w = new Float64Array(n), a = new Float64Array(n), b = new Float64Array(n), l = new Float64Array(n);
   for (let i = 0; i < n; i++) {
-    w[i] = -gridWork(i); a[i] = -gridGet("famA", i); b[i] = -gridGet("famB", i);
+    w[i] = -gridWorkF(i) * I.work; a[i] = -gridGet("famA", i); b[i] = -gridGet("famB", i);
+    if (useCity()) l[i] = -commuteGrid("city", i).f * I.city;
     comb[i] = -gridRatio(i);
   }
   layers.zone.clearLayers(); layers.iso.clearLayers();
   L.geoJSON(contour(comb, -1), { style: { color: css("--zone"), weight: 1.5, fillColor: css("--zone"), fillOpacity: 0.22 }, interactive: false }).addTo(layers.zone);
-  const lines = [["work", w, I.work], ["famA", a, I.famA], ["famB", b, I.famB]];
+  const lines = [["work", w, I.work], ["famA", a, I.famA], ["famB", b, I.famB], ...(useCity() ? [["city", l, I.city]] : [])];
   for (const [k, vals, t] of lines) {
-    L.geoJSON(contour(vals, -t), { style: { color: css("--" + k), weight: 2.2, dashArray: k === "work" ? null : "6 5", fill: false }, interactive: false }).addTo(layers.iso);
+    L.geoJSON(contour(vals, -t), { style: { color: css("--" + k), weight: 2.2, dashArray: k === "work" || k === "city" ? null : "6 5", fill: false }, interactive: false }).addTo(layers.iso);
   }
   layers.tpd.clearLayers(); layers.tpe.clearLayers();
   if (TRAIN) for (const k in TKEYS) {
@@ -481,7 +542,9 @@ function drawCommunes(rows) {
 // Pourquoi une commune n'est pas dans la zone verte : seuils non tenus
 function zoneWhy(c) {
   const I = S.iso, w = [];
-  if (c.wt > I.work) w.push(`${workShort()} ${c.wt} min > ${I.work}`);
+  if (COM() && !crecheMode()) { if (c.wf > 1) w.push(`${who("work")} ${c.wt} min, au-delà des limites (${c.wmode})`); }
+  else if (c.wt > I.work) w.push(`${workShort()} ${c.wt} min > ${I.work}`);
+  if (useCity() && I.zcity && c.lf > 1) w.push(`${who("city")} ${c.lt} min, au-delà des limites (${c.lmode})`);
   if (c.famA > I.famA) w.push(`${place("famA").short} ${c.famA} min > ${I.famA}`);
   if (c.famB > I.famB) w.push(`${place("famB").short} ${c.famB} min > ${I.famB}`);
   if (c.alt < I.alt) w.push(`altitude ${c.alt} m < ${I.alt} m`);
@@ -509,7 +572,8 @@ function communeBody(c) {
   const zw = c.zone ? [] : zoneWhy(c);
   return `<dl><dt>Score</dt><dd>${c.score}${S.profile === "mix" ? ` (${esc(CFG.people[0])} ${c.sA} · ${esc(CFG.people[1])} ${c.sB})` : ""}</dd>
   <dt>Altitude</dt><dd>${c.alt} m</dd>
-  <dt>${esc(workShort())}</dt><dd>${c.wt} min · ${esc(c.wmode)} · ${hw} h/sem.</dd>
+  <dt>${esc(COM() && !crecheMode() ? who("work") : workShort())}</dt><dd>${c.wt} min · ${esc(c.wmode)} · ${hw} h/sem.</dd>
+  ${useCity() ? `<dt>${esc(who("city"))}</dt><dd>${c.lt} min · ${esc(c.lmode)}</dd>` : ""}
   <dt>${esc(place("famA").short)}</dt><dd>${c.famA} min</dd><dt>${esc(place("famB").short)}</dt><dd>${c.famB} min</dd>
   ${TRAIN ? trainRows(c) : `<dt>Train</dt><dd>${c.train != null ? `${c.train} min${c.gare ? " · " + esc(c.gare) : ""}` : "pas de gare proche"}</dd>`}
   <dt>Terrain médian</dt><dd>${fmtk(c.prix)}${c.eurm2 ? ` · ${c.eurm2} €/m²` : ""}${c.nv != null ? ` · ${c.nv} ventes` : ""}</dd>
@@ -654,6 +718,7 @@ function workDest(lat, lon) {
 // redemande le contenu à Leaflet (popup.update), qui relit cet état.
 function routeAct(lat, lon, pos) {
   lat = +lat; lon = +lon; pos = ["exact", "approx", "commune"].includes(pos) ? pos : "";
+  if (COM()) return doorAct(lat, lon, pos);
   const d = workDest(lat, lon);
   if (!d || d.lat == null) return "";
   const st = ROUTES.get(`${lat},${lon}|${d.lat},${d.lon}`);
@@ -663,6 +728,14 @@ function routeAct(lat, lon, pos) {
     : st.err ? `<div class="sub">Trajet indisponible (${esc(st.err)}).</div>${btn("Réessayer")}`
     : routeHtml([lat, lon], d, st, pos);
   return `<div class="route">${body}</div>`;
+}
+function routeActCar(lat, lon, pos) {
+  const d = workDest(lat, lon);
+  if (!d || d.lat == null) return "";
+  const st = ROUTES.get(`${lat},${lon}|${d.lat},${d.lon}`);
+  const btn = (txt) => `<button type="button" onclick="window.__route(${lat},${lon},'${pos}')">${txt}</button>`;
+  return !st ? btn(`Trajet → ${esc(workShort())}`) : st === "wait" ? `<div class="sub">Calcul du trajet…</div>`
+    : st.err ? `<div class="sub">Trajet indisponible (${esc(st.err)}).</div>${btn("Réessayer")}` : routeHtml([lat, lon], d, st, pos);
 }
 function routeHtml(o, d, r, pos) {
   const t = Math.round(r.min), tr = d.rush ? Math.round(r.min * S.iso.rush) : t;
@@ -675,6 +748,97 @@ function routeHtml(o, d, r, pos) {
     ${from ? `<div class="sub">${from}</div>` : ""}
     <div class="act"><a href="${gm}" target="_blank" rel="noopener">Ouvrir dans Google Maps ↗</a><a href="${wz}" target="_blank" rel="noopener">Waze ↗</a><span class="sub">Waze part de la position du téléphone</span></div></div>`;
 }
+// ---- trajet porte à porte (train.json « commute ») : pour chacun, le meilleur
+// trajet depuis le point (voiture seule, ou voiture / marche / vélo + train) avec
+// les trains du matin, dessiné sur la carte. Gares candidates : celles du point
+// de grille le plus proche ; la partie voiture est recalculée par OSRM au clic.
+const DOORS = new Map();
+const hhmm = (m) => `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")}`;
+function nearGrid(lat, lon) {
+  const ix = Math.round((lon - GRID.lon0) / GRID.dlon), iy = Math.round((lat - GRID.lat0) / GRID.dlat);
+  return Math.max(0, Math.min(GRID.ny - 1, iy)) * GRID.nx + Math.max(0, Math.min(GRID.nx - 1, ix));
+}
+function doorDest(k) {
+  if (k === "work" && crecheMode()) return null; // crèche : trajet local en voiture (bouton classique)
+  const p = place(k);
+  return p && p.lat != null ? p : null;
+}
+function doorAct(lat, lon, pos) {
+  const keys = ["work", ...(COM().city ? ["city"] : [])];
+  const parts = keys.map((k) => {
+    if (!doorDest(k)) return routeActCar(lat, lon, pos);
+    const st = DOORS.get(`${lat},${lon}|${k}`);
+    const btn = (txt) => `<button type="button" onclick="window.__door(${lat},${lon},'${k}','${pos}')">${txt}</button>`;
+    return !st ? btn(`Trajet ${esc(who(k))}`)
+      : st === "wait" ? `<div class="sub">Calcul du trajet ${esc(who(k))}…</div>`
+      : st.err ? `<div class="sub">Trajet indisponible (${esc(st.err)}).</div>${btn("Réessayer")}`
+      : doorHtml(k, st, pos);
+  });
+  return `<div class="route">${parts.join("")}</div>`;
+}
+function doorHtml(k, r, pos) {
+  const b = r.best, L = lim(k), car = r.car;
+  const from = pos === "exact" ? "" : pos === "commune" ? "Départ approximatif : centre du village." : pos === "approx" ? "Départ approximatif : position floutée." : "";
+  const carLine = car ? `Tout en voiture : ${Math.round(car.min * S.iso.rush)} min à l'heure de pointe (${car.km.toFixed(1).replace(".", ",")} km, ${Math.round(car.min)} min sans trafic)` : "";
+  const ok = b.f <= 1 ? `dans les limites (${Math.round(b.f * 100)} %)` : `au-delà des limites (${Math.round(b.f * 100)} %)`;
+  let steps = "";
+  if (b.st != null) {
+    const s = COM()[k].st[b.st], R = COM().rules;
+    const fast = Math.min(...(s[7] || []).map(([d, a]) => a - d));
+    const opts = (s[7] || []).filter(([d, a]) => a - d <= fast + 15).slice(0, 8).map(([d, a, via]) => `${hhmm(d)} → ${hhmm(a)}${via ? ` (changement à ${esc(via)})` : ""}`);
+    steps = `<ol class="steps">
+      <li>${b.acc === "voiture" ? `Voiture jusqu'à la gare de ${esc(s[0])} : ${b.a} min + ${R.park_car} min pour se garer` : `${b.acc === "pied" ? "À pied" : "À vélo"} jusqu'à la gare de ${esc(s[0])} : ${b.a} min`}</li>
+      <li>Attente moyenne : ${b.wait} min (${s[4]} trains utiles entre 7 h et 9 h)</li>
+      <li>Train ${esc(s[0])} → ${esc(s[5])} : ${s[3] - s[6]} min${opts.length ? `<div class="sub">Départs : ${opts.join(" · ")}</div>` : ""}</li>
+      <li>De ${esc(s[5])} à ${esc(place(k).short)} : ${s[6]} min (à pied ou TCL)</li></ol>`;
+  }
+  return `<div class="rt-res"><b>${esc(who(k))} : ${b.t} min</b> · ${b.st != null ? "voiture / train" : "voiture"} · ${ok}
+    ${steps}<div class="sub">${carLine}</div>${from ? `<div class="sub">${from}</div>` : ""}</div>`;
+}
+async function osrmRoute(a, b) {
+  const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${a[1]},${a[0]};${b[1]},${b[0]}?overview=full&geometries=geojson`);
+  if (!res.ok) throw new Error(res.status === 429 ? "trop de demandes, réessayer dans un moment" : "erreur " + res.status);
+  const j = await res.json(), rt = j.code === "Ok" && j.routes && j.routes[0];
+  if (!rt) throw new Error("pas d'itinéraire trouvé");
+  return { km: rt.distance / 1000, min: rt.duration / 60, line: rt.geometry.coordinates.map(([x, y]) => [y, x]) };
+}
+window.__door = async (lat, lon, k) => {
+  const key = `${lat},${lon}|${k}`, pop = openPop, refresh = () => pop && pop.isOpen() && pop.update();
+  let r = DOORS.get(key);
+  if (!r || r.err) {
+    DOORS.set(key, "wait"); refresh();
+    try {
+      const P = doorDest(k), D = COM()[k], gi = nearGrid(lat, lon);
+      const car = await osrmRoute([lat, lon], [P.lat, P.lon]);
+      let best = tripAt(k, lat, lon, D.grid[gi], car.min);
+      let acc = null;
+      if (best.st != null && best.acc === "voiture") { // partie voiture réelle, depuis le point lui-même
+        const s = D.st[best.st];
+        acc = await osrmRoute([lat, lon], [s[1], s[2]]);
+        const cand = D.grid[gi].slice(), at = cand.findIndex((v, n) => n % 2 === 0 && v === best.st);
+        cand[at + 1] = Math.round(acc.min);
+        best = tripAt(k, lat, lon, cand, car.min);
+      }
+      r = { best, car, acc };
+    } catch (e) { r = { err: e.message || "réseau" }; }
+    DOORS.set(key, r);
+  }
+  if (!r.err && r !== "wait") {
+    layers.route.clearLayers();
+    const col = css(k === "city" ? "--city" : "--work"), b = r.best, P = doorDest(k);
+    if (b.st == null) L.polyline(r.car.line, { color: col, weight: 4, opacity: 0.85, interactive: false }).addTo(layers.route);
+    else {
+      const s = COM()[k].st[b.st];
+      if (b.acc === "voiture" && r.acc && r.acc.line) L.polyline(r.acc.line, { color: col, weight: 4, opacity: 0.85, interactive: false }).addTo(layers.route);
+      else L.polyline([[lat, lon], [s[1], s[2]]], { color: col, weight: 3, dashArray: "2 6", interactive: false }).addTo(layers.route);
+      const path = s[8] && s[8].length > 1 ? s[8] : [[s[1], s[2]], [P.lat, P.lon]];
+      L.polyline(path, { color: col, weight: 4, dashArray: "10 6", opacity: 0.9, interactive: false }).addTo(layers.route);
+      L.polyline([path[path.length - 1], [P.lat, P.lon]], { color: col, weight: 3, dashArray: "2 6", interactive: false }).addTo(layers.route);
+      for (const q of [[s[1], s[2]], path[path.length - 1]]) L.circleMarker(q, { radius: 5, color: "#fff", weight: 1.5, fillColor: col, fillOpacity: 1, interactive: false }).addTo(layers.route);
+    }
+  }
+  refresh();
+};
 let openPop = null; // bulle ouverte, à rafraîchir quand le trajet arrive
 window.__route = async (lat, lon) => {
   const d = workDest(lat, lon), key = `${lat},${lon}|${d.lat},${d.lon}`;
@@ -898,7 +1062,7 @@ let raf = 0;
 function render() { cancelAnimationFrame(raf); raf = requestAnimationFrame(doRender); }
 function doRender() {
   save();
-  for (const k of ["work", "famA", "famB"]) document.querySelector(`output[for=i-${k}]`).textContent = S.iso[k] + " min";
+  for (const k of ["work", "famA", "famB", "workTr", "city", "cityTr"]) document.querySelector(`output[for=i-${k}]`).textContent = S.iso[k] + " min";
   document.querySelector("output[for=i-alt]").textContent = S.iso.alt + " m";
   if (TRAIN) for (const k in TKEYS) document.querySelector(`output[for=i-t${k}]`).textContent = S.iso["t" + k] + " min";
   document.querySelector("output[for=i-rush]").textContent = "×" + S.iso.rush.toFixed(2).replace(/0$/, "");
@@ -917,10 +1081,12 @@ function doRender() {
   const inz = C.filter((c) => c.zone).length;
   $("zone-count").textContent = crecheMode()
     ? `${inz} communes dans la zone verte (bourg). Travail : crèche la plus proche, en voiture sans trafic.`
+    : COM() ? `${inz} communes dans la zone verte (bourg). Voiture : temps sans trafic × ${S.iso.rush.toFixed(2)} ; un trajet mixte consomme une part de chaque limite.`
     : `${inz} communes dans la zone verte (bourg). Voiture ${place("work").short} : temps sans trafic × ${S.iso.rush.toFixed(2)}.`;
   const tz = TRAIN ? Object.keys(TKEYS).filter((k) => S.iso["z" + k]).map((k) => `${TKEYS[k]} ≤ ${S.iso["t" + k]} min`) : [];
   if (tz.length) $("zone-count").textContent += ` Avec ${tz.join(" et ")}.`;
   document.querySelectorAll("[data-place=work]").forEach((el) => (el.textContent = workShort()));
+  if (COM()) $("lbl-work").textContent = crecheMode() ? "Crèche proche · voiture" : who("work") + " · voiture";
   syncMarkers();
   renderMapList();
   renderTable(rows);

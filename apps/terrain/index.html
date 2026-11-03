@@ -49,7 +49,14 @@
     <section class="box">
       <h2>Zone atteignable</h2>
       <p class="hint">La zone verte réunit tous les points qui respectent les quatre seuils. Les lignes montrent chaque trajet seul.</p>
-      <div class="w"><label for="i-work"><span class="key k-work"></span><span data-place="work">Travail</span></label><input type="range" id="i-work" min="20" max="90" step="5"><output for="i-work"></output></div>
+      <div class="w"><label for="i-work"><span class="key k-work"></span><span id="lbl-work"><span data-place="work">Travail</span></span></label><input type="range" id="i-work" min="20" max="90" step="5"><output for="i-work"></output></div>
+      <div id="commute-box" hidden>
+        <div class="w"><label for="i-workTr"><span class="key k-work"></span>… ou en train</label><input type="range" id="i-workTr" min="20" max="120" step="5"><output for="i-workTr"></output></div>
+        <div class="w"><label for="i-city"><span class="key k-city"></span><span id="lbl-city">Ville · voiture</span></label><input type="range" id="i-city" min="20" max="120" step="5"><output for="i-city"></output></div>
+        <div class="w"><label for="i-cityTr"><span class="key k-city"></span>… ou en train</label><input type="range" id="i-cityTr" min="20" max="120" step="5"><output for="i-cityTr"></output></div>
+        <label class="chk sub-chk"><input type="checkbox" id="i-zcity"> Ce trajet dans la zone verte</label>
+        <p class="hint">Chacun a une limite en voiture et une en train. Un trajet mixte en consomme une part de chaque : 10 min de voiture sur 45 laissent 78 % de la limite train. Gare à pied (≤ 2 km) ou à vélo (≤ 6 km) : pas de voiture. Attente : moitié de l'intervalle entre trains du matin (15 min au plus), plus le temps de se garer.</p>
+      </div>
       <div class="w"><label for="i-famA"><span class="key k-famA"></span><span data-place="famA">Famille 1</span></label><input type="range" id="i-famA" min="10" max="90" step="5"><output for="i-famA"></output></div>
       <div class="w"><label for="i-famB"><span class="key k-famB"></span><span data-place="famB">Famille 2</span></label><input type="range" id="i-famB" min="10" max="120" step="5"><output for="i-famB"></output></div>
       <div class="w"><label for="i-alt"><span class="key k-alt"></span>Altitude min.</label><input type="range" id="i-alt" min="0" max="800" step="25"><output for="i-alt"></output></div>

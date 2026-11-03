@@ -14,6 +14,15 @@ train.json (méthode inchangée depuis tools/train.py) :
   Plus le trajet tout en voiture jusqu'à ces deux gares (l'app y applique
   l'heure de pointe et PARK_LYON, et garde le plus rapide des deux).
 
+train.json « commute » : trajets domicile-travail détaillés, que l'app combine
+selon les limites de chacun (voiture / train) :
+  pour chaque destination (lieux « work » et « city ») : les gares de départ
+  utiles [nom, lat, lon, minutes de train + fin de trajet, arrivées utiles le
+  matin] ; pour chaque point de la grille et chaque bourg, ses COMMUTE_K gares
+  candidates avec les minutes de voiture pour s'y rendre ; et le trajet tout en
+  voiture (sans trafic). Marche, vélo, stationnement et attente du train (selon la
+  fréquence) sont calculés dans l'app, réglages dans « rules ».
+
 communes.json, calé sur les fiches d'origine (voir README) :
   train     = voiture jusqu'à la gare + CITY_C + train jusqu'à une gare X à moins de
               NEAR_KM du lieu « city » + CITY_B min/km de X au lieu ; gare, tmin
@@ -248,6 +257,113 @@ def to_place(stops, trips, place, points, osrm, C, B):
     return out
 
 
+COMMUTE_K = 5                 # gares candidates par point
+COMMUTE_RULES = {             # lus par l'app (modifiables sans recalcul)
+    "walk_km": 2, "bike_km": 6,           # gare à pied / à vélo jusqu'à cette distance (à vol d'oiseau)
+    "walk_kmh": 5, "bike_kmh": 15, "detour": 1.3,
+    "park_car": 5, "park_bike": 3,        # se garer, rejoindre le quai
+    "wait_cap": 15, "window": 120,        # attente = moitié de l'intervalle entre trains (fenêtre 7 h–9 h), plafonnée
+}
+EGRESS_FIX, EGRESS_KM = 3, 4  # fin de trajet de la gare d'arrivée au lieu : fixe + par km (marche / TCL)
+
+
+def itineraries(trips, x, origins, stops):
+    """Trains du matin de chaque gare d'origine vers la gare x (direct ou une
+    correspondance d'au moins CORRESP min), arrivée entre 7 h et 9 h. Pour chaque
+    origine : (options [[départ, arrivée, gare de correspondance ou None], …] les
+    plus tardives pour chaque arrivée, sans option dominée ; tracé [[lat, lon], …]
+    de l'option la plus rapide)."""
+    legs = {}  # gare s → [(départ de s, arrivée à x, voyage, position de s, position de x)]
+    for ti, t in enumerate(trips):
+        ix = next((n for n, r in enumerate(t) if r[1] == x and r[5]), None)
+        if ix is None:
+            continue
+        for n in range(ix):
+            if t[n][4]:
+                legs.setdefault(t[n][1], []).append((t[n][3], t[ix][2], ti, n, ix))
+    for L in legs.values():
+        L.sort()
+    deps = {s: [l[0] for l in L] for s, L in legs.items()}
+    out = {}
+    for o in origins:
+        opts = [(l[0], l[1], None, (l[2], l[3], l[4]), None) for l in legs.get(o, [])]
+        for ti, t in enumerate(trips):
+            io = next((n for n, r in enumerate(t) if r[1] == o and r[4]), None)
+            if io is None or t[io][3] < DEP_MIN:
+                continue
+            for n in range(io + 1, len(t)):
+                s, a, down = t[n][1], t[n][2], t[n][5]
+                if not down or s == x or s not in legs:
+                    continue
+                k = bisect.bisect_left(deps[s], a + CORRESP)
+                if k < len(legs[s]) and legs[s][k][2] != ti:
+                    l = legs[s][k]
+                    opts.append((t[io][3], l[1], s, (ti, io, n), (l[2], l[3], l[4])))
+        opts = [q for q in opts if ARR[0] <= q[1] <= ARR[1]]
+        if not opts:
+            continue
+        by_arr = {}
+        for q in opts:  # pour une arrivée, le départ le plus tardif
+            if q[1] not in by_arr or q[0] > by_arr[q[1]][0]:
+                by_arr[q[1]] = q
+        keep, last_dep = [], -1
+        for q in sorted(by_arr.values(), key=lambda q: (q[1], -q[0])):
+            if q[0] > last_dep:  # sinon un train plus tôt arrive au plus tard pareil
+                keep.append(q)
+                last_dep = q[0]
+        fast = min(keep, key=lambda q: q[1] - q[0])
+        path = []
+        for seg in (fast[3], fast[4]):
+            if seg:
+                ti, a, b = seg
+                path += [[round(stops[r[1]][1], 4), round(stops[r[1]][2], 4)] for r in trips[ti][a:b + 1]]
+        out[o] = ([[q[0], q[1], stops[q[2]][0] if q[2] else None] for q in keep], path)
+    return out
+
+
+def commute(stops, trips, places, grid, com, osrm):
+    """Bloc « commute » de train.json (voir l'en-tête)."""
+    codes = sorted(com)
+    cpts = [(com[c]["lat"], com[c]["lon"]) for c in codes]
+    gpts = grid_points(grid)
+    out = {"rules": COMMUTE_RULES}
+    for key in ("work", "city"):
+        place = places.get(key)
+        if not place:
+            continue
+        P = (place["lat"], place["lon"])
+        near = {sid: km(P, (la, lo)) for sid, (n, la, lo) in stops.items() if km(P, (la, lo)) <= NEAR_KM}
+        best = {}  # gare de départ → (train + fin de trajet, arrivées utiles, gare d'arrivée, fin de trajet)
+        for x, dx in near.items():
+            eg = EGRESS_FIX + EGRESS_KM * dx
+            for o, (t, n) in rail_times(trips, {x: 0}, {x}).items():
+                if o in near and t == 0:
+                    continue  # déjà à destination : la voiture ou la marche suffit
+                v = round(t + eg)
+                if o not in best or v < best[o][0] or (v == best[o][0] and n > best[o][1]):
+                    best[o] = (v, n, x, round(eg))
+        orig = sorted(best, key=lambda o: stops[o][0])
+        it = {}
+        for x in {best[o][2] for o in orig}:  # horaires et tracés, par gare d'arrivée
+            it.update(itineraries(trips, x, [o for o in orig if best[o][2] == x], stops))
+        # [nom, lat, lon, minutes, arrivées utiles, gare d'arrivée, fin de trajet, options, tracé]
+        st = [[stops[o][0], round(stops[o][1], 5), round(stops[o][2], 5), best[o][0], best[o][1],
+               stops[best[o][2]][0], best[o][3], *(it.get(o) or ([], []))] for o in orig]
+        sites = [s[1:3] for s in st]
+
+        def cands(points):
+            cand = [sorted(range(len(sites)), key=lambda j: km(p, sites[j]))[:COMMUTE_K] for p in points]
+            dur = osrm.minutes(points, [[sites[j] for j in c] for c in cand])
+            return [[v for j, car in zip(c, row) for v in (j, car)] for c, row in zip(cand, dur)]
+        log(f"commute {key} : {len(st)} gares de départ")
+        gc, cc = cands(gpts), cands(cpts)
+        gcar = [r[0] for r in osrm.minutes(gpts, [[P]] * len(gpts))]
+        ccar = [r[0] for r in osrm.minutes(cpts, [[P]] * len(cpts))]
+        out[key] = {"st": st, "grid": gc, "com": dict(zip(codes, cc)),
+                    "car": {"grid": gcar, "com": dict(zip(codes, ccar))}}
+    return out
+
+
 def run(com, cfg, grid, osrm):
     path, _ = fetch_file(GTFS_URL, "sncf-gtfs.zip")
     day, stops, trips = load_gtfs(path)
@@ -268,4 +384,5 @@ def run(com, cfg, grid, osrm):
         for c, r in zip(codes, to_place(stops, trips, places["work"], pts, osrm, WORK_C, WORK_B)):
             fields[c].update(worktrain=r[0] if r else None, workgare=stops[r[1]][0] if r else None)
     tj = train_json(stops, trips, day, grid, com, osrm)
+    tj["commute"] = commute(stops, trips, places, grid, com, osrm)
     return fields, gares, tj
