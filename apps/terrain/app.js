@@ -323,7 +323,7 @@ function parts(c, wt) {
   s.eau = clip(c.srckm, 0, 1.2);
   s.prix = 1 - clip(c.prix ?? 999999, 70000, 180000);
   const p = 0.3 * clip(c.inond, 2, 10) + 0.2 * (c.sech ? 1 : 0) + 0.15 * clip(c.mvt, 0, 4) + 0.15 * c.feu + 0.2 * c.indus;
-  s.risques = 1 - Math.min(1, p);
+  s.risques = c.inond == null ? 0.5 : 1 - Math.min(1, p); // risques pas encore calculés (fiche récente) : neutre, pas « aucun risque »
   s.offre = clip(c.big, 0, 6);
   s.work = 1 - clip(c.lt != null ? (wt + c.lt) / 2 : wt, 30, 75); // deux trajets : la moyenne
   return s;
@@ -1329,7 +1329,7 @@ function renderTable(rows) {
     if (c.sech) ch.push(`<span class="chip wa">argile ${c.sech}</span>`);
     if (c.feu) ch.push(`<span class="chip b">feux</span>`);
     if (c.indus) ch.push(`<span class="chip b">site indus.</span>`);
-    if (!ch.length) ch.push(`<span class="chip g">peu</span>`);
+    if (!ch.length) ch.push(c.inond == null ? `<span class="chip">pas encore calculés</span>` : `<span class="chip g">peu</span>`);
     return `<tr data-code="${c.code}"${c.why.length ? ' class="out"' : ""}>
       <td><span class="score" style="background:${colFor(c.score)};color:${c.score > (cuts[2] || 0) ? "var(--bg)" : "var(--ink)"}">${c.score}</span>${c.zone ? '<span class="sub">zone verte</span>' : ""}</td>
       ${mix ? `<td class="num">${Math.abs(c.sA - c.sB)}<span class="sub">${esc(CFG.people[0])} ${c.sA} · ${esc(CFG.people[1])} ${c.sB}</span></td>` : ""}
