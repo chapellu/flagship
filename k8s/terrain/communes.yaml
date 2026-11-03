@@ -11,7 +11,7 @@
 # Les sources brutes et les temps OSRM sont gardés dans le volume terrain-cache
 # (données publiques seulement) : une semaine ordinaire ne relit que ce qui a
 # changé. Quand la grille grandit, un passage ajoute au plus 8 000 cellules
-# (~1 000 à 1 500 requêtes OSRM, une par seconde au plus : ~1 h) et reprend la
+# (~450 requêtes OSRM, une par seconde au plus : ~20 min de plus) et reprend la
 # semaine suivante.
 #
 # Le code est public et ne contient aucun lieu : tout vient de data/config.json,

@@ -87,7 +87,8 @@ pour les mêmes communes, `schools.json`, `creches.json` et `train.json`. Une co
 voisine devient une commune comme les autres : score, classement, zone verte, fiche.
 
 Lancer à la main : `kubectl -n terrain create job --from=cronjob/terrain-communes communes-now`
-(premier passage ~30 à 60 min, surtout les temps OSRM ; ensuite quelques minutes).
+(premier passage ~30 à 60 min, surtout les temps OSRM ; un passage qui agrandit la grille de
+8 000 cellules ~20 min de plus, ~450 requêtes OSRM ; ensuite quelques minutes).
 En local : `TERRAIN_DATA=./data TERRAIN_CACHE=./cache python3 -I k8s/terrain/communes/build.py`
 (`TERRAIN_COMMUNES_SKIP=train,creches` saute des modules, leurs champs gardent la valeur précédente).
 
