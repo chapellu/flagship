@@ -190,6 +190,24 @@ de l'artefact. Les contours de parcelles (`ring`) viennent d'apicarto.ign.fr.
 L'artefact ne gardait que les 8 annonces mises en avant, pas les 53 du relevé
 du 28 octobre ; leur position sur la carte est celle du bourg.
 
+## Trajets domicile-travail
+
+`train.json` porte un bloc `commute` (calculé chaque semaine avec les fiches
+communes) : pour les lieux `work` et `city`, les gares de départ utiles avec le
+temps de train jusqu'au lieu (gare d'arrivée + fin de trajet à pied ou en TCL,
+forfait 3 min + 4 min/km), le nombre de trains utiles entre 7 h et 9 h, les
+horaires du matin et le tracé du train le plus rapide ; et pour chaque point de
+la grille et chaque bourg, ses 5 gares candidates avec le temps de voiture.
+
+L'app en tire, pour chaque personne (`config.commuters` : `{ "work": "…", "city": "…" }`),
+le meilleur trajet entre tout en voiture (× heure de pointe) et voiture, marche
+(gare à ≤ 2 km) ou vélo (≤ 6 km) + train. Chacun a une limite voiture et une
+limite train ; un trajet mixte consomme une part de chacune : minutes au volant /
+limite voiture + reste du trajet / limite train ≤ 1. Attente du train : moitié
+de l'intervalle moyen entre trains du matin, plafonnée à 15 min, plus 5 min pour
+se garer (3 à vélo). Ces réglages sont dans `commute.rules`. Le bouton « Trajet »
+d'une annonce ou d'une parcelle détaille ce trajet et le dessine sur la carte.
+
 ## Isochrones
 
 La zone verte et les lignes de trajet sont des contours `d3.contours` calculés
