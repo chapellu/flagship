@@ -10,11 +10,13 @@ commune, une par seconde au plus (l'API coupe les clients trop pressés) ;
 chaque réponse est gardée TTL jours (les arrêtés changent rarement), et au plus
 MAX_PER_RUN communes sont rafraîchies par passage, les plus anciennes d'abord.
 """
+import os
+
 from lib import TODAY, cache_path, http_json, load_json, log, save_json
 
 API = "https://georisques.gouv.fr/api/v1/gaspar/"
 TTL = 28
-MAX_PER_RUN = 250
+MAX_PER_RUN = int(os.environ.get("TERRAIN_RISQUES_MAX", "250"))  # relevable pour un passage manuel
 PAUSE = 1.0
 
 
