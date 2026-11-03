@@ -52,6 +52,8 @@ spec:
       labels:
         app: mailin
     spec:
+      # sinon Kubernetes injecte MAILIN_PORT=tcp://… (Service « mailin »)
+      enableServiceLinks: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 101
@@ -86,6 +88,8 @@ spec:
               value: in.chapellu.fr
             - name: MAILIN_DIR
               value: /inbox
+            - name: MAILIN_PORT
+              value: "2525"
           ports:
             - name: smtp
               containerPort: 2525
