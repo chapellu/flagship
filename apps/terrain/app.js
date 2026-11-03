@@ -1142,7 +1142,8 @@ function doRender() {
   renderMapList();
   renderTable(rows);
   renderParcels();
-  renderAds();
+  // l'onglet Annonces est lourd (des centaines de lignes) : refait seulement quand il est ouvert
+  if (!document.querySelector('.view[data-view=annonces]')?.hidden) renderAds();
 }
 // Panneau « Zone atteignable » : textes qui suivent les réglages, phrase de synthèse,
 // et pour chaque critère le nombre de communes (bourg) qu'il écarte.
@@ -1380,6 +1381,7 @@ function showTab(t) {
   $("side").hidden = !["carte", "classement", "parcelles", "annonces"].includes(t);
   document.querySelector(".layout").style.gridTemplateColumns = $("side").hidden ? "1fr" : "";
   if (t === "carte") setTimeout(() => map.invalidateSize(), 30);
+  if (t === "annonces") renderAds();
   if (!location.hash.startsWith("#r=")) history.replaceState(null, "", "#" + t);
 }
 
