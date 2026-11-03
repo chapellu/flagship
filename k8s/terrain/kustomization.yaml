@@ -21,3 +21,5 @@ configMapGenerator:
     files:
       - refresh/refresh.py
       - refresh/src_bienici.py
+      - refresh/src_notaires.py
+      - refresh/src_paruvendu.py

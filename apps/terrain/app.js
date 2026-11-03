@@ -25,7 +25,7 @@ const DEF = {
   profiles: { A: { w: { ...DEF_W }, famshare: 80 }, B: { w: { ...DEF_W }, famshare: 80 } },
   days: 4,
   iso: { work: 55, famA: 40, famB: 75, alt: 350, rush: 1.4 },
-  f: { fibre: true, ecole: true, zone: false, prix: 200, m2: 0 },
+  f: { fibre: true, ecole: true, zone: false, prix: 200, m2: 0, constr: true },
   show: { parcels: true, topads: true, ads: false, creches: false, cadastre: false, outside: false },
   workAt: "qg", // "qg" : le lieu de travail de config.json ; "creche" : la crèche la plus proche de chez soi
 };
@@ -123,7 +123,7 @@ function buildControls() {
     $("i-" + k).value = S.iso[k];
     $("i-" + k).addEventListener("input", (e) => { S.iso[k] = +e.target.value; render(); });
   }
-  for (const k of ["fibre", "ecole", "zone"]) {
+  for (const k of ["fibre", "ecole", "zone", "constr"]) {
     $("f-" + k).checked = S.f[k];
     $("f-" + k).addEventListener("change", (e) => { S.f[k] = e.target.checked; render(); });
   }
@@ -137,7 +137,7 @@ function buildControls() {
     const keep = S.profile;
     S = structuredClone(DEF); S.profile = keep === "mix" ? "A" : keep;
     for (const k of ["work", "famA", "famB", "alt", "rush"]) $("i-" + k).value = S.iso[k];
-    for (const k of ["fibre", "ecole", "zone"]) $("f-" + k).checked = S.f[k];
+    for (const k of ["fibre", "ecole", "zone", "constr"]) $("f-" + k).checked = S.f[k];
     $("f-prix").value = S.f.prix;
     syncProfile(); syncWeights(); render();
   });
@@ -399,19 +399,45 @@ function drawCommunes(rows) {
     c._m = m;
   }
 }
-function communePopup(c) {
+// Pourquoi une commune n'est pas dans la zone verte : seuils non tenus
+function zoneWhy(c) {
+  const I = S.iso, w = [];
+  if (c.wt > I.work) w.push(`${workShort()} ${c.wt} min > ${I.work}`);
+  if (c.famA > I.famA) w.push(`${place("famA").short} ${c.famA} min > ${I.famA}`);
+  if (c.famB > I.famB) w.push(`${place("famB").short} ${c.famB} min > ${I.famB}`);
+  if (c.alt < I.alt) w.push(`altitude ${c.alt} m < ${I.alt} m`);
+  return w;
+}
+// Fiche d'une commune : popup de la commune, et rappelée dans chaque annonce
+// (la commune peut être hors zone verte ou exclue, donc absente de la carte).
+function communeBody(c) {
   const hw = Math.round(c.wt * 2 * S.days / 6) / 10;
   const live = ALLADS.filter((a) => a.insee === c.code && !a.gone).length;
-  return `<div class="pop"><h3>${esc(c.nom)}</h3><div class="sub">${esc(c.sect)} · ${c.alt} m</div>
-  <dl><dt>Score</dt><dd>${c.score}${S.profile === "mix" ? ` (${esc(CFG.people[0])} ${c.sA} · ${esc(CFG.people[1])} ${c.sB})` : ""}</dd>
+  const zw = c.zone ? [] : zoneWhy(c);
+  return `<dl><dt>Score</dt><dd>${c.score}${S.profile === "mix" ? ` (${esc(CFG.people[0])} ${c.sA} · ${esc(CFG.people[1])} ${c.sB})` : ""}</dd>
+  <dt>Altitude</dt><dd>${c.alt} m</dd>
   <dt>${esc(workShort())}</dt><dd>${c.wt} min · ${esc(c.wmode)} · ${hw} h/sem.</dd>
   <dt>${esc(place("famA").short)}</dt><dd>${c.famA} min</dd><dt>${esc(place("famB").short)}</dt><dd>${c.famB} min</dd>
-  <dt>Terrain médian</dt><dd>${fmtk(c.prix)}${c.eurm2 ? ` · ${c.eurm2} €/m²` : ""}</dd>
+  <dt>Train</dt><dd>${c.train != null ? `${c.train} min${c.gare ? " · " + esc(c.gare) : ""}` : "pas de gare proche"}</dd>
+  <dt>Terrain médian</dt><dd>${fmtk(c.prix)}${c.eurm2 ? ` · ${c.eurm2} €/m²` : ""}${c.nv != null ? ` · ${c.nv} ventes` : ""}</dd>
   ${live ? `<dt>Annonces</dt><dd>${live} en ligne</dd>` : ""}
   <dt>Fibre</dt><dd>${c.fibre ?? "–"} %</dd></dl>
   ${schoolHTML(c)}
-  ${c.why.length ? `<div class="sub">Exclue : ${esc(c.why.join(", "))}</div>` : ""}
+  <div class="sub">${c.zone ? '<span class="chip g">zone verte</span>' : `<span class="chip">hors zone verte</span> ${esc(zw.join(" · "))}`}</div>
+  ${c.why.length ? `<div class="sub"><span class="chip wa">exclue du classement</span> ${esc(c.why.join(", "))}</div>` : ""}`;
+}
+function communePopup(c) {
+  return `<div class="pop"><h3>${esc(c.nom)}</h3><div class="sub">${esc(c.sect)} · ${c.alt} m</div>
+  ${communeBody(c)}
   <div class="act"><button type="button" onclick="window.__goRow('${c.code}')">Voir dans le classement</button></div></div>`;
+}
+// Résumé de la commune dans la fiche d'une annonce, détail dépliable
+function communeInAd(a) {
+  const c = C.find((x) => x.code === a.insee);
+  if (!c) return a.insee ? `<div class="sub">Commune hors de l'étude : pas de données.</div>` : "";
+  const sc = `<span class="score" style="background:${colFor(c.score)};color:${c.score > (cuts[2] || 0) ? "var(--bg)" : "var(--ink)"}">${c.score}</span>`;
+  return `<details class="school commune-in-ad"><summary>${sc} ${esc(c.nom)} · ${c.alt} m · ${esc(workShort())} ${c.wt} min${c.zone ? "" : " · hors zone"}${c.why.length ? " · exclue" : ""}</summary>
+    ${communeBody(c)}<div class="act"><button type="button" onclick="window.__goRow('${c.code}')">Voir dans le classement</button></div></details>`;
 }
 
 // ---- écoles (schools.json). Pas de classement officiel des écoles primaires :
@@ -472,10 +498,10 @@ function parcelPopup(p) {
 // de la commune (communes.json, au moins 5 ventes). À défaut, les annonces en ligne
 // du même secteur (au moins 5) ; sinon 2 à 4 ventes, marqué « indicatif ». Seuils : ±15 %.
 function priceVerdict(a) {
-  if (!a.m2 || !a.prix) return null;
+  if (!a.m2 || !a.prix || constrVerdict(a)?.k === "non") return null; // vignes, loisir : pas comparable
   const e = a.prix / a.m2, c = C.find((x) => x.code === a.insee);
   if (!c) return null;
-  const peers = () => ALLADS.filter((x) => x !== a && !x.gone && !x.stale && x.m2 && C.find((y) => y.code === x.insee)?.sect === c.sect).map((x) => x.prix / x.m2);
+  const peers = () => ALLADS.filter((x) => x !== a && !x.gone && !x.stale && x.m2 && constrVerdict(x)?.k !== "non" && C.find((y) => y.code === x.insee)?.sect === c.sect).map((x) => x.prix / x.m2);
   let ref, src, typ, weak = false;
   if (c.eurm2 && c.nv >= 5) { ref = c.eurm2; src = `médiane de ${c.nv} ventes à ${c.nom}`; typ = c.m2; }
   else if (peers().length >= 5) { const p = peers(); ref = median(p); src = `médiane de ${p.length} annonces en ligne, secteur ${c.sect}`; }
@@ -495,12 +521,13 @@ function priceBadge(a, full = true) {
   const x = Math.max(0, Math.min(100, 50 + v.pct)); // jauge de −50 % à +50 %
   return `<div class="pverdict"><span class="chip ${v.cls}">${esc(v.label)} · ${pctTxt(v.pct)}</span>
     <div class="pgauge" role="img" aria-label="${esc(v.label)}, ${pctTxt(v.pct)} par rapport au marché"><span style="left:${x}%"></span></div>
-    <div class="sub">${v.eurm2} €/m² contre ${v.ref} €/m² (${esc(v.src)})${v.size ? `. Attention : ${esc(v.size)}.` : ""}</div></div>`;
+    <div class="sub">${v.eurm2} €/m² contre ${v.ref} €/m² (${esc(v.src)})${v.size ? `. Attention : ${esc(v.size)}.` : ""}${v.cls === "g" && constrVerdict(a) && constrVerdict(a).k !== "oui" ? " <b>Prix bas : vérifier d'abord que le terrain est constructible.</b>" : ""}</div></div>`;
 }
 function adPopup(a) {
   return `<div class="pop"><span class="tag ad">Annonce${a.top ? " mise en avant" : ""}</span>${a.photo ? `<img src="${esc(a.photo)}" alt="">` : ""}<h3>${esc(a.commune)} · ${fmtk(a.prix)}</h3>
   <div class="sub">${a.m2} m² · ${a.eurm2} €/m²${a.vendeur ? " · " + esc(a.vendeur) : ""}${a.top ? " · " + esc(a.top) : ""}</div>
-  ${priceBadge(a)}${marketLine(a)}${a.analyse ? `<p>${esc(a.analyse)}</p>` : ""}
+  ${constrBadge(a)}${priceBadge(a)}${marketLine(a)}${a.analyse ? `<p>${esc(a.analyse)}</p>` : ""}
+  ${communeInAd(a)}
   ${a.lat ? routeAct(a.lat, a.lon, a.pos) : ""}
   <div class="act"><a class="go" href="${esc(a.url)}" target="_blank" rel="noopener">Voir l'annonce ↗</a><button type="button" onclick="window.__goAd('${esc(a.id)}')">Dans la liste</button>
   ${a.lat ? `<a href="${cadastreUrl(a.lat, a.lon)}" target="_blank" rel="noopener">Cadastre ↗</a>` : ""}</div></div>`;
@@ -607,7 +634,32 @@ const priceOk = (a) => !a.prix || a.prix <= S.f.prix * 1000;
 // surface d'une parcelle repérée : « 3 002 m² » ; terrain mixte : constructible + zone A/N
 const parcelM2 = (p) => (p.kind === "mixte" ? (+p.constr || 0) + (+p.agri || 0) : +String(p.surface || "").replace(/[^0-9]/g, "") || 0);
 const sizeOk = (a) => !a.m2 || a.m2 >= S.f.m2;
-const adOk = (a) => priceOk(a) && sizeOk(a);
+// Constructibilité d'une annonce (relevé quotidien) : texte de l'annonce (constr_txt)
+// et zone du PLU au point (ztype), fiable seulement si la position est exacte.
+// Bien'ici floute la plupart des positions (~250 m) : un point flouté tombe souvent
+// dans le pré d'à côté, donc une zone A/N y vaut « à vérifier », pas « non ».
+const ZOK = /^(U|AUc)/, ZNO = /^(A|N)(?!U)/;
+function constrVerdict(a) {
+  if (!a.src) return null; // annonce commentée à la main : déjà vérifiée
+  const exact = a.pos === "exact", z = a.ztype, cheap = a.m2 && (a.prix / a.m2 < 20 || a.m2 > 10000);
+  const zl = z ? ` (zone ${a.zone || z} du PLU${exact ? "" : " près du point flouté"})` : "";
+  if (a.constr_txt === false) return { k: "non", why: "l'annonce parle de vignes, de loisir, d'agricole ou de non constructible" + zl };
+  if (exact && z && ZNO.test(z)) return { k: "non", why: `zone ${a.zone || z} du PLU : agricole ou naturelle` };
+  if (exact && z && ZOK.test(z)) return { k: "oui", why: `zone ${a.zone || z} du PLU` };
+  if (a.constr_txt === true && !cheap && !(z && ZNO.test(z))) return { k: "oui", why: "l'annonce le dit" + zl };
+  if (z && ZNO.test(z)) return { k: "?", why: "zone agricole ou naturelle autour du point" + zl };
+  if (z && /^AUs/.test(z)) return { k: "?", why: "zone à urbaniser plus tard (AUs) : pas constructible tout de suite" };
+  if (cheap) return { k: "?", why: "très grand ou très bon marché : souvent agricole, vérifier le zonage" + zl };
+  return { k: "?", why: "l'annonce ne le dit pas" + zl };
+}
+const constrOk = (a) => !S.f.constr || constrVerdict(a)?.k !== "non";
+function constrBadge(a, full = true) {
+  const v = constrVerdict(a);
+  if (!v) return "";
+  const [cls, txt] = v.k === "oui" ? ["g", "constructible"] : v.k === "non" ? ["b", "non constructible"] : ["wa", "constructible ? à vérifier"];
+  return full ? `<div class="sub"><span class="chip ${cls}">${txt}</span> ${esc(v.why)}</div>` : `<span class="chip ${cls}" title="${esc(v.why)}">${txt}</span>`;
+}
+const adOk = (a) => priceOk(a) && sizeOk(a) && constrOk(a);
 const parcelOk = (p) => !S.f.m2 || parcelM2(p) >= S.f.m2;
 function syncMarkers() {
   const bc = byCodeC();
@@ -641,7 +693,7 @@ function renderMapList() {
   $("top5").innerHTML = list.map(({ c, ads, parcels }) => `<article class="mcard${c.why.length ? " out" : ""}">
     <button type="button" class="mhead" data-code="${c.code}">${sc(c)}<b>${esc(c.nom)}</b><span>${c.alt} m · ${esc(workShort())} ${c.wt} min · ${esc(place("famA").short)} ${c.famA} · ${esc(place("famB").short)} ${c.famB} min${c.zone ? "" : " · hors zone"}${c.why.length ? " · exclue : " + esc(c.why.join(", ")) : ""}</span></button>
     ${ads.length || parcels.length ? `<ul>${parcels.map((p) => `<li><button type="button" data-pid="${esc(p.id)}"><span class="pmark ${p.kind} sm"></span>${esc(p.kind === "mixte" ? `${p.constr} m² + ${p.agri} m² A/N` : p.surface)} · ${esc(p.zone)}</button></li>`).join("")}
-      ${ads.sort((x, y) => (!!y.top - !!x.top) || x.prix - y.prix).map((a) => `<li><button type="button" data-aid="${esc(a.id)}"><span class="amark sm${a.top ? " top" : ""}">${a.top ? "★" : "€"}</span>${a.m2} m² · ${fmtk(a.prix)}${a.drop ? ` <span class="chip wa">−${fmtk(a.drop)}</span>` : ""}${isNew(a) ? ' <span class="chip g">nouvelle</span>' : ""} ${priceBadge(a, false)}</button>
+      ${ads.sort((x, y) => (!!y.top - !!x.top) || x.prix - y.prix).map((a) => `<li><button type="button" data-aid="${esc(a.id)}"><span class="amark sm${a.top ? " top" : ""}">${a.top ? "★" : "€"}</span>${a.m2} m² · ${fmtk(a.prix)}${a.drop ? ` <span class="chip wa">−${fmtk(a.drop)}</span>` : ""}${isNew(a) ? ' <span class="chip g">nouvelle</span>' : ""} ${priceBadge(a, false)}${constrVerdict(a)?.k === "oui" ? "" : " " + constrBadge(a, false)}</button>
         <a href="${esc(a.url)}" target="_blank" rel="noopener" aria-label="Ouvrir l'annonce">↗</a></li>`).join("")}</ul>` : ""}
   </article>`).join("");
   $("top5").onclick = (e) => {
@@ -653,7 +705,7 @@ function renderMapList() {
 }
 
 // ---- tableau
-let sortK = "score", sortDir = -1, showAll = false;
+let sortK = "score", sortDir = -1, showAll = false, forceRow = null; // forceRow : commune exclue demandée depuis une fiche
 function renderTable(rows) {
   const mix = S.profile === "mix";
   const cols = [
@@ -666,7 +718,7 @@ function renderTable(rows) {
   thead.onclick = (e) => { const th = e.target.closest("th"); if (!th) return; const k = th.dataset.k; if (k === sortK) sortDir = -sortDir; else { sortK = k; sortDir = ["nom", "wt", "famA", "famB", "train", "prix", "colkm"].includes(k) ? 1 : -1; } render(); };
   const val = { gap: (c) => Math.abs(c.sA - c.sB), risk: (c) => c.inond + 3 * c.sech, train: (c) => c.train ?? 999, prix: (c) => c.prix ?? 9e9, colkm: (c) => c.colkm ?? 99 };
   const v = val[sortK] || ((c) => c[sortK]);
-  let r = rows.filter((c) => !c.why.length).sort((a, b) => (typeof v(a) === "string" ? v(a).localeCompare(v(b)) : v(a) - v(b)) * sortDir);
+  let r = rows.filter((c) => !c.why.length || c.code === forceRow).sort((a, b) => (typeof v(a) === "string" ? v(a).localeCompare(v(b)) : v(a) - v(b)) * sortDir);
   const total = r.length;
   $("count").textContent = `${total} communes retenues sur ${C.length}. Cliquez un en-tête pour trier, une ligne pour la voir sur la carte.`;
   if (!showAll) r = r.slice(0, 30);
@@ -681,7 +733,7 @@ function renderTable(rows) {
     if (c.feu) ch.push(`<span class="chip b">feux</span>`);
     if (c.indus) ch.push(`<span class="chip b">site indus.</span>`);
     if (!ch.length) ch.push(`<span class="chip g">peu</span>`);
-    return `<tr data-code="${c.code}">
+    return `<tr data-code="${c.code}"${c.why.length ? ' class="out"' : ""}>
       <td><span class="score" style="background:${colFor(c.score)};color:${c.score > (cuts[2] || 0) ? "var(--bg)" : "var(--ink)"}">${c.score}</span>${c.zone ? '<span class="sub">zone verte</span>' : ""}</td>
       ${mix ? `<td class="num">${Math.abs(c.sA - c.sB)}<span class="sub">${esc(CFG.people[0])} ${c.sA} · ${esc(CFG.people[1])} ${c.sB}</span></td>` : ""}
       <td><strong>${esc(c.nom)}</strong><span class="sub">${esc(c.sect)}</span></td>
@@ -707,7 +759,12 @@ function schoolBrief(c) {
 function flash(sel) { requestAnimationFrame(() => { const el = document.querySelector(sel); if (el) { el.scrollIntoView({ block: "center" }); el.classList.add("sel"); setTimeout(() => el.classList.remove("sel"), 2000); } }); }
 window.__goParcel = (id) => { pkind = "tout"; renderParcels(); showTab("parcelles"); flash(`#plist [data-pid="${CSS.escape(id)}"]`); };
 window.__goAd = (id) => { showTab("annonces"); const a = ALLADS.find((x) => x.id === id); if (a && (a.gone || a.stale)) $("a-gone").checked = true; renderAds(); flash(`#atop [data-aid="${CSS.escape(id)}"], #atbl tr[data-aid="${CSS.escape(id)}"]`); };
-window.__goRow = (code) => { showTab("classement"); requestAnimationFrame(() => { const tr = document.querySelector(`#tbl tr[data-code="${code}"]`); if (tr) { tr.scrollIntoView({ block: "center" }); tr.classList.add("sel"); setTimeout(() => tr.classList.remove("sel"), 2000); } }); };
+window.__goRow = (code) => {
+  const c0 = C.find((x) => x.code === code);
+  if (c0 && c0.why.length) { forceRow = code; showAll = true; doRender(); } // commune exclue : sinon sa ligne n'existe pas
+  showTab("classement");
+  requestAnimationFrame(() => { const tr = document.querySelector(`#tbl tr[data-code="${code}"]`); if (tr) { tr.scrollIntoView({ block: "center" }); tr.classList.add("sel"); setTimeout(() => tr.classList.remove("sel"), 2000); } });
+};
 window.__goMap = (code) => {
   const c = C.find((x) => x.code === code);
   if (!c.zone && !S.show.outside) { S.show.outside = true; syncToggles(); doRender(); } // commune hors zone : on l'affiche
@@ -761,9 +818,30 @@ let ALLADS = [];
 const DAY = 864e5;
 const todayISO = () => new Date().toISOString().slice(0, 10);
 const adKey = (url) => { const m = /bienici\.com\/annonce\/(?:.*\/)?([^/?#]+)/.exec(url || ""); return m ? "bienici:" + m[1] : url; };
-const since = (a) => a.published && a.published < (a.first || "9") ? a.published : a.first || a.published;
+// Date de mise en ligne : certains sites mettent une date bidon (Bien'ici : 1970-01-01
+// pour les annonces importées d'agences). Hors 2000-aujourd'hui, on l'ignore.
+const validPub = (a) => !!a.published && a.published >= "2000" && a.published <= todayISO();
+const since = (a) => (validPub(a) && a.published < (a.first || "9") ? a.published : a.first || (validPub(a) ? a.published : null));
+// âge fiable : vraie date de mise en ligne, ou annonce apparue après le début du suivi
+const trackStart = () => MARKET?.runs?.[0]?.date;
+const knownAge = (a) => validPub(a) || (!!a.first && !!trackStart() && a.first > trackStart());
 function daysOn(a) { const s = since(a); return s ? Math.max(0, Math.round((Date.parse(a.gone || todayISO()) - Date.parse(s)) / DAY)) : null; }
-const isNew = (a) => !a.gone && daysOn(a) != null && daysOn(a) <= 7 && !!MARKET;
+const isNew = (a) => !a.gone && knownAge(a) && daysOn(a) != null && daysOn(a) <= 7 && !!MARKET;
+// « 12 j », « 5 mois », « 2 ans » ; jamais 20 760 j
+function fmtAge(d) {
+  if (d == null) return "–";
+  if (d < 60) return d + " j";
+  if (d < 365) return Math.round(d / 30.44) + " mois";
+  const y = Math.round(d / 365.25 * 2) / 2;
+  return String(y).replace(".5", ",5") + (y < 2 ? " an" : " ans");
+}
+const fmtFull = (iso) => (iso ? new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "");
+// âge lisible, date exacte au survol ; âge inconnu affiché « ≥ N » (vu depuis le début du suivi)
+function ageHTML(a) {
+  const d = daysOn(a), k = knownAge(a);
+  const t = k ? `En ligne depuis le ${fmtFull(since(a))}` : `Date de mise en ligne inconnue : vue par le relevé depuis le ${fmtFull(a.first)}`;
+  return `<span class="age" title="${esc(t + (a.gone ? ` · partie le ${fmtFull(a.gone)}` : ""))}">${k ? fmtAge(d) : d ? "≥ " + fmtAge(d) : "?"}</span>`;
+}
 const median = (v) => { v = v.filter((x) => x != null).sort((a, b) => a - b); return v.length ? v[Math.floor((v.length - 1) / 2)] : null; };
 const fmtd = (iso) => (iso ? new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : "");
 function buildAdList() {
@@ -782,7 +860,7 @@ function marketLine(a) {
   if (!MARKET) return "";
   if (a.stale) return `<p class="sub">Plus vue au dernier relevé : sans doute vendue ou retirée.</p>`;
   const d = daysOn(a);
-  const bits = [a.gone ? `partie le ${fmtd(a.gone)} après ${d} j en ligne` : `en ligne depuis ${d} j${isNew(a) ? " · nouvelle" : ""}`];
+  const bits = [a.gone ? `partie le ${fmtd(a.gone)} après ${ageHTML(a)} en ligne` : `en ligne depuis ${ageHTML(a)}${isNew(a) ? " · nouvelle" : ""}${knownAge(a) ? "" : " (date exacte inconnue)"}`];
   if (a.drop) bits.push(`prix baissé de ${fmtk(a.drop)}`);
   if (a.relist) bits.push("remise en ligne");
   return `<p class="sub">${bits.join(" · ")}</p>`;
@@ -808,14 +886,14 @@ function renderAds() {
   }).join("");
   if (hiddenTops) $("atop").insertAdjacentHTML("beforeend", `<p class="hint">${hiddenTops} annonce${hiddenTops > 1 ? "s" : ""} mise${hiddenTops > 1 ? "s" : ""} en avant masquée${hiddenTops > 1 ? "s" : ""} par les filtres (${S.f.prix} k€ max${S.f.m2 ? `, ${S.f.m2} m² min.` : ""}).</p>`);
   const m2 = S.f.m2, px = S.f.prix * 1000, z = $("a-zone").checked, g = $("a-gone").checked;
-  const rows = ALLADS.filter((a) => a.m2 >= m2 && a.prix <= px && (!z || byCode[a.insee]?.zone) && (g || (!a.gone && !a.stale)))
+  const rows = ALLADS.filter((a) => a.m2 >= m2 && a.prix <= px && constrOk(a) && (!z || byCode[a.insee]?.zone) && (g || (!a.gone && !a.stale)))
     .map((a) => ({ a, c: byCode[a.insee] })).sort((x, y) => (!!x.a.gone - !!y.a.gone) || (y.c?.score ?? 0) - (x.c?.score ?? 0));
   $("atbl").tHead.innerHTML = `<tr><th>Score commune</th><th>Commune</th><th>Surface</th><th>Prix</th><th>€/m²</th><th>${esc(workShort())}</th><th>Alt. bourg</th>${MARKET ? "<th>En ligne</th>" : ""}<th>Annonce</th></tr>`;
   $("atbl").tBodies[0].innerHTML = rows.map(({ a, c }) => `<tr data-aid="${esc(a.id)}"${a.gone || a.stale ? ' class="gone"' : ""}><td class="num">${c ? c.score : "–"}${c?.zone ? '<span class="sub">zone verte</span>' : ""}</td>
     <td><strong>${esc(a.commune)}</strong>${a.top ? ' <span class="chip g">★</span>' : ""}<span class="sub">${esc(a.titre || "")}</span></td><td class="num">${a.m2} m²</td>
-    <td class="num">${fmtk(a.prix)}${a.drop ? `<span class="sub">−${fmtk(a.drop)}</span>` : ""}</td><td class="num">${a.eurm2 ?? "–"}<span class="sub">${priceBadge(a, false)}</span></td>
+    <td class="num">${fmtk(a.prix)}${a.drop ? `<span class="sub">−${fmtk(a.drop)}</span>` : ""}</td><td class="num">${a.eurm2 ?? "–"}<span class="sub">${priceBadge(a, false)} ${constrBadge(a, false)}</span></td>
     <td class="num">${c ? c.wt + " min" : "–"}</td><td class="num">${c ? c.alt + " m" : "–"}</td>
-    ${MARKET ? `<td class="num">${a.stale ? "–" : daysOn(a) + " j"}<span class="sub">${a.stale ? "plus vue" : a.gone ? "partie le " + fmtd(a.gone) : isNew(a) ? "nouvelle" : "depuis le " + fmtd(since(a))}</span></td>` : ""}
+    ${MARKET ? `<td class="num">${a.stale ? "–" : ageHTML(a)}<span class="sub">${a.stale ? "plus vue" : a.gone ? "partie le " + fmtd(a.gone) : isNew(a) ? "nouvelle" : knownAge(a) ? "depuis le " + fmtd(since(a)) : "date inconnue"}</span></td>` : ""}
     <td><a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.agence || a.vendeur || "voir")} ↗</a>${a.src ? `<span class="sub">${esc(a.src)}${a.constructeur ? " · constructeur" : ""}</span>` : a.constructeur ? '<span class="sub">constructeur</span>' : ""}
     ${a.lat && !a.gone ? `<button type="button" class="linkish" data-ll="${a.lat},${a.lon}">carte</button>` : ""}</td></tr>`).join("") || `<tr><td colspan="9">Aucune annonce avec ces filtres.</td></tr>`;
   const goLL = (e) => { const b = e.target.closest("button[data-ll]"); if (!b) return; const [la, lo] = b.dataset.ll.split(",").map(Number); showTab("carte"); setTimeout(() => { map.invalidateSize(); map.setView([la, lo], 15); }, 50); };
@@ -827,26 +905,27 @@ function renderMarket() {
   const el = $("market");
   if (!MARKET) { el.innerHTML = `<p class="hint">Le relevé quotidien n'a pas encore tourné : les annonces ci-dessous sont celles du relevé manuel.</p>`; return; }
   const runs = MARKET.runs || [], last = runs[runs.length - 1] || { sources: {} }, start = runs[0]?.date;
-  const live = ALLADS.filter((a) => !a.gone && !a.stale && a.src), gone = ALLADS.filter((a) => a.gone);
+  const live = ALLADS.filter((a) => !a.gone && !a.stale && a.src && constrVerdict(a)?.k !== "non"), gone = ALLADS.filter((a) => a.gone);
   const bySect = {};
   const sectOf = Object.fromEntries(C.map((c) => [c.code, c.sect]));
   for (const a of ALLADS) if (a.src) (bySect[sectOf[a.insee] || "?"] ||= []).push(a);
   const recent = (a) => a.gone && Date.parse(todayISO()) - Date.parse(a.gone) <= 30 * DAY;
-  const fast = gone.filter((a) => daysOn(a) <= 45).sort((a, b) => b.gone.localeCompare(a.gone)).slice(0, 8);
-  const slow = live.filter((a) => daysOn(a) >= 120).sort((a, b) => daysOn(b) - daysOn(a)).slice(0, 8);
+  const kLive = live.filter(knownAge), kGone = gone.filter(knownAge);
+  const fast = kGone.filter((a) => daysOn(a) <= 45).sort((a, b) => b.gone.localeCompare(a.gone)).slice(0, 8);
+  const slow = kLive.filter((a) => daysOn(a) >= 120).sort((a, b) => daysOn(b) - daysOn(a)).slice(0, 8);
   const li = (a, extra) => `<li><a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.commune)} · ${a.m2} m² · ${fmtk(a.prix)}</a> <span class="sub">${extra}</span></li>`;
   const srcs = Object.entries(last.sources).map(([k, v]) => v.ok ? `${esc(k)} ${v.n}${v.complete ? "" : " (incomplet)"}` : `<b>${esc(k)} en panne</b>`).join(" · ");
   el.innerHTML = `<p class="hint">Relevé chaque matin. Dernier passage le ${fmtd(last.date)} : ${srcs}. Suivi depuis le ${fmtd(start)}${runs.length < 30 ? ` : il faut quelques semaines d'historique pour que les durées de vente veuillent dire quelque chose` : ""}.</p>
   <div class="kpis"><div><b>${live.length}</b><span>en ligne</span></div><div><b>${live.filter(isNew).length}</b><span>nouvelles (7 j)</span></div>
   <div><b>${live.filter((a) => a.drop).length}</b><span>prix baissé</span></div><div><b>${gone.filter(recent).length}</b><span>parties (30 j)</span></div>
-  <div><b>${median(live.map(daysOn)) ?? "–"} j</b><span>en ligne, médiane</span></div><div><b>${median(gone.map(daysOn)) ?? "–"} j</b><span>avant de partir, médiane</span></div></div>
-  <div class="cols2"><div><h3>Parties vite (≤ 45 j)</h3>${fast.length ? `<ul>${fast.map((a) => li(a, `partie le ${fmtd(a.gone)} après ${daysOn(a)} j`)).join("")}</ul>` : `<p class="hint">Rien encore : il faut que des annonces disparaissent du relevé.</p>`}</div>
-  <div><h3>Traînent (≥ 120 j)</h3>${slow.length ? `<ul>${slow.map((a) => li(a, `${daysOn(a)} j${a.drop ? ` · −${fmtk(a.drop)}` : ""} : vendeur peut-être prêt à négocier`)).join("")}</ul>` : `<p class="hint">Aucune.</p>`}</div></div>
+  <div><b>${fmtAge(median(kLive.map(daysOn)))}</b><span>en ligne, médiane${live.length > kLive.length ? ` (${kLive.length} dates connues)` : ""}</span></div><div><b>${fmtAge(median(kGone.map(daysOn)))}</b><span>avant de partir, médiane</span></div></div>
+  <div class="cols2"><div><h3>Parties vite (≤ 45 j)</h3>${fast.length ? `<ul>${fast.map((a) => li(a, `partie le ${fmtd(a.gone)} après ${fmtAge(daysOn(a))}`)).join("")}</ul>` : `<p class="hint">Rien encore : il faut que des annonces disparaissent du relevé.</p>`}</div>
+  <div><h3>Traînent (≥ 120 j)</h3>${slow.length ? `<ul>${slow.map((a) => li(a, `${fmtAge(daysOn(a))}${a.drop ? ` · −${fmtk(a.drop)}` : ""} : vendeur peut-être prêt à négocier`)).join("")}</ul>` : `<p class="hint">Aucune.</p>`}</div></div>
   <h3>Par secteur</h3><div class="tablewrap"><table><thead><tr><th>Secteur</th><th>En ligne</th><th>€/m² médian</th><th>Jours en ligne (médiane)</th><th>Parties (30 j)</th><th>Durée avant départ</th></tr></thead><tbody>
   ${Object.entries(bySect).sort((a, b) => b[1].length - a[1].length).map(([s, v]) => { const l = v.filter((a) => !a.gone), g = v.filter((a) => a.gone);
-    return `<tr><td>${esc(s)}</td><td class="num">${l.length}</td><td class="num">${median(l.map((a) => a.eurm2)) ?? "–"}</td><td class="num">${median(l.map(daysOn)) ?? "–"}</td><td class="num">${g.filter(recent).length}</td><td class="num">${g.length ? median(g.map(daysOn)) + " j" : "–"}</td></tr>`; }).join("")}
+    return `<tr><td>${esc(s)}</td><td class="num">${l.length}</td><td class="num">${median(l.map((a) => a.eurm2)) ?? "–"}</td><td class="num">${fmtAge(median(l.filter(knownAge).map(daysOn)))}</td><td class="num">${g.filter(recent).length}</td><td class="num">${g.some(knownAge) ? fmtAge(median(g.filter(knownAge).map(daysOn))) : "–"}</td></tr>`; }).join("")}
   </tbody></table></div>
-  <p class="hint">Une annonce qui disparaît n'est pas forcément vendue : retrait, compromis, ou remise en ligne plus tard (signalée). Les doublons entre sites sont fusionnés.</p>`;
+  <p class="hint">Chiffres hors annonces non constructibles (vignes, loisir, zone agricole). Durées calculées seulement sur les annonces dont on connaît la date de mise en ligne (vraie date du site, ou apparue depuis le début du suivi) : beaucoup d'agences publient sans date. Une annonce qui disparaît n'est pas forcément vendue : retrait, compromis, ou remise en ligne plus tard (signalée). Les doublons entre sites sont fusionnés.</p>`;
 }
 
 // ---- textes

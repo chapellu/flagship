@@ -25,8 +25,10 @@ import os
 import re
 import sys
 import tempfile
+import time
 import traceback
 import unicodedata
+import urllib.parse
 import urllib.request
 
 DATA = os.environ.get("TERRAIN_DATA", "/data")
@@ -39,7 +41,9 @@ AD_FIELDS = (
     "id", "src", "url", "insee", "commune", "lat", "lon", "pos",  # pos : exact | approx | commune
     "prix", "m2", "titre", "vendeur",  # vendeur : "particulier" | "mandataire" | "agence" | "constructeur" | nom
     "constructeur", "photo", "published",  # published : date ISO de mise en ligne selon la source
+    "constr_txt",  # calculé ici depuis titre + desc + url : True (constructible) | False (non) | None
 )
+# Les sources peuvent aussi fournir "desc" (texte de l'annonce) : lu pour constr_txt, jamais stocké.
 
 
 # ---------------------------------------------------------------- outils partagés par les sources
@@ -72,6 +76,38 @@ def is_constructeur(*texts):
     return bool(CONSTRUCTEUR.search(" ".join(t or "" for t in texts)))
 
 
+# Constructibilité d'après le texte. Les terrains très bon marché sont souvent
+# agricoles, naturels ou de loisir : on cherche d'abord les mentions négatives.
+NON_CONSTR = re.compile(r"non[\s-]*constructible|inconstructible|terrains?[\s-]+de[\s-]+loisirs?|terrains?[\s-]+agricoles?|zone[\s-]+(?:agricole|naturelle)|\bzone[\s-]+[AN]\b|pas constructible", re.I)
+CONSTR = re.compile(r"constructible|[àa][\s-]+b[âa]tir|viabilis|permis de construire|lotissement|libre de constructeur", re.I)
+# vignes, terres agricoles : les « terrains » les moins chers du relevé. Ne comptent
+# que si le texte ne dit pas aussi constructible (« terrain à bâtir face aux vignes »).
+AGRI = re.compile(r"\bvignes?\b|\bAO[PC]\b|viticoles?|cuvage|terres? agricoles?|exploitation agricole|\bpâtures?\b", re.I)
+
+
+def text_constructible(*texts):
+    t = " ".join(x or "" for x in texts)
+    if NON_CONSTR.search(t):
+        return False
+    if CONSTR.search(t):
+        return True
+    return False if AGRI.search(t) else None
+
+
+# Zone du PLU au point (Géoportail de l'Urbanisme, via API Carto IGN).
+# Renvoie {"ztype": "U"|"AUc"|"AUs"|"A"|"N"|…, "zone": libellé} ; ztype "" si la
+# commune n'a pas de PLU numérisé (carte communale ou RNU) ; None si l'API échoue.
+def plu_zone(lat, lon):
+    geom = json.dumps({"type": "Point", "coordinates": [round(lon, 6), round(lat, 6)]})
+    try:
+        d = http_json("https://apicarto.ign.fr/api/gpu/zone-urba?" + urllib.parse.urlencode({"geom": geom}), timeout=30)
+    except Exception as e:
+        print("plu:", type(e).__name__, e)
+        return None
+    f = (d.get("features") or [{}])[0].get("properties") or {}
+    return {"ztype": f.get("typezone") or "", "zone": f.get("libelle") or ""}
+
+
 # ---------------------------------------------------------------- fusion avec l'historique
 def today():
     return dt.datetime.now(dt.timezone(dt.timedelta(hours=1))).date().isoformat()
@@ -98,6 +134,7 @@ def merge(market, src, ads, complete, day):
     hist = market["ads"]
     seen = set()
     for a in ads:
+        a["constr_txt"] = text_constructible(a.get("titre"), a.get("desc"), a.get("url"))
         a = {k: a.get(k) for k in AD_FIELDS}
         seen.add(a["id"])
         h = hist.get(a["id"])
@@ -107,6 +144,9 @@ def merge(market, src, ads, complete, day):
             h["relist"] = h.get("relist", 0) + 1  # revenue après disparition
             h["gone"] = None
         h.update({k: v for k, v in a.items() if v is not None})
+        # date de mise en ligne bidon (Bien'ici : 1970-01-01) : on l'oublie, l'âge partira de "first"
+        if (h.get("published") or "9") < "2000":
+            h.pop("published", None)
         h["last"] = day
         if a["prix"] and (not h["prices"] or h["prices"][-1][1] != a["prix"]):
             h["prices"].append([day, a["prix"]])
@@ -117,6 +157,28 @@ def merge(market, src, ads, complete, day):
                 h["gone"] = day
                 gone += 1
     return gone
+
+
+def zones(market, budget=400):
+    """Zone du PLU au point de l'annonce, une fois par annonce (et à nouveau si sa
+    position change). Seulement si la position est exacte ou floutée (~250 m) :
+    au centre du village, la zone ne dirait rien de la parcelle."""
+    n = 0
+    for h in market["ads"].values():
+        if h.get("gone") or h.get("pos") not in ("exact", "approx") or h.get("lat") is None:
+            continue
+        key = f"{h['lat']:.5f},{h['lon']:.5f}"
+        if h.get("zkey") == key:
+            continue
+        if n >= budget:  # le reste attendra demain
+            break
+        z = plu_zone(h["lat"], h["lon"])
+        n += 1
+        time.sleep(0.3)
+        if z is not None:
+            h.update(z, zkey=key)
+    if n:
+        print(f"plu : {n} zones interrogées")
 
 
 def dedupe(market):
@@ -162,6 +224,7 @@ def main():
             traceback.print_exc()
             run["sources"][name] = {"ok": False, "error": f"{type(e).__name__}: {e}"[:300]}
     dedupe(market)
+    zones(market)
     market["runs"] = [r for r in market["runs"] if r["date"] != day][-89:] + [run]
     market["updated"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
     save("market.json", market)
