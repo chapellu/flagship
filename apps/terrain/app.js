@@ -146,7 +146,8 @@ function buildControls() {
   $("share").addEventListener("click", share);
   syncWeights();
 }
-// ---- lignes « train » (train.json) : trajet porte à porte en train vers Part-Dieu et Perrache.
+// ---- lignes Part-Dieu / Perrache (train.json) : trajet porte à porte, le plus rapide de
+// « tout en voiture » (× coefficient de pointe + se garer en ville) et « voiture + train ».
 // Chaque ligne s'affiche seule ; la zone verte ne l'exige que si on coche « dans la zone verte ».
 const TKEYS = { pd: "Part-Dieu", pe: "Perrache" };
 let syncTrain = () => {};
@@ -163,12 +164,19 @@ function buildTrain() {
   syncTrain = () => els.forEach((f) => f());
   syncTrain();
 }
-// [minutes, gare, minutes de voiture] depuis le bourg, ou null
+// voiture seule : minutes sans trafic → avec pointe et stationnement, ou null
+const carTrip = (m) => (m == null ? null : Math.round(m * S.iso.rush) + (TRAIN.park ?? 10));
+const best = (a, b) => (a == null ? b : b == null ? a : Math.min(a, b));
+// point i de la grille : meilleur des deux modes (999 sans donnée)
+const tripGrid = (k, i) => best(TRAIN.grid[k][i], carTrip(TRAIN.car?.grid?.[k]?.[i])) ?? 999;
+// depuis le bourg : { t: meilleur, mode, train: {t, gare, car} | null, voiture }, ou null
 function trainOf(c, k) {
-  const r = TRAIN?.com?.[c.code];
-  if (!r) return null;
-  const o = k === "pd" ? 0 : 3;
-  return r[o] == null ? null : { t: r[o], gare: TRAIN.stations[r[o + 1]]?.[0] ?? "", car: r[o + 2] };
+  if (!TRAIN) return null;
+  const r = TRAIN.com?.[c.code], o = k === "pd" ? 0 : 3;
+  const train = r && r[o] != null ? { t: r[o], gare: TRAIN.stations[r[o + 1]]?.[0] ?? "", car: r[o + 2] } : null;
+  const voiture = carTrip(TRAIN.car?.com?.[c.code]?.[k === "pd" ? 0 : 1]);
+  const t = best(train?.t, voiture);
+  return t == null ? null : { t, mode: train && train.t <= (voiture ?? 999) ? "train" : "voiture", train, voiture };
 }
 
 // En mode compromis, les poids affichés sont la moyenne des deux et ne se règlent pas.
@@ -313,7 +321,7 @@ function buildMap() {
     "Parcelles repérées et mixtes": layers.parcels, "Annonces mises en avant": layers.topads, "Toutes les annonces en ligne": layers.ads,
   };
   if (CRECHE) over["Crèches"] = layers.creches;
-  if (TRAIN) for (const k in TKEYS) over["Train → " + TKEYS[k]] = layers["t" + k];
+  if (TRAIN) for (const k in TKEYS) over["→ " + TKEYS[k] + " (voiture/train)"] = layers["t" + k];
   L.control.layers({ "Plan IGN": plan, "Photo aérienne": ortho }, over, { collapsed: true }).addTo(map);
   buildToggles({ cadastre });
   map.on("moveend", renderMapList); // la liste sous la carte suit ce qu'on voit
@@ -354,7 +362,7 @@ function buildToggles(extra) {
     ["topads", "Annonces mises en avant", layers.topads, `<span class="amark top sm">★</span>`],
     ["ads", "Toutes les annonces", layers.ads, `<span class="amark sm">€</span>`],
     ...(CRECHE ? [["creches", "Crèches", layers.creches, `<span class="cmark"></span>`]] : []),
-    ...(TRAIN ? Object.entries(TKEYS).map(([k, n]) => ["t" + k, "Train → " + n, layers["t" + k], `<span class="key k-t${k}"></span>`]) : []),
+    ...(TRAIN ? Object.entries(TKEYS).map(([k, n]) => ["t" + k, "→ " + n, layers["t" + k], `<span class="key k-t${k}"></span>`]) : []),
     ["cadastre", "Cadastre", extra.cadastre, ""],
     ["outside", "Hors zone verte aussi", null, ""],
   ];
@@ -385,7 +393,7 @@ function drawLegend() {
     <span><span class="ln" style="background:var(--work)"></span>${esc(workShort())}</span>
     <span><span class="ln" style="background:var(--famA)"></span>${esc(place("famA").short)}</span>
     <span><span class="ln" style="background:var(--famB)"></span>${esc(place("famB").short)}</span>
-    ${TRAIN ? Object.entries(TKEYS).map(([k, n]) => `<span title="${esc(trainHow())}"><span class="ln dot" style="color:var(--t${k})"></span>Train → ${esc(n)} ${S.iso["t" + k]} min${S.iso["z" + k] ? " (zone verte)" : ""}</span>`).join("") : ""}
+    ${TRAIN ? Object.entries(TKEYS).map(([k, n]) => `<span title="${esc(trainHow())}"><span class="ln dot" style="color:var(--t${k})"></span>→ ${esc(n)} ${S.iso["t" + k]} min${S.iso["z" + k] ? " (zone verte)" : ""}</span>`).join("") : ""}
     <span><span class="sw" style="background:var(--s5)"></span>Commune, couleur = score</span>
     <span><span class="sq" style="background:#ffcf33"></span>Parcelle repérée</span><span><span class="sq" style="background:#ff7ad1;transform:rotate(45deg)"></span>Terrain mixte</span>
     <span><span class="amark lg top">★</span>Annonce mise en avant</span><span><span class="amark lg">€</span>Annonce en ligne (calque à cocher)</span>
@@ -393,7 +401,8 @@ function drawLegend() {
 }
 
 function trainHow() {
-  return `Porte à porte en train, arrivée entre 7 h et 9 h un jour de semaine : voiture jusqu'à la gare la plus avantageuse (sans trafic) + ${TRAIN.marge} min pour se garer et rejoindre le quai + trajet le plus rapide en TER ou tram-train (au plus une correspondance). Depuis une gare de Lyon (Saint-Paul, Gorge de Loup, Vaise, Jean Macé), fin du trajet en TCL forfaitaire. Horaires SNCF du ${TRAIN.day.slice(6)}/${TRAIN.day.slice(4, 6)}/${TRAIN.day.slice(0, 4)}.`;
+  const car = TRAIN.car ? `Le plus rapide de deux trajets. Tout en voiture : temps sans trafic × ${S.iso.rush} (heure de pointe) + ${TRAIN.park ?? 10} min pour se garer en ville. Ou voiture + train : ` : "";
+  return `${car}Porte à porte en train, arrivée entre 7 h et 9 h un jour de semaine : voiture jusqu'à la gare la plus avantageuse (sans trafic) + ${TRAIN.marge} min pour se garer et rejoindre le quai + trajet le plus rapide en TER ou tram-train (au plus une correspondance). Depuis une gare de Lyon (Saint-Paul, Gorge de Loup, Vaise, Jean Macé), fin du trajet en TCL forfaitaire. Horaires SNCF du ${TRAIN.day.slice(6)}/${TRAIN.day.slice(4, 6)}/${TRAIN.day.slice(0, 4)}.`;
 }
 // Isochrones : contours d3 sur la grille, convertis en lon/lat.
 // d3.contours place la valeur (i, j) au centre de la cellule [i, i+1] × [j, j+1].
@@ -417,7 +426,7 @@ function gridRatio(i) {
   const I = S.iso;
   const m = Math.max(gridWork(i) / I.work, gridGet("famA", i) / I.famA, gridGet("famB", i) / I.famB);
   let r = I.alt > 0 ? Math.max(m, I.alt / Math.max(1, GRID.alt[i])) : m;
-  if (TRAIN) for (const k in TKEYS) if (I["z" + k]) r = Math.max(r, (TRAIN.grid[k][i] ?? 999) / I["t" + k]); // train coché : critère de zone
+  if (TRAIN) for (const k in TKEYS) if (I["z" + k]) r = Math.max(r, tripGrid(k, i) / I["t" + k]); // Part-Dieu / Perrache cochés : critère de zone
   return r;
 }
 function drawIso() {
@@ -435,7 +444,7 @@ function drawIso() {
   }
   layers.tpd.clearLayers(); layers.tpe.clearLayers();
   if (TRAIN) for (const k in TKEYS) {
-    const v = Float64Array.from(TRAIN.grid[k], (x) => -(x ?? 999));
+    const v = Float64Array.from(TRAIN.grid[k], (_, i) => -tripGrid(k, i));
     L.geoJSON(contour(v, -I["t" + k]), { style: { color: css("--t" + k), weight: 2.4, dashArray: "1 5", lineCap: "round", fill: false }, interactive: false }).addTo(layers["t" + k]);
   }
 }
@@ -466,14 +475,18 @@ function zoneWhy(c) {
   if (c.alt < I.alt) w.push(`altitude ${c.alt} m < ${I.alt} m`);
   if (TRAIN) for (const k in TKEYS) {
     const t = trainOf(c, k)?.t;
-    if (I["z" + k] && !(t <= I["t" + k])) w.push(`train ${TKEYS[k]} ${t ?? "–"} min > ${I["t" + k]}`);
+    if (I["z" + k] && !(t <= I["t" + k])) w.push(`${TKEYS[k]} ${t ?? "–"} min > ${I["t" + k]}`);
   }
   return w;
 }
 function trainRows(c) {
   return Object.entries(TKEYS).map(([k, n]) => {
     const r = trainOf(c, k);
-    return `<dt title="${esc(trainHow())}">Train → ${esc(n)}</dt><dd>${r ? `${r.t} min · ${esc(r.gare)} (${r.car} min de voiture)` : "pas de gare utile"}</dd>`;
+    if (!r) return `<dt title="${esc(trainHow())}">→ ${esc(n)}</dt><dd>–</dd>`;
+    const tr = r.train ? `train ${r.train.t} min via ${esc(r.train.gare)} (${r.train.car} min de voiture)` : "pas de gare utile";
+    const vo = r.voiture != null ? `voiture ${r.voiture} min` : "";
+    const parts = r.mode === "train" ? [tr, vo] : [vo, tr];
+    return `<dt title="${esc(trainHow())}">→ ${esc(n)}</dt><dd><b>${r.t} min</b> · ${parts.filter(Boolean).join(" · ou ")}</dd>`;
   }).join("");
 }
 // Fiche d'une commune : popup de la commune, et rappelée dans chaque annonce
@@ -892,7 +905,7 @@ function doRender() {
   $("zone-count").textContent = crecheMode()
     ? `${inz} communes dans la zone verte (bourg). Travail : crèche la plus proche, en voiture sans trafic.`
     : `${inz} communes dans la zone verte (bourg). Voiture ${place("work").short} : temps sans trafic × ${S.iso.rush.toFixed(2)}.`;
-  const tz = TRAIN ? Object.keys(TKEYS).filter((k) => S.iso["z" + k]).map((k) => `train ${TKEYS[k]} ≤ ${S.iso["t" + k]} min`) : [];
+  const tz = TRAIN ? Object.keys(TKEYS).filter((k) => S.iso["z" + k]).map((k) => `${TKEYS[k]} ≤ ${S.iso["t" + k]} min`) : [];
   if (tz.length) $("zone-count").textContent += ` Avec ${tz.join(" et ")}.`;
   document.querySelectorAll("[data-place=work]").forEach((el) => (el.textContent = workShort()));
   syncMarkers();
