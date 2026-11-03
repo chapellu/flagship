@@ -204,6 +204,10 @@ td .gap{font:12px var(--f-data);color:var(--warn)}
 .pop .tag.ad{background:#dfe8fb;color:#17306b}
 .pop .act{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin-top:8px;font-size:12.5px}
 .pop .act button{font:500 12.5px var(--f-body);background:transparent;color:#2f6b4f;border:0;padding:0;cursor:pointer;text-decoration:underline}
+/* trajet réel depuis le point (OSRM, au clic) */
+.pop .route{margin-top:8px;padding:6px 8px;border-left:3px solid var(--work);background:rgba(194,87,12,.06);border-radius:0 5px 5px 0;font-size:12.5px}
+.pop .route>button{font:600 12.5px var(--f-body);background:transparent;color:#b04f0b;border:0;padding:0;cursor:pointer;text-decoration:underline} /* bulle toujours claire */
+.pop .route .act{margin-top:4px}
 .pop .act a.go,.parcel .act a.go{font-weight:600;background:#2f62c8;color:#fff;padding:5px 9px;border-radius:5px;text-decoration:none}
 .pop details.school{margin:6px 0;font-size:12.5px}
 .pop details.school summary{cursor:pointer;font-weight:600}

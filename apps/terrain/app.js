@@ -270,6 +270,7 @@ function buildMap() {
   layers.topads = L.layerGroup().addTo(map);
   layers.ads = L.layerGroup();
   layers.places = L.layerGroup().addTo(map);
+  layers.route = L.layerGroup().addTo(map); // un seul itinéraire à la fois
   const over = {
     "Relief (ombrage)": relief, "Cadastre (zoomer)": cadastre, "Zone verte": layers.zone, "Lignes de trajet": layers.iso, "Communes": layers.communes,
     "Parcelles repérées et mixtes": layers.parcels, "Annonces mises en avant": layers.topads, "Toutes les annonces en ligne": layers.ads,
@@ -278,6 +279,7 @@ function buildMap() {
   L.control.layers({ "Plan IGN": plan, "Photo aérienne": ortho }, over, { collapsed: true }).addTo(map);
   buildToggles({ cadastre });
   map.on("moveend", renderMapList); // la liste sous la carte suit ce qu'on voit
+  map.on("popupopen", (e) => { openPop = e.popup; });
   for (const k of ["work", "famA", "famB", "home"]) {
     const p = CFG.places[k];
     if (!p) continue;
@@ -462,6 +464,7 @@ function parcelPopup(p) {
   <div class="sub">${p.kind === "mixte" ? `${p.constr} m² constructibles + ${p.agri} m² en zone A/N` : esc(p.surface) + " · " + esc(p.zone)} · ${esc(parcelRef(p.id))}</div>
   <p>${esc(p.note)}</p><dl><dt>Altitude</dt><dd>${esc(p.alt)}</dd><dt>Pente</dt><dd>${esc(p.pente)}</dd><dt>Exposition</dt><dd>${esc(p.expo)}</dd>
   ${c ? `<dt>${esc(workShort())}</dt><dd>${c.wt} min</dd>` : ""}</dl>
+  ${routeAct(p.lat, p.lon, "exact")}
   <div class="act"><button type="button" onclick="window.__goParcel('${esc(p.id)}')">Fiche de la parcelle</button>
   <a href="${cadastreUrl(p.lat, p.lon)}" target="_blank" rel="noopener">Cadastre ↗</a><a href="${plu(p.lat, p.lon)}" target="_blank" rel="noopener">Zonage ↗</a></div></div>`;
 }
@@ -498,9 +501,72 @@ function adPopup(a) {
   return `<div class="pop"><span class="tag ad">Annonce${a.top ? " mise en avant" : ""}</span>${a.photo ? `<img src="${esc(a.photo)}" alt="">` : ""}<h3>${esc(a.commune)} · ${fmtk(a.prix)}</h3>
   <div class="sub">${a.m2} m² · ${a.eurm2} €/m²${a.vendeur ? " · " + esc(a.vendeur) : ""}${a.top ? " · " + esc(a.top) : ""}</div>
   ${priceBadge(a)}${marketLine(a)}${a.analyse ? `<p>${esc(a.analyse)}</p>` : ""}
+  ${a.lat ? routeAct(a.lat, a.lon, a.pos) : ""}
   <div class="act"><a class="go" href="${esc(a.url)}" target="_blank" rel="noopener">Voir l'annonce ↗</a><button type="button" onclick="window.__goAd('${esc(a.id)}')">Dans la liste</button>
   ${a.lat ? `<a href="${cadastreUrl(a.lat, a.lon)}" target="_blank" rel="noopener">Cadastre ↗</a>` : ""}</div></div>`;
 }
+
+// ---------------------------------------------------------------- trajet réel
+// Au clic seulement : itinéraire depuis le point lui-même (et non le bourg) jusqu'au
+// lieu de travail, par le serveur OSRM public (limité : jamais de requêtes en masse).
+const ROUTES = new Map();
+function workDest(lat, lon) {
+  if (!crecheMode()) { const w = place("work"); return { lat: w.lat, lon: w.lon, name: w.name || w.short, rush: true }; }
+  let best = null, bd = Infinity; // crèche la plus proche à vol d'oiseau
+  const k = Math.cos(lat * Math.PI / 180);
+  for (const [la, lo, nom, commune] of CRECHE.sites) {
+    const d = (la - lat) ** 2 + ((lo - lon) * k) ** 2;
+    if (d < bd) { bd = d; best = { lat: la, lon: lo, name: `${nom} · ${commune}`, rush: false }; }
+  }
+  return best;
+}
+// Les bulles sont des fonctions : on note l'état du calcul (ROUTES) puis on
+// redemande le contenu à Leaflet (popup.update), qui relit cet état.
+function routeAct(lat, lon, pos) {
+  lat = +lat; lon = +lon; pos = ["exact", "approx", "commune"].includes(pos) ? pos : "";
+  const d = workDest(lat, lon);
+  if (!d || d.lat == null) return "";
+  const st = ROUTES.get(`${lat},${lon}|${d.lat},${d.lon}`);
+  const btn = (txt) => `<button type="button" onclick="window.__route(${lat},${lon},'${pos}')">${txt}</button>`;
+  const body = !st ? btn(`Trajet → ${esc(workShort())}`)
+    : st === "wait" ? `<div class="sub">Calcul du trajet…</div>`
+    : st.err ? `<div class="sub">Trajet indisponible (${esc(st.err)}).</div>${btn("Réessayer")}`
+    : routeHtml([lat, lon], d, st, pos);
+  return `<div class="route">${body}</div>`;
+}
+function routeHtml(o, d, r, pos) {
+  const t = Math.round(r.min), tr = d.rush ? Math.round(r.min * S.iso.rush) : t;
+  const gm = `https://www.google.com/maps/dir/?api=1&origin=${o[0]},${o[1]}&destination=${d.lat},${d.lon}&travelmode=driving`;
+  const wz = `https://waze.com/ul?ll=${d.lat},${d.lon}&navigate=yes`;
+  const from = pos === "exact" ? "" : pos === "commune" ? "Départ approximatif : centre du village (adresse exacte inconnue)."
+    : "Départ approximatif : la position de l'annonce est floutée.";
+  return `<div class="rt-res"><b>${r.km.toFixed(1).replace(".", ",")} km · ${t} min</b> sans trafic${d.rush ? ` · ≈ ${tr} min à l'heure de pointe` : ""}
+    <div class="sub">Vers ${esc(d.name)}. ${S.days} allers-retours : ${Math.round(tr * 2 * S.days / 6) / 10} h par semaine.</div>
+    ${from ? `<div class="sub">${from}</div>` : ""}
+    <div class="act"><a href="${gm}" target="_blank" rel="noopener">Ouvrir dans Google Maps ↗</a><a href="${wz}" target="_blank" rel="noopener">Waze ↗</a><span class="sub">Waze part de la position du téléphone</span></div></div>`;
+}
+let openPop = null; // bulle ouverte, à rafraîchir quand le trajet arrive
+window.__route = async (lat, lon) => {
+  const d = workDest(lat, lon), key = `${lat},${lon}|${d.lat},${d.lon}`;
+  const pop = openPop, refresh = () => pop && pop.isOpen() && pop.update();
+  let r = ROUTES.get(key);
+  if (!r || r.err) {
+    ROUTES.set(key, "wait"); refresh();
+    try {
+      const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${lon},${lat};${d.lon},${d.lat}?overview=full&geometries=geojson`);
+      if (!res.ok) throw new Error(res.status === 429 ? "trop de demandes, réessayer dans un moment" : "erreur " + res.status);
+      const j = await res.json(), rt = j.code === "Ok" && j.routes && j.routes[0];
+      if (!rt) throw new Error("pas d'itinéraire trouvé");
+      r = { km: rt.distance / 1000, min: rt.duration / 60, line: rt.geometry.coordinates.map(([x, y]) => [y, x]) };
+    } catch (e) { r = { err: e.message || "réseau" }; }
+    ROUTES.set(key, r); // les erreurs aussi, jusqu'au prochain essai
+  }
+  if (!r.err && r !== "wait") {
+    layers.route.clearLayers(); // l'itinéraire reste affiché jusqu'au suivant
+    L.polyline(r.line, { color: css("--work"), weight: 4, opacity: 0.85, interactive: false }).addTo(layers.route);
+  }
+  refresh();
+};
 
 // ---------------------------------------------------------------- rendu
 let raf = 0;
