@@ -1,8 +1,10 @@
 """Communes de la zone, identité et altitude (geo.api.gouv.fr, IGN RGE ALTI).
 
-Zone : communes.json, plus les autres communes des mêmes départements dont le
-centre est dans l'emprise de grid.json (même règle que le relevé des annonces,
-refresh.zone_communes). Une commune de communes.json n'en sort jamais.
+Zone : communes.json, plus toutes les communes (quel que soit le département)
+dont le centre est dans la zone de grid.json : emprise de la grille, et points
+atteignables aux curseurs au maximum (« reach », voir m_grid ; même règle que le
+relevé des annonces, refresh.zone_communes). Une commune de communes.json n'en
+sort jamais.
 
 Champs : nom, lat/lon (centre geo.api, 4 décimales), pop (population
 municipale), alt (RGE ALTI au centre, arrondie), sect (secteur, voir sectors()).
@@ -12,14 +14,9 @@ import re
 import urllib.parse
 from collections import Counter
 
-from lib import altitudes, cache_path, http_json, load_json, log, save_json
+from lib import altitudes, cache_path, http_json, in_area, load_json, log, save_json
 
 GEO = "https://geo.api.gouv.fr"
-
-
-def in_grid(grid, lat, lon):
-    return (grid["lon0"] <= lon <= grid["lon0"] + grid["dlon"] * (grid["nx"] - 1)
-            and grid["lat0"] <= lat <= grid["lat0"] + grid["dlat"] * (grid["ny"] - 1))
 
 
 def departements(codes):
@@ -27,20 +24,25 @@ def departements(codes):
 
 
 def area(existing, grid):
-    """{code: commune} : communes de communes.json + voisines dans l'emprise de la grille.
-    Lève une erreur si geo.api.gouv.fr ne répond pas : sans lui, pas de fiche fiable."""
+    """{code: commune} : communes de communes.json + celles dont le centre est dans
+    la zone de la grille (lib.in_area), tous départements confondus : les
+    départements suivent l'emprise de la grille. Lève une erreur si
+    geo.api.gouv.fr ne répond pas : sans lui, pas de fiche fiable."""
     out, arr = {}, {}
-    for dep in departements(existing):
-        geo = http_json(f"{GEO}/communes?" + urllib.parse.urlencode(
-            {"codeDepartement": dep, "fields": "code,nom,centre,population,surface,codeEpci,epci", "format": "json"}), pause=0.3)
-        for g in geo:
-            lon, lat = ((g.get("centre") or {}).get("coordinates") or (None, None))
-            if lat is None:
-                continue
-            if g["code"] in existing or in_grid(grid, lat, lon):
-                out[g["code"]] = {"code": g["code"], "nom": g["nom"], "lat": round(lat, 4), "lon": round(lon, 4),
-                                  "pop": g.get("population"), "surface": g.get("surface"), "dep": dep,
-                                  "epci": g.get("codeEpci"), "epci_nom": (g.get("epci") or {}).get("nom")}
+    # toutes les communes de France en une requête (~8 Mo), filtrées ici
+    for g in http_json(f"{GEO}/communes?" + urllib.parse.urlencode(
+            {"fields": "code,nom,centre,population,surface,codeEpci,epci,codeDepartement", "format": "json"}), timeout=300):
+        lon, lat = ((g.get("centre") or {}).get("coordinates") or (None, None))
+        if lat is None:
+            continue
+        if g["code"] in existing or in_area(grid, lat, lon):
+            out[g["code"]] = {"code": g["code"], "nom": g["nom"], "lat": round(lat, 4), "lon": round(lon, 4),
+                              "pop": g.get("population"), "surface": g.get("surface"),
+                              "dep": g.get("codeDepartement") or departements([g["code"]])[0],
+                              "epci": g.get("codeEpci"), "epci_nom": (g.get("epci") or {}).get("nom")}
+    deps = sorted({c["dep"] for c in out.values()})
+    log(f"geo : départements de la zone : {len(deps)}")
+    for dep in deps:
         # arrondissements municipaux (Lyon, Marseille, Paris) : les sources par commune
         # (DVF, écoles, BD TOPO…) les donnent parfois à la place de la commune
         for a in http_json(f"{GEO}/communes?" + urllib.parse.urlencode(

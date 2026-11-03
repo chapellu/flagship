@@ -142,7 +142,25 @@ def km(a, b):
 
 
 def grid_points(grid):
-    return [(grid["lat0"] + j * grid["dlat"], grid["lon0"] + i * grid["dlon"]) for j in range(grid["ny"]) for i in range(grid["nx"])]
+    # arrondi à 1e-6 : un même point garde la même clé de cache quand la grille
+    # s'agrandit (lon0/lat0 décalés d'un nombre entier de cellules)
+    return [(round(grid["lat0"] + j * grid["dlat"], 6), round(grid["lon0"] + i * grid["dlon"], 6))
+            for j in range(grid["ny"]) for i in range(grid["nx"])]
+
+
+def in_area(grid, lat, lon):
+    """Le point est-il dans l'emprise de la grille et, si grid.json porte « reach »,
+    à moins d'une cellule d'un point atteignable aux curseurs au maximum (m_grid) ?"""
+    if not grid or lat is None or lon is None:
+        return False
+    i, j = round((lon - grid["lon0"]) / grid["dlon"]), round((lat - grid["lat0"]) / grid["dlat"])
+    nx, ny = grid["nx"], grid["ny"]
+    if not (0 <= i < nx and 0 <= j < ny):
+        return False
+    r = grid.get("reach")
+    if not r or len(r) != nx * ny:
+        return True
+    return any(r[b * nx + a] for b in range(max(0, j - 1), min(ny, j + 2)) for a in range(max(0, i - 1), min(nx, i + 2)))
 
 
 def grid_box(grid, margin=0.0):

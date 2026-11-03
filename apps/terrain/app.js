@@ -61,6 +61,12 @@ const need = (n) => fetch(DATA + n + ".json", { cache: "no-cache" }).then((r) =>
 const maybe = (n) => fetch(DATA + n + ".json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
 Promise.all([...["config", "communes", "grid", "parcels", "ads", "notes"].map(need), maybe("creches"), maybe("schools"), maybe("market"), maybe("train")])
 .then(([cfg, com, grid, parcels, ads, notes, creches, schools, market, train]) => {
+  // creches.json / train.json ont des tableaux point par point sur grid.json : s'ils
+  // ne sont pas de la même grille (fichiers en cours de réécriture), on s'en passe
+  const n = grid.nx * grid.ny, fits = (...a) => a.every((x) => !x || x.length === n);
+  if (creches && !fits(creches.grid)) creches = null;
+  if (train && !fits(...Object.values(train.grid || {}), ...Object.values(train.car?.grid || {}),
+    ...["work", "city"].flatMap((k) => [train.commute?.[k]?.grid, train.commute?.[k]?.car?.grid]))) train = null;
   CFG = cfg; GRID = grid; PARCELS = parcels; ADS = ads; NOTES = notes; GARES = com.g;
   CRECHE = creches; SCHOOLS = schools; MARKET = market; TRAIN = train;
   C = com.c.map((r) => Object.fromEntries(cfg.fields.map((f, i) => [f, r[i]])));
@@ -542,10 +548,11 @@ const gridWork = (i) => (crecheMode() ? CRECHE.grid[i] ?? 999 : gridGet("work", 
 // part de la limite « travail » consommée au point i (voiture seule, ou trajet mixte)
 const gridWorkF = (i) => (COM() && !crecheMode() ? commuteGrid("work", i).f : gridWork(i) / S.iso.work);
 // valeur combinée au point i : le pire des rapports « valeur / seuil » ; la zone est là où il vaut ≤ 1
-function gridRatio(i) {
+// (wf, lf : parts travail / ville déjà calculées par drawIso, pour ne pas refaire les trajets)
+function gridRatio(i, wf = gridWorkF(i), lf = null) {
   const I = S.iso;
-  let m = Math.max(gridWorkF(i), gridGet("famA", i) / I.famA, gridGet("famB", i) / I.famB);
-  if (useCity() && I.zcity) m = Math.max(m, commuteGrid("city", i).f);
+  let m = Math.max(wf, gridGet("famA", i) / I.famA, gridGet("famB", i) / I.famB);
+  if (useCity() && I.zcity) m = Math.max(m, lf ?? commuteGrid("city", i).f);
   let r = I.alt > 0 ? Math.max(m, I.alt / Math.max(1, GRID.alt[i])) : m;
   for (const k of tzKeys()) r = Math.max(r, tripGrid(k, i) / I["t" + k]); // Part-Dieu / Perrache cochés : critère de zone
   return r;
@@ -554,9 +561,10 @@ function drawIso() {
   const n = GRID.nx * GRID.ny, I = S.iso;
   const comb = new Float64Array(n), w = new Float64Array(n), a = new Float64Array(n), b = new Float64Array(n), l = new Float64Array(n);
   for (let i = 0; i < n; i++) {
-    w[i] = -gridWorkF(i) * I.work; a[i] = -gridGet("famA", i); b[i] = -gridGet("famB", i);
-    if (useCity()) l[i] = -commuteGrid("city", i).f * I.city;
-    comb[i] = -gridRatio(i);
+    const wf = gridWorkF(i), lf = useCity() ? commuteGrid("city", i).f : null;
+    w[i] = -wf * I.work; a[i] = -gridGet("famA", i); b[i] = -gridGet("famB", i);
+    if (lf != null) l[i] = -lf * I.city;
+    comb[i] = -gridRatio(i, wf, lf);
   }
   layers.zone.clearLayers(); layers.iso.clearLayers();
   const zg = contour(comb, -1);
@@ -1134,7 +1142,8 @@ function doRender() {
   renderMapList();
   renderTable(rows);
   renderParcels();
-  renderAds();
+  // l'onglet Annonces est lourd (des centaines de lignes) : refait seulement quand il est ouvert
+  if (!document.querySelector('.view[data-view=annonces]')?.hidden) renderAds();
 }
 // Panneau « Zone atteignable » : textes qui suivent les réglages, phrase de synthèse,
 // et pour chaque critère le nombre de communes (bourg) qu'il écarte.
@@ -1372,6 +1381,7 @@ function showTab(t) {
   $("side").hidden = !["carte", "classement", "parcelles", "annonces"].includes(t);
   document.querySelector(".layout").style.gridTemplateColumns = $("side").hidden ? "1fr" : "";
   if (t === "carte") setTimeout(() => map.invalidateSize(), 30);
+  if (t === "annonces") renderAds();
   if (!location.hash.startsWith("#r=")) history.replaceState(null, "", "#" + t);
 }
 
