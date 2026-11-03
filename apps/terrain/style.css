@@ -109,9 +109,9 @@ section h3{font-size:18px}
 a{color:var(--accent)}
 
 /* ---- App : un panneau de réglages à gauche, la vue à droite ---- */
-:root{--work:#c2570c;--famA:#2563a8;--famB:#7c3aa8;--zone:#2f8a5c;--grey:#9aa49e}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--work:#f0954f;--famA:#7fb2ec;--famB:#c69cf0;--zone:#5fcf93;--grey:#5d6a62}}
-:root[data-theme="dark"]{--work:#f0954f;--famA:#7fb2ec;--famB:#c69cf0;--zone:#5fcf93;--grey:#5d6a62}
+:root{--tpd:#b0306a;--tpe:#0d7f86;--work:#c2570c;--famA:#2563a8;--famB:#7c3aa8;--zone:#2f8a5c;--grey:#9aa49e}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--tpd:#f07aae;--tpe:#4fd0d6;--work:#f0954f;--famA:#7fb2ec;--famB:#c69cf0;--zone:#5fcf93;--grey:#5d6a62}}
+:root[data-theme="dark"]{--tpd:#f07aae;--tpe:#4fd0d6;--work:#f0954f;--famA:#7fb2ec;--famB:#c69cf0;--zone:#5fcf93;--grey:#5d6a62}
 [hidden]{display:none!important}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body);padding-inline:16px;padding-block:0 32px}
@@ -135,6 +135,8 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body)
 .w output{font:12.5px var(--f-data);text-align:right;white-space:nowrap}
 .key{flex:none;width:14px;height:4px;border-radius:2px;display:inline-block}
 .k-work{background:var(--work)}.k-famA{background:var(--famA)}.k-famB{background:var(--famB)}.k-alt{background:var(--muted)}
+.k-tpd{background:var(--tpd)}.k-tpe{background:var(--tpe)}
+.sub-chk{margin:-2px 0 4px 0;font-size:12.5px;color:var(--muted)}
 input[type=range]{width:100%;accent-color:var(--accent)}
 input[type=range]:disabled{opacity:.45}
 .seg{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;justify-self:start}
@@ -153,6 +155,7 @@ main{min-width:0;display:grid;gap:16px}
 .maplegend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--muted);align-items:center}
 .maplegend .sw{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-2px;margin-right:5px}
 .maplegend .ln{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:3px;margin-right:5px}
+.maplegend .ln.dot{height:0;background:none;border-top:3px dotted currentColor;border-radius:0}
 .maplegend .sq{display:inline-block;width:12px;height:12px;vertical-align:-2px;margin-right:5px;border-radius:2px}
 .top5{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
 .top5 button{all:unset;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:3px}
