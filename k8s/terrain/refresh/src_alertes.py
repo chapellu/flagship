@@ -35,11 +35,13 @@ DAYS = 30
 SENDERS = ("leboncoin", "seloger", "logic-immo")
 
 # Liens d'annonce, une fois décodés. Leboncoin : /ad/<catégorie>/<id> ou
-# /<catégorie>/<id>.htm ; SeLoger/Logic-Immo : /annonces/…/<id>.htm ou /detail/<id>.
+# /<catégorie>/<id>.htm ; SeLoger/Logic-Immo : /annonces/…/<id>.htm, /detail/<id>, ou
+# (format 2026) /annonce/achat/<région>/<département>/<commune-cp>/<code alphanumérique>.
 AD_URL = re.compile(
     r"https?://(?:www\.)?(?P<site>leboncoin|seloger|logic-immo)\.(?:fr|com)/"
     r"(?:ad/[a-z_]+/(?P<lbc>\d{8,12})|[a-z_]+/(?P<lbc2>\d{8,12})\.htm"
-    r"|annonces/[^\s\"'<>]*?/(?P<slg>\d{6,12})\.htm|detail/(?P<slg2>[\w-]{6,40}))", re.I)
+    r"|annonces/[^\s\"'<>]*?/(?P<slg>\d{6,12})\.htm|detail/(?P<slg2>[\w-]{6,40})"
+    r"|annonce/(?:achat|vente)/(?:[a-z0-9-]+/){2,3}(?P<slg3>[A-Z0-9]{8,16})(?=[?#\"'\s<]|$))", re.I)
 PRICE = re.compile(r"(\d{1,3}(?:[\s  .]\d{3})+|\d{4,7})\s*(?:€|&euro;|eur\b)", re.I)
 SURF = re.compile(r"(\d{1,3}(?:[\s  .]\d{3})+|\d{2,6})\s*m(?:²|2|&sup2;)", re.I)
 PLACE = re.compile(r"([A-ZÀ-Ý][\w'’ \-]{1,60}?)\s*\(?\s*(\d{5})\s*\)?")
@@ -94,8 +96,8 @@ def parse_mail(body_html, communes, index, resolve=True):
         if not m:
             continue
         site = m.group("site").lower()
-        aid = m.group("lbc") or m.group("lbc2") or m.group("slg") or m.group("slg2")
-        hits.append((lm.start(), f"{'leboncoin' if site == 'leboncoin' else 'seloger'}-{aid}", m.group(0).split("?")[0], site))
+        aid = m.group("lbc") or m.group("lbc2") or m.group("slg") or m.group("slg2") or m.group("slg3")
+        hits.append((max(0, body_html.rfind("<", 0, lm.start())), f"{'leboncoin' if site == 'leboncoin' else 'seloger'}-{aid}", m.group(0).split("?")[0], site))
     out = {}
     starts = []  # début du bloc de chaque annonce, dans l'ordre
     for pos, key, url, site in hits:
@@ -113,10 +115,17 @@ def parse_mail(body_html, communes, index, resolve=True):
         if key in out and (out[key]["prix"] or not prix):
             continue  # même annonce citée deux fois : on garde la version la plus complète
         c = communes.get(insee) or {}
+        slug = None
+        if not insee:  # lien SeLoger « …/<commune>-<code postal>/<code> » : le nom, pour le rattachement du relevé
+            sm = re.search(r"/([a-z0-9-]+?)-(\d{5})/[A-Z0-9]{8,16}", url, re.I)
+            if sm:
+                slug = sm.group(1).replace("-", " ")
+                insee = index.get((norm(slug), sm.group(2)[:2]))
+                c = communes.get(insee) or {}
         txt = " ".join(block.split())
         out[key] = {
             "id": f"{NAME}:{key}", "src": NAME, "url": url,
-            "insee": insee, "commune": c.get("nom"), "lat": c.get("lat"), "lon": c.get("lon"), "pos": "commune",
+            "insee": insee, "commune": c.get("nom") or (slug.title() if slug else None), "lat": c.get("lat"), "lon": c.get("lon"), "pos": "commune",
             "prix": _num(prix.group(1)) if prix else None, "m2": _num(surf.group(1)) if surf else None,
             "titre": txt[:140] or None, "desc": txt[:600],
             "vendeur": "leboncoin" if site == "leboncoin" else site,
