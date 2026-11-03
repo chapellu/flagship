@@ -43,6 +43,7 @@ configMapGenerator:
       - communes/m_ecoles.py
       - communes/m_fibre.py
       - communes/m_geo.py
+      - communes/m_grid.py
       - communes/m_risques.py
       - communes/m_train.py
       - communes/m_voiture.py

@@ -1,14 +1,18 @@
-# Fiches communes, chaque semaine (k8s/terrain/communes/build.py) → data/communes.json,
+# Grille de trajets et fiches communes, chaque semaine (k8s/terrain/communes/build.py)
+# → data/grid.json (taillée automatiquement, voir m_grid.py), data/communes.json,
 # et pour les mêmes communes data/schools.json, data/creches.json, data/train.json.
 #
-# Toutes les communes de la zone (communes.json + voisines des mêmes départements
-# dans l'emprise de grid.json) reçoivent une fiche complète, calculée depuis des
-# sources publiques : geo.api.gouv.fr, IGN (altitude, BD TOPO), OSRM, horaires
-# SNCF, DVF, ARCEP, data.education.gouv.fr, INSEE BPE, Géorisques.
+# Toutes les communes de la zone (communes.json + celles, de tout département,
+# dont le centre est dans la zone de grid.json) reçoivent une fiche complète,
+# calculée depuis des sources publiques : geo.api.gouv.fr, IGN (altitude, BD
+# TOPO), OSRM, horaires SNCF, DVF, ARCEP, data.education.gouv.fr, INSEE BPE,
+# Géorisques.
 #
 # Les sources brutes et les temps OSRM sont gardés dans le volume terrain-cache
 # (données publiques seulement) : une semaine ordinaire ne relit que ce qui a
-# changé. Le premier passage demande tous les temps de voiture (~30 à 60 min).
+# changé. Quand la grille grandit, un passage ajoute au plus 8 000 cellules
+# (~1 000 à 1 500 requêtes OSRM, une par seconde au plus : ~1 h) et reprend la
+# semaine suivante.
 #
 # Le code est public et ne contient aucun lieu : tout vient de data/config.json,
 # data/communes.json et data/grid.json. Écriture atomique ; si une source est en

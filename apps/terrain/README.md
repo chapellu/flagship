@@ -17,7 +17,7 @@ lit en `fetch` :
 |---|---|
 | `config.json` | lieux de référence (`work`, `famA`, `famB`, `home`, `city`), prénoms, titre, liste des champs de `communes.json` |
 | `communes.json` | une ligne par commune (champs de `config.fields`) + gares ; écrit chaque semaine par le CronJob `terrain-communes` (voir « Fiches communes ») |
-| `grid.json` | grille régulière ~1,5 km : minutes de voiture sans trafic vers `work`/`famA`/`famB`, altitude |
+| `grid.json` | grille régulière ~1,5 km : minutes de voiture sans trafic vers `work`/`famA`/`famB`, altitude, `reach` (atteignable aux curseurs au maximum) ; taillée et recalculée chaque semaine par le CronJob `terrain-communes` (voir « Grille de trajets ») |
 | `parcels.json` | parcelles repérées et terrains mixtes (photo, contour, zone) |
 | `ads.json` | annonces relevées |
 | `notes.json` | textes d'analyse, en HTML |
@@ -29,8 +29,10 @@ lit en `fetch` :
 | `market.json` | relevé quotidien des annonces et leur historique (première/dernière vue, prix, départ) ; écrit par le CronJob `terrain-refresh` |
 
 `config.json` porte aussi le bloc `search` lu par le relevé :
-`{"minM2": 300, "bienici": {"zoneIds": ["-4850451", "-4850450", "-7420"]}}`
-(identifiants Bien'ici des départements, via `res.bienici.com/suggest.json?q=Rhône`).
+`{"minM2": 300}`. Les départements interrogés découlent de la zone (ci-dessous) ;
+Bien'ici traduit chacun en identifiant de zone par `res.bienici.com/suggest.json?q=<département>`
+(`"bienici": {"zoneIds": […]}` s'y ajoute si besoin). `"paruvendu": {"minutes": 25}` borne
+la passe commune de ParuVendu (rang de départ tournant chaque jour).
 Le relevé ne filtre pas le prix (un ancien `maxPrice` est ignoré) : le budget se règle
 avec le curseur de l'app, dont la position la plus à droite veut dire « sans limite ».
 
@@ -39,8 +41,9 @@ avec le curseur de l'app, dont la position la plus à droite veut dire « sans l
 `k8s/terrain/cronjob.yaml`, chaque matin à 6 h 30 : `k8s/terrain/refresh/refresh.py`
 interroge chaque source (`src_<nom>.py`, liste dans `TERRAIN_SOURCES` : Bien'ici, immobilier.notaires.fr, ParuVendu), garde les
 annonces de la zone de recherche, et met à jour `market.json`. La zone, ce sont les
-communes de `communes.json` **et** les autres communes des mêmes départements dont le
-centre tombe dans l'emprise de `grid.json` (geo.api.gouv.fr) : une commune voisine
+communes de `communes.json` **et** toutes les autres communes, quel que soit leur
+département, dont le centre tombe dans la zone de `grid.json` — son emprise, à moins
+d'une cellule d'un point `reach` (geo.api.gouv.fr) : une commune voisine
 laissée hors de l'étude ne fait plus disparaître ses annonces. Les codes INSEE de
 communes déléguées (communes nouvelles) sont ramenés à la commune actuelle ; une
 annonce sans code est rattachée par son nom, ou par la commune la plus proche de son
@@ -78,8 +81,8 @@ appartenir (`chown 101:101 /data` depuis le pod temporaire ci-dessous, une fois)
 
 `k8s/terrain/communes.yaml`, le dimanche à 3 h 15 : `k8s/terrain/communes/build.py`
 recalcule **toutes** les fiches de la zone — les communes de `communes.json` et les
-autres communes des mêmes départements dont le centre est dans l'emprise de
-`grid.json` (la règle du relevé des annonces) — et réécrit `communes.json`, ainsi que,
+autres communes dont le centre est dans la zone de `grid.json` (la règle du relevé
+des annonces ; les départements suivent la grille) — et réécrit `communes.json`, ainsi que,
 pour les mêmes communes, `schools.json`, `creches.json` et `train.json`. Une commune
 voisine devient une commune comme les autres : score, classement, zone verte, fiche.
 
@@ -191,6 +194,38 @@ sur les 229 communes, les temps recalculés tombent à la minute près sur ceux
 de l'artefact. Les contours de parcelles (`ring`) viennent d'apicarto.ign.fr.
 L'artefact ne gardait que les 8 annonces mises en avant, pas les 53 du relevé
 du 28 octobre ; leur position sur la carte est celle du bourg.
+
+## Grille de trajets
+
+`grid.json` est recalculée au début de chaque passage hebdomadaire
+(`k8s/terrain/communes/m_grid.py`) : mêmes cellules (~1,5 km), même méthode (OSRM
+sans trafic, IGN RGE ALTI), et une emprise **taillée automatiquement** pour
+qu'aucune ligne de trajet ne bute sur le bord. Règle : sur chaque côté, les deux
+rangées du bord doivent être hors d'atteinte pour tous les critères, curseurs au
+maximum (ceux de `index.html` : travail 90 min en voiture / 120 en train, ville 120 / 120,
+famille 1 90, famille 2 120, Part-Dieu / Perrache 120) et heure de pointe au minimum
+(× 1, les lignes les plus loin) : voiture vers chaque lieu, tout en voiture vers les
+gares de Lyon, et les trajets voiture / marche / vélo + train comme l'app. Tant qu'un
+côté a un point atteignable, il gagne 3 cellules, puis on teste à nouveau ; les
+points existants ne bougent pas (cellules entières), leurs temps restent en cache.
+
+Garde-fous : chaque côté s'arrête à 100 km du centre des lieux de `config.json`
+(une ligne qui irait plus loin est alors fermée par l'app au bord de la grille), et
+un passage n'ajoute pas plus de 8 000 cellules (le serveur OSRM de démonstration
+limite le débit : ~1 requête/s) ; la croissance reprend la semaine suivante, ou au
+passage lancé à la main. `config.json` peut régler `"grid": {"maxKm": 100,
+"maxNew": 8000, "limits": {…}}`. La grille ne rétrécit jamais ; `grid.json.auto` dit
+de combien chaque côté a grandi et lesquels sont au plafond.
+
+`reach` marque les points où famille 1 et famille 2 (toujours dans la zone verte)
+tiennent aux curseurs au maximum : hors de là, aucune commune ne peut être dans la
+zone verte. Fiches communes et relevé des annonces suivent cette zone (à une
+cellule près), donc de nouveaux départements quand la grille les atteint.
+
+`train.json` et `creches.json` sont recalculés dans le même passage, sur la même
+grille, et écrits avant `grid.json` ; si l'un des deux manque, l'ancienne grille est
+gardée. L'app ignore un `train.json` ou un `creches.json` dont les tableaux n'ont pas
+la taille de la grille.
 
 ## Trajets domicile-travail
 
