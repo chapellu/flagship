@@ -399,19 +399,45 @@ function drawCommunes(rows) {
     c._m = m;
   }
 }
-function communePopup(c) {
+// Pourquoi une commune n'est pas dans la zone verte : seuils non tenus
+function zoneWhy(c) {
+  const I = S.iso, w = [];
+  if (c.wt > I.work) w.push(`${workShort()} ${c.wt} min > ${I.work}`);
+  if (c.famA > I.famA) w.push(`${place("famA").short} ${c.famA} min > ${I.famA}`);
+  if (c.famB > I.famB) w.push(`${place("famB").short} ${c.famB} min > ${I.famB}`);
+  if (c.alt < I.alt) w.push(`altitude ${c.alt} m < ${I.alt} m`);
+  return w;
+}
+// Fiche d'une commune : popup de la commune, et rappelée dans chaque annonce
+// (la commune peut être hors zone verte ou exclue, donc absente de la carte).
+function communeBody(c) {
   const hw = Math.round(c.wt * 2 * S.days / 6) / 10;
   const live = ALLADS.filter((a) => a.insee === c.code && !a.gone).length;
-  return `<div class="pop"><h3>${esc(c.nom)}</h3><div class="sub">${esc(c.sect)} · ${c.alt} m</div>
-  <dl><dt>Score</dt><dd>${c.score}${S.profile === "mix" ? ` (${esc(CFG.people[0])} ${c.sA} · ${esc(CFG.people[1])} ${c.sB})` : ""}</dd>
+  const zw = c.zone ? [] : zoneWhy(c);
+  return `<dl><dt>Score</dt><dd>${c.score}${S.profile === "mix" ? ` (${esc(CFG.people[0])} ${c.sA} · ${esc(CFG.people[1])} ${c.sB})` : ""}</dd>
+  <dt>Altitude</dt><dd>${c.alt} m</dd>
   <dt>${esc(workShort())}</dt><dd>${c.wt} min · ${esc(c.wmode)} · ${hw} h/sem.</dd>
   <dt>${esc(place("famA").short)}</dt><dd>${c.famA} min</dd><dt>${esc(place("famB").short)}</dt><dd>${c.famB} min</dd>
-  <dt>Terrain médian</dt><dd>${fmtk(c.prix)}${c.eurm2 ? ` · ${c.eurm2} €/m²` : ""}</dd>
+  <dt>Train</dt><dd>${c.train != null ? `${c.train} min${c.gare ? " · " + esc(c.gare) : ""}` : "pas de gare proche"}</dd>
+  <dt>Terrain médian</dt><dd>${fmtk(c.prix)}${c.eurm2 ? ` · ${c.eurm2} €/m²` : ""}${c.nv != null ? ` · ${c.nv} ventes` : ""}</dd>
   ${live ? `<dt>Annonces</dt><dd>${live} en ligne</dd>` : ""}
   <dt>Fibre</dt><dd>${c.fibre ?? "–"} %</dd></dl>
   ${schoolHTML(c)}
-  ${c.why.length ? `<div class="sub">Exclue : ${esc(c.why.join(", "))}</div>` : ""}
+  <div class="sub">${c.zone ? '<span class="chip g">zone verte</span>' : `<span class="chip">hors zone verte</span> ${esc(zw.join(" · "))}`}</div>
+  ${c.why.length ? `<div class="sub"><span class="chip wa">exclue du classement</span> ${esc(c.why.join(", "))}</div>` : ""}`;
+}
+function communePopup(c) {
+  return `<div class="pop"><h3>${esc(c.nom)}</h3><div class="sub">${esc(c.sect)} · ${c.alt} m</div>
+  ${communeBody(c)}
   <div class="act"><button type="button" onclick="window.__goRow('${c.code}')">Voir dans le classement</button></div></div>`;
+}
+// Résumé de la commune dans la fiche d'une annonce, détail dépliable
+function communeInAd(a) {
+  const c = C.find((x) => x.code === a.insee);
+  if (!c) return a.insee ? `<div class="sub">Commune hors de l'étude : pas de données.</div>` : "";
+  const sc = `<span class="score" style="background:${colFor(c.score)};color:${c.score > (cuts[2] || 0) ? "var(--bg)" : "var(--ink)"}">${c.score}</span>`;
+  return `<details class="school commune-in-ad"><summary>${sc} ${esc(c.nom)} · ${c.alt} m · ${esc(workShort())} ${c.wt} min${c.zone ? "" : " · hors zone"}${c.why.length ? " · exclue" : ""}</summary>
+    ${communeBody(c)}<div class="act"><button type="button" onclick="window.__goRow('${c.code}')">Voir dans le classement</button></div></details>`;
 }
 
 // ---- écoles (schools.json). Pas de classement officiel des écoles primaires :
@@ -501,6 +527,7 @@ function adPopup(a) {
   return `<div class="pop"><span class="tag ad">Annonce${a.top ? " mise en avant" : ""}</span>${a.photo ? `<img src="${esc(a.photo)}" alt="">` : ""}<h3>${esc(a.commune)} · ${fmtk(a.prix)}</h3>
   <div class="sub">${a.m2} m² · ${a.eurm2} €/m²${a.vendeur ? " · " + esc(a.vendeur) : ""}${a.top ? " · " + esc(a.top) : ""}</div>
   ${constrBadge(a)}${priceBadge(a)}${marketLine(a)}${a.analyse ? `<p>${esc(a.analyse)}</p>` : ""}
+  ${communeInAd(a)}
   ${a.lat ? routeAct(a.lat, a.lon, a.pos) : ""}
   <div class="act"><a class="go" href="${esc(a.url)}" target="_blank" rel="noopener">Voir l'annonce ↗</a><button type="button" onclick="window.__goAd('${esc(a.id)}')">Dans la liste</button>
   ${a.lat ? `<a href="${cadastreUrl(a.lat, a.lon)}" target="_blank" rel="noopener">Cadastre ↗</a>` : ""}</div></div>`;
@@ -678,7 +705,7 @@ function renderMapList() {
 }
 
 // ---- tableau
-let sortK = "score", sortDir = -1, showAll = false;
+let sortK = "score", sortDir = -1, showAll = false, forceRow = null; // forceRow : commune exclue demandée depuis une fiche
 function renderTable(rows) {
   const mix = S.profile === "mix";
   const cols = [
@@ -691,7 +718,7 @@ function renderTable(rows) {
   thead.onclick = (e) => { const th = e.target.closest("th"); if (!th) return; const k = th.dataset.k; if (k === sortK) sortDir = -sortDir; else { sortK = k; sortDir = ["nom", "wt", "famA", "famB", "train", "prix", "colkm"].includes(k) ? 1 : -1; } render(); };
   const val = { gap: (c) => Math.abs(c.sA - c.sB), risk: (c) => c.inond + 3 * c.sech, train: (c) => c.train ?? 999, prix: (c) => c.prix ?? 9e9, colkm: (c) => c.colkm ?? 99 };
   const v = val[sortK] || ((c) => c[sortK]);
-  let r = rows.filter((c) => !c.why.length).sort((a, b) => (typeof v(a) === "string" ? v(a).localeCompare(v(b)) : v(a) - v(b)) * sortDir);
+  let r = rows.filter((c) => !c.why.length || c.code === forceRow).sort((a, b) => (typeof v(a) === "string" ? v(a).localeCompare(v(b)) : v(a) - v(b)) * sortDir);
   const total = r.length;
   $("count").textContent = `${total} communes retenues sur ${C.length}. Cliquez un en-tête pour trier, une ligne pour la voir sur la carte.`;
   if (!showAll) r = r.slice(0, 30);
@@ -706,7 +733,7 @@ function renderTable(rows) {
     if (c.feu) ch.push(`<span class="chip b">feux</span>`);
     if (c.indus) ch.push(`<span class="chip b">site indus.</span>`);
     if (!ch.length) ch.push(`<span class="chip g">peu</span>`);
-    return `<tr data-code="${c.code}">
+    return `<tr data-code="${c.code}"${c.why.length ? ' class="out"' : ""}>
       <td><span class="score" style="background:${colFor(c.score)};color:${c.score > (cuts[2] || 0) ? "var(--bg)" : "var(--ink)"}">${c.score}</span>${c.zone ? '<span class="sub">zone verte</span>' : ""}</td>
       ${mix ? `<td class="num">${Math.abs(c.sA - c.sB)}<span class="sub">${esc(CFG.people[0])} ${c.sA} · ${esc(CFG.people[1])} ${c.sB}</span></td>` : ""}
       <td><strong>${esc(c.nom)}</strong><span class="sub">${esc(c.sect)}</span></td>
@@ -732,7 +759,12 @@ function schoolBrief(c) {
 function flash(sel) { requestAnimationFrame(() => { const el = document.querySelector(sel); if (el) { el.scrollIntoView({ block: "center" }); el.classList.add("sel"); setTimeout(() => el.classList.remove("sel"), 2000); } }); }
 window.__goParcel = (id) => { pkind = "tout"; renderParcels(); showTab("parcelles"); flash(`#plist [data-pid="${CSS.escape(id)}"]`); };
 window.__goAd = (id) => { showTab("annonces"); const a = ALLADS.find((x) => x.id === id); if (a && (a.gone || a.stale)) $("a-gone").checked = true; renderAds(); flash(`#atop [data-aid="${CSS.escape(id)}"], #atbl tr[data-aid="${CSS.escape(id)}"]`); };
-window.__goRow = (code) => { showTab("classement"); requestAnimationFrame(() => { const tr = document.querySelector(`#tbl tr[data-code="${code}"]`); if (tr) { tr.scrollIntoView({ block: "center" }); tr.classList.add("sel"); setTimeout(() => tr.classList.remove("sel"), 2000); } }); };
+window.__goRow = (code) => {
+  const c0 = C.find((x) => x.code === code);
+  if (c0 && c0.why.length) { forceRow = code; showAll = true; doRender(); } // commune exclue : sinon sa ligne n'existe pas
+  showTab("classement");
+  requestAnimationFrame(() => { const tr = document.querySelector(`#tbl tr[data-code="${code}"]`); if (tr) { tr.scrollIntoView({ block: "center" }); tr.classList.add("sel"); setTimeout(() => tr.classList.remove("sel"), 2000); } });
+};
 window.__goMap = (code) => {
   const c = C.find((x) => x.code === code);
   if (!c.zone && !S.show.outside) { S.show.outside = true; syncToggles(); doRender(); } // commune hors zone : on l'affiche
