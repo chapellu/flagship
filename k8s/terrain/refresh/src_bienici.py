@@ -3,8 +3,9 @@
 Zone : les départements des communes de la zone (refresh.zone_communes, qui
 suit la grille de trajets), traduits en identifiants de zone Bien'ici par leur
 moteur de suggestion (res.bienici.com/suggest.json?q=<nom du département> : les
-entrées de type « department » dont le code INSEE est celui du département ; le
-Rhône y est coupé en 69D et 69M, Métropole de Lyon). search.bienici.zoneIds dans
+entrées de type « department » dont le code INSEE est celui du département, ou
+ce code suivi d'une lettre quand le site coupe un département en deux).
+search.bienici.zoneIds dans
 config.json s'y ajoute (facultatif) ; si un département ne se traduit pas, le
 relevé est incomplet (rien n'est marqué parti).
 Chaque annonce porte son code INSEE (district.insee_code), parfois celui d'une
@@ -19,6 +20,7 @@ from refresh import http_json, is_constructeur
 
 NAME = "bienici"
 PAGE = 100
+WINDOW = 2500  # from + size au plus, au-delà : HTTP 400
 VENDEUR = {"mandatary": "mandataire", "agency": "agence", "private": "particulier", "builder": "constructeur"}
 
 
@@ -28,7 +30,7 @@ def dep_zones(dep):
     ids = set()
     for e in http_json("https://res.bienici.com/suggest.json?" + urllib.parse.urlencode({"q": nom})):
         codes = e.get("insee_codes") or [e.get("insee_code")]
-        # « 69D », « 69M » : les deux moitiés du Rhône ; pas « 013 » pour « 01 »
+        # code suivi d'une lettre : moitié d'un département coupé en deux ; pas « 013 » pour « 01 »
         if (e.get("type") or "").endswith("department") and codes and all(
                 c and c.startswith(dep) and not c[len(dep):].isdigit() for c in codes):
             ids.update(e.get("zoneIds") or [])
@@ -38,11 +40,14 @@ def dep_zones(dep):
 def fetch(search, communes):
     zone, complete_zone = set((search.get("bienici") or {}).get("zoneIds") or []), True
     for dep in sorted({c[:2] for c in communes}):
-        try:
-            ids = dep_zones(dep)
-        except Exception as e:  # suggestion indisponible : la zone configurée seule
-            print(f"bienici {dep}: zone introuvable ({type(e).__name__}: {e})")
-            ids = set()
+        ids = set()
+        for essai in range(3):
+            try:
+                ids = dep_zones(dep)
+                break
+            except Exception as e:  # suggestion indisponible : nouvel essai, puis la zone configurée seule
+                print(f"bienici {dep}: zone introuvable ({type(e).__name__}: {e})")
+                time.sleep(5 * (essai + 1))
         if not ids:
             complete_zone = False
         zone |= ids
@@ -51,22 +56,29 @@ def fetch(search, communes):
         raise ValueError("aucune zone Bien'ici (départements introuvables, config.search.bienici.zoneIds vide)")
     zone = sorted(zone)
     print(f"bienici : {len(zone)} zones")
-    flt = {
-        "size": PAGE, "from": 0, "filterType": "buy", "propertyType": ["terrain"],
-        "sortBy": "publicationDate", "sortOrder": "desc", "onTheMarket": [True],
-        "zoneIdsByTypes": {"zoneIds": zone},
-    }
-    out, total = [], None
-    while total is None or flt["from"] < total:
-        d = http_json("https://www.bienici.com/realEstateAds.json?filters=" + urllib.parse.quote(json.dumps(flt)))
-        total = d.get("total", 0)
-        page = d.get("realEstateAds") or []
-        if not page:
-            break
-        out += page
-        flt["from"] += PAGE
-        time.sleep(1.5)
-    complete = complete_zone and total is not None and len({a["id"] for a in out}) >= 0.97 * total
+    # une zone à la fois : le site ne pagine pas au-delà de WINDOW résultats par recherche
+    seen, complete = {}, complete_zone
+    for z in zone:
+        flt = {
+            "size": PAGE, "from": 0, "filterType": "buy", "propertyType": ["terrain"],
+            "sortBy": "publicationDate", "sortOrder": "desc", "onTheMarket": [True],
+            "zoneIdsByTypes": {"zoneIds": [z]},
+        }
+        n, total = 0, None
+        while (total is None or flt["from"] < total) and flt["from"] + PAGE <= WINDOW:
+            d = http_json("https://www.bienici.com/realEstateAds.json?filters=" + urllib.parse.quote(json.dumps(flt)))
+            total = d.get("total", 0)
+            page = d.get("realEstateAds") or []
+            time.sleep(1.5)
+            if not page:
+                break
+            n += len(page)
+            seen.update((a["id"], a) for a in page)
+            flt["from"] += PAGE
+        if total is None or n < 0.97 * total:
+            print(f"bienici {z}: {n} annonces lues sur {total}")
+            complete = False
+    out = list(seen.values())
     ads = []
     for a in out:
         # programmes neufs : prix et surfaces en fourchette [min, max] → « à partir de », plus grand lot
