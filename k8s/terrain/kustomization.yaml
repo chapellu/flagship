@@ -9,6 +9,7 @@ resources:
   - securitypolicy.yaml
   - referencegrant.yaml
   - cronjob.yaml
+  - communes.yaml
   - mailin.yaml
   - mailin.enc.yaml
 # Le code du relevé quotidien, monté dans le CronJob. Le suffixe de hash fait
@@ -26,3 +27,22 @@ configMapGenerator:
       - refresh/src_notaires.py
       - refresh/src_paruvendu.py
       - refresh/src_alertes.py
+  # Le générateur hebdomadaire des fiches communes (communes.yaml).
+  - name: terrain-communes
+    namespace: terrain
+    options:
+      annotations:
+        kustomize.toolkit.fluxcd.io/substitute: disabled
+    files:
+      - communes/build.py
+      - communes/lib.py
+      - communes/m_bpe.py
+      - communes/m_creches.py
+      - communes/m_dvf.py
+      - communes/m_eau.py
+      - communes/m_ecoles.py
+      - communes/m_fibre.py
+      - communes/m_geo.py
+      - communes/m_risques.py
+      - communes/m_train.py
+      - communes/m_voiture.py
