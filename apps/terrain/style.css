@@ -202,6 +202,7 @@ td .gap{font:12px var(--f-data);color:var(--warn)}
 /* barre « afficher » de la carte */
 .maptoggles{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:13px;margin-bottom:8px}
 .maptoggles .chk{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.gmark{display:inline-block;width:10px;height:10px;border-radius:50%;background:#3b3f99;border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.4)}
 .maptoggles .cnt{color:var(--muted,#888);font-size:12px;margin-left:-2px}
 /* popups : étiquette de type et liens rapides */
 .pop .tag{display:inline-block;font:500 10.5px/1 var(--f-data);text-transform:uppercase;letter-spacing:.05em;padding:4px 6px;border-radius:4px;margin-bottom:6px;background:#fff3c2;color:#6b5200}
