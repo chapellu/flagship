@@ -2,7 +2,9 @@
 
 Zone : search.bienici.zoneIds dans config.json (identifiants de département
 Bien'ici, ex. « -4850451 » pour le Rhône ; voir res.bienici.com/suggest.json).
-Chaque annonce porte son code INSEE (district.insee_code).
+Chaque annonce porte son code INSEE (district.insee_code), parfois celui d'une
+commune déléguée, parfois aucun (code postal seul) : refresh.locate s'en charge.
+Pas de filtre de prix : tout le marché de la zone est relevé.
 """
 import json
 import time
@@ -22,7 +24,6 @@ def fetch(search, communes):
     flt = {
         "size": PAGE, "from": 0, "filterType": "buy", "propertyType": ["terrain"],
         "sortBy": "publicationDate", "sortOrder": "desc", "onTheMarket": [True],
-        "maxPrice": search.get("maxPrice", 250000),
         "zoneIdsByTypes": {"zoneIds": zone},
     }
     out, total = [], None
@@ -38,6 +39,10 @@ def fetch(search, communes):
     complete = total is not None and len({a["id"] for a in out}) >= 0.97 * total
     ads = []
     for a in out:
+        # programmes neufs : prix et surfaces en fourchette [min, max] → « à partir de », plus grand lot
+        prix, m2 = a.get("price"), a.get("landSurfaceArea") or a.get("surfaceArea")
+        prix = min(prix) if isinstance(prix, list) and prix else prix
+        m2 = max(m2) if isinstance(m2, list) and m2 else m2
         dist = a.get("district") or {}
         insee = dist.get("insee_code") or dist.get("code_insee")
         blur = a.get("blurInfo") or {}
@@ -49,7 +54,7 @@ def fetch(search, communes):
             "id": "bienici:" + a["id"], "src": NAME, "url": "https://www.bienici.com/annonce/" + a["id"],
             "insee": insee, "commune": a.get("city"), "lat": pos.get("lat"), "lon": pos.get("lon"),
             "pos": {"exact": "exact", "disk": "approx"}.get(blur.get("type"), "commune"),
-            "prix": a.get("price"), "m2": a.get("landSurfaceArea") or a.get("surfaceArea"),
+            "prix": prix or None, "m2": m2 or None,
             "titre": a.get("title"), "desc": a.get("description"),
             "vendeur": a.get("accountDisplayName") if a.get("accountType") == "agency" else VENDEUR.get(a.get("accountType"), a.get("accountType")),
             "constructeur": a.get("propertyType") == "programme" or is_constructeur(a.get("title"), a.get("description")),

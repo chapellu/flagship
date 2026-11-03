@@ -3,15 +3,19 @@
 
 Tourne dans le CronJob terrain-refresh (k8s/terrain/cronjob.yaml), sur le
 volume terrain-data. Ce fichier est public : il ne contient aucun lieu. La zone
-de recherche vient de data/config.json (bloc "search") et de communes.json
-(seules les annonces situées dans ces communes sont gardées).
+de recherche vient de data/config.json (bloc "search"), de communes.json et de
+grid.json : on garde les annonces des communes de communes.json et de toutes
+les communes des mêmes départements dont le centre tombe dans l'emprise de la
+grille de trajets (voir zone_communes). Le prix n'est pas filtré ici : le
+budget se règle dans l'app.
 
 Chaque source est un module src_<nom>.py qui expose :
 
     NAME = "bienici"
     def fetch(search: dict, communes: dict[str, dict]) -> tuple[list[dict], bool]
 
-`communes` est indexé par code INSEE. `fetch` renvoie les annonces normalisées
+`communes` est indexé par code INSEE : communes.json et les communes voisines
+de la zone (voir zone_communes). `fetch` renvoie les annonces normalisées
 (voir AD_FIELDS) et un booléen « relevé complet ». Si le relevé n'est pas
 complet (erreur réseau, pagination interrompue…), les annonces absentes ne sont
 PAS marquées comme parties : on ne veut pas inventer des ventes.
@@ -21,6 +25,7 @@ Bibliothèque standard seulement : l'image est un python:alpine nu.
 import datetime as dt
 import importlib
 import json
+import math
 import os
 import re
 import sys
@@ -185,6 +190,77 @@ def zones(market, budget=400):
         print(f"plu : {n} zones interrogées")
 
 
+# ---------------------------------------------------------------- zone de recherche
+GEO = "https://geo.api.gouv.fr"
+
+
+def in_grid(grid, lat, lon):
+    """Le point est-il dans l'emprise de grid.json (là où l'app calcule les trajets) ?"""
+    if not grid or lat is None or lon is None:
+        return False
+    return (grid["lon0"] <= lon <= grid["lon0"] + grid["dlon"] * (grid["nx"] - 1)
+            and grid["lat0"] <= lat <= grid["lat0"] + grid["dlat"] * (grid["ny"] - 1))
+
+
+def zone_communes(communes, grid):
+    """Zone de recherche : communes.json, plus les autres communes des mêmes
+    départements dont le centre est dans l'emprise de la grille (communes
+    limitrophes laissées hors de l'étude, communes trop chères pour le
+    classement…). Une annonce n'y est jamais perdue faute d'être dans
+    communes.json ; l'app la montre avec la zone verte calculée sur la grille.
+
+    Renvoie (communes, alias, ok) : alias associe le code INSEE d'une commune
+    déléguée (ancienne commune fusionnée, que certains sites donnent encore) à
+    celui de la commune actuelle. Si geo.api.gouv.fr ne répond pas, on se
+    contente de communes.json et ok est faux : le relevé du jour ne doit alors
+    marquer aucune annonce partie (celles des communes voisines manqueraient)."""
+    zone, alias, ok = dict(communes), {}, True
+    for dep in sorted({c[:2] for c in communes}):
+        try:
+            geo = http_json(f"{GEO}/communes?" + urllib.parse.urlencode(
+                {"codeDepartement": dep, "fields": "code,nom,centre", "format": "json"}))
+            dele = http_json(f"{GEO}/communes_associees_deleguees?" + urllib.parse.urlencode(
+                {"codeDepartement": dep, "fields": "code,chefLieu", "format": "json"}))
+        except Exception as e:
+            print(f"zone {dep}: geo.api.gouv.fr indisponible ({type(e).__name__}: {e}), communes.json seul")
+            ok = False
+            continue
+        for g in geo:
+            lon, lat = ((g.get("centre") or {}).get("coordinates") or (None, None))
+            if g["code"] not in zone and in_grid(grid, lat, lon):
+                zone[g["code"]] = {"nom": g["nom"], "lat": round(lat, 4), "lon": round(lon, 4)}
+        alias.update({d["code"]: d["chefLieu"] for d in dele if d.get("chefLieu")})
+    alias = {k: v for k, v in alias.items() if v in zone and k not in zone}
+    print(f"zone : {len(communes)} communes étudiées + {len(zone) - len(communes)} voisines dans l'emprise de la grille")
+    return zone, alias, ok
+
+
+def locate(ads, zone, alias, grid):
+    """Rattache chaque annonce à une commune de la zone, ou la laisse hors zone
+    (insee None) : code de commune déléguée → commune actuelle ; code inconnu →
+    nom de la commune dans le même département ; pas de code du tout (certaines
+    annonces ne donnent qu'un code postal) → commune la plus proche du point,
+    s'il est dans la grille. Sans coordonnées, l'annonce prend le centre de sa commune."""
+    by_name = {}
+    for code, c in zone.items():
+        by_name.setdefault((norm(c["nom"]), code[:2]), code)
+    for a in ads:
+        insee = alias.get(a.get("insee"), a.get("insee"))
+        if insee not in zone and a.get("commune"):
+            deps = [insee[:2]] if insee else sorted({c[:2] for c in zone})
+            insee = next((by_name[k] for k in ((norm(a["commune"]), d) for d in deps) if k in by_name), insee)
+        if insee not in zone and not insee and in_grid(grid, a.get("lat"), a.get("lon")):
+            k = math.cos(math.radians(a["lat"]))
+            insee = min(zone, key=lambda c: (zone[c]["lat"] - a["lat"]) ** 2 + ((zone[c]["lon"] - a["lon"]) * k) ** 2)
+        a["insee"] = insee if insee in zone else None
+        if a["insee"] and a.get("lat") is None:
+            c = zone[a["insee"]]
+            a.update(lat=c["lat"], lon=c["lon"], pos="commune")
+        if a["insee"] and not a.get("commune"):
+            a["commune"] = zone[a["insee"]]["nom"]
+    return ads
+
+
 def dedupe(market):
     """Une même parcelle sur deux sites : même commune, même surface (±2 %),
     prix à ±3 %. On garde la plus ancienne et on note les autres en doublon."""
@@ -213,6 +289,8 @@ def main():
         sys.exit("communes.json absent : rien à relever")
     i_code, i_nom, i_lat, i_lon = (cfg["fields"].index(f) for f in ("code", "nom", "lat", "lon"))
     communes = {r[i_code]: {"nom": r[i_nom], "lat": r[i_lat], "lon": r[i_lon]} for r in com["c"]}
+    grid = load("grid.json", None)
+    zone, alias, zone_ok = zone_communes(communes, grid)
 
     day = today()
     market = load("market.json", {"ads": {}, "runs": []})
@@ -220,9 +298,14 @@ def main():
     for name in SOURCES:
         try:
             mod = importlib.import_module("src_" + name)
-            ads, complete = mod.fetch(search, communes)
+            ads, complete = mod.fetch(search, zone)
+            complete = complete and zone_ok
+            ads = locate(ads, zone, alias, grid)
+            hors = sum(1 for a in ads if not a["insee"])
             # surface inconnue (certaines alertes e-mail) : gardée, l'app l'affiche « – »
-            ads = [a for a in ads if a.get("insee") in communes and (a.get("m2") is None or a["m2"] >= search.get("minM2", 0))]
+            ads = [a for a in ads if a["insee"] and (a.get("m2") is None or a["m2"] >= search.get("minM2", 0))]
+            if hors:
+                print(f"{name}: {hors} annonces hors zone ignorées")
             gone = merge(market, name, ads, complete, day)
             run["sources"][name] = {"ok": True, "complete": complete, "n": len(ads), "gone": gone}
             print(f"{name}: {len(ads)} annonces dans la zone, complet={complete}, parties={gone}")

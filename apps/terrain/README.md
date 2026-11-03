@@ -27,14 +27,23 @@ lit en `fetch` :
 | `market.json` | relevé quotidien des annonces et leur historique (première/dernière vue, prix, départ) ; écrit par le CronJob `terrain-refresh` |
 
 `config.json` porte aussi le bloc `search` lu par le relevé :
-`{"maxPrice": 250000, "minM2": 300, "bienici": {"zoneIds": ["-4850451", "-4850450", "-7420"]}}`
+`{"minM2": 300, "bienici": {"zoneIds": ["-4850451", "-4850450", "-7420"]}}`
 (identifiants Bien'ici des départements, via `res.bienici.com/suggest.json?q=Rhône`).
+Le relevé ne filtre pas le prix (un ancien `maxPrice` est ignoré) : le budget se règle
+avec le curseur de l'app, dont la position la plus à droite veut dire « sans limite ».
 
 ## Relevé quotidien des annonces
 
 `k8s/terrain/cronjob.yaml`, chaque matin à 6 h 30 : `k8s/terrain/refresh/refresh.py`
 interroge chaque source (`src_<nom>.py`, liste dans `TERRAIN_SOURCES` : Bien'ici, immobilier.notaires.fr, ParuVendu), garde les
-annonces des communes de `communes.json`, et met à jour `market.json`. Une annonce
+annonces de la zone de recherche, et met à jour `market.json`. La zone, ce sont les
+communes de `communes.json` **et** les autres communes des mêmes départements dont le
+centre tombe dans l'emprise de `grid.json` (geo.api.gouv.fr) : une commune voisine
+laissée hors de l'étude ne fait plus disparaître ses annonces. Les codes INSEE de
+communes déléguées (communes nouvelles) sont ramenés à la commune actuelle ; une
+annonce sans code est rattachée par son nom, ou par la commune la plus proche de son
+point. Dans l'app, ces annonces de communes voisines n'ont ni score ni fiche ; leur
+zone verte est lue sur la grille de trajets, au point de l'annonce. Une annonce
 absente d'un relevé **complet** est notée partie ce jour-là ; un relevé incomplet ne
 marque rien. Les doublons entre sites (même commune, surface et prix à quelques %
 près) sont fusionnés. L'onglet Annonces en tire « Le marché » : nouvelles, baisses de

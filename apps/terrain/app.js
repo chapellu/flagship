@@ -226,6 +226,9 @@ function scoreWith(s, c, prof) {
   const tot = WKEYS.reduce((a, k) => a + w[k], 0) || 1;
   return Math.round(100 * WKEYS.reduce((a, k) => a + w[k] * (k === "famille" ? fam : s[k]), 0) / tot);
 }
+// Curseur de prix : tout à droite, pas de limite (le relevé garde toutes les annonces, quel que soit le prix).
+const pxMax = () => (S.f.prix >= +$("f-prix").max ? Infinity : S.f.prix * 1000);
+const pxTxt = () => (pxMax() === Infinity ? "sans limite" : S.f.prix + " k");
 function inZone(c, wt) {
   return wt <= S.iso.work && c.famA <= S.iso.famA && c.famB <= S.iso.famB && c.alt >= S.iso.alt;
 }
@@ -242,7 +245,7 @@ function compute() {
     if (S.f.fibre && (c.fibre ?? 0) < 80) why.push("fibre < 80 %");
     if (S.f.ecole && c.cl25 < 2) why.push("pas d'école");
     if (c.nv < 2) why.push("trop peu de ventes");
-    else if (c.prix > S.f.prix * 1000) why.push("terrain trop cher");
+    else if (c.prix > pxMax()) why.push("terrain trop cher");
     if (S.f.zone && !c.zone) why.push("hors zone verte");
     c.why = why;
   }
@@ -363,17 +366,20 @@ function contour(values, thr) {
   return toGeo(d3.contours().size([nx, ny]).smooth(true).thresholds([thr])(values)[0]);
 }
 let gridCache = null;
+const gridGet = (k, i) => (GRID[k][i] == null ? 999 : GRID[k][i]);
+const gridWork = (i) => (crecheMode() ? CRECHE.grid[i] ?? 999 : gridGet("work", i) * S.iso.rush);
+// valeur combinée au point i : le pire des quatre rapports « valeur / seuil » ; la zone est là où il vaut ≤ 1
+function gridRatio(i) {
+  const I = S.iso;
+  const m = Math.max(gridWork(i) / I.work, gridGet("famA", i) / I.famA, gridGet("famB", i) / I.famB);
+  return I.alt > 0 ? Math.max(m, I.alt / Math.max(1, GRID.alt[i])) : m;
+}
 function drawIso() {
   const n = GRID.nx * GRID.ny, I = S.iso;
-  const big = 999;
-  const get = (k, i) => (GRID[k][i] == null ? big : GRID[k][i]);
-  // valeur combinée : le pire des quatre rapports « valeur / seuil » ; la zone est là où il vaut ≤ 1
   const comb = new Float64Array(n), w = new Float64Array(n), a = new Float64Array(n), b = new Float64Array(n);
   for (let i = 0; i < n; i++) {
-    w[i] = crecheMode() ? -(CRECHE.grid[i] ?? big) : -get("work", i) * I.rush; a[i] = -get("famA", i); b[i] = -get("famB", i);
-    let m = Math.max(-w[i] / I.work, -a[i] / I.famA, -b[i] / I.famB);
-    if (I.alt > 0) m = Math.max(m, I.alt / Math.max(1, GRID.alt[i]));
-    comb[i] = -m;
+    w[i] = -gridWork(i); a[i] = -gridGet("famA", i); b[i] = -gridGet("famB", i);
+    comb[i] = -gridRatio(i);
   }
   layers.zone.clearLayers(); layers.iso.clearLayers();
   L.geoJSON(contour(comb, -1), { style: { color: css("--zone"), weight: 1.5, fillColor: css("--zone"), fillOpacity: 0.22 }, interactive: false }).addTo(layers.zone);
@@ -435,7 +441,7 @@ function communePopup(c) {
 // Résumé de la commune dans la fiche d'une annonce, détail dépliable
 function communeInAd(a) {
   const c = C.find((x) => x.code === a.insee);
-  if (!c) return a.insee ? `<div class="sub">Commune hors de l'étude : pas de données.</div>` : "";
+  if (!c) return a.insee ? `<div class="sub">Commune voisine, hors de l'étude : pas de fiche. ${adInZone(a) ? "Dans la zone verte" : "Hors zone verte"} d'après la grille de trajets.</div>` : "";
   const sc = `<span class="score" style="background:${colFor(c.score)};color:${c.score > (cuts[2] || 0) ? "var(--bg)" : "var(--ink)"}">${c.score}</span>`;
   return `<details class="school commune-in-ad"><summary>${sc} ${esc(c.nom)} · ${c.alt} m · ${esc(workShort())} ${c.wt} min${c.zone ? "" : " · hors zone"}${c.why.length ? " · exclue" : ""}</summary>
     ${communeBody(c)}<div class="act"><button type="button" onclick="window.__goRow('${c.code}')">Voir dans le classement</button></div></details>`;
@@ -808,7 +814,7 @@ function doRender() {
   for (const k of ["work", "famA", "famB"]) document.querySelector(`output[for=i-${k}]`).textContent = S.iso[k] + " min";
   document.querySelector("output[for=i-alt]").textContent = S.iso.alt + " m";
   document.querySelector("output[for=i-rush]").textContent = "×" + S.iso.rush.toFixed(2).replace(/0$/, "");
-  for (const id of ["f-prix", "a-prix"]) { $(id).value = S.f.prix; document.querySelector(`output[for=${id}]`).textContent = S.f.prix + " k"; }
+  for (const id of ["f-prix", "a-prix"]) { $(id).value = S.f.prix; document.querySelector(`output[for=${id}]`).textContent = pxTxt(); }
   for (const id of ["f-m2", "a-m2"]) { $(id).value = S.f.m2; document.querySelector(`output[for=${id}]`).textContent = S.f.m2 ? S.f.m2 + " m²" : "toutes"; }
   const p = effW(S.profile);
   WKEYS.forEach((k) => { if (S.profile === "mix") $("w-" + k).value = p.w[k]; document.querySelector(`output[for=w-${k}]`).textContent = Math.round(p.w[k]); });
@@ -835,7 +841,7 @@ function doRender() {
 // (ou si « hors zone verte aussi » est coché).
 const byCodeC = () => Object.fromEntries(C.map((c) => [c.code, c]));
 const parcelCommune = (p) => C.find((x) => x.nom === p.commune);
-const priceOk = (a) => !a.prix || a.prix <= S.f.prix * 1000;
+const priceOk = (a) => !a.prix || a.prix <= pxMax();
 // surface d'une parcelle repérée : « 1 234 m² » ; terrain mixte : constructible + zone A/N
 const parcelM2 = (p) => (p.kind === "mixte" ? (+p.constr || 0) + (+p.agri || 0) : +String(p.surface || "").replace(/[^0-9]/g, "") || 0);
 const sizeOk = (a) => !a.m2 || a.m2 >= S.f.m2;
@@ -865,12 +871,22 @@ function constrBadge(a, full = true) {
   return full ? `<div class="sub"><span class="chip ${cls}">${txt}</span> ${esc(v.why)}</div>` : `<span class="chip ${cls}" title="${esc(v.why)}">${txt}</span>`;
 }
 const adOk = (a) => priceOk(a) && sizeOk(a) && constrOk(a);
+// Zone verte d'une annonce : celle de sa commune ; pour une commune voisine hors de
+// l'étude (pas dans communes.json), le point de grille le plus proche, mêmes seuils
+// que le contour dessiné sur la carte.
+function adInZone(a, bc = byCodeC()) {
+  const c = bc[a.insee];
+  if (c) return !!c.zone;
+  if (a.lat == null) return false;
+  const i = Math.round((a.lon - GRID.lon0) / GRID.dlon), j = Math.round((a.lat - GRID.lat0) / GRID.dlat);
+  return i >= 0 && j >= 0 && i < GRID.nx && j < GRID.ny && gridRatio(j * GRID.nx + i) <= 1;
+}
 const parcelOk = (p) => !S.f.m2 || parcelM2(p) >= S.f.m2;
 function syncMarkers() {
   const bc = byCodeC();
   for (const a of ALLADS) {
     if (!a._m) continue;
-    const lay = a.top ? layers.topads : layers.ads, ok = (S.show.outside || !!bc[a.insee]?.zone) && adOk(a);
+    const lay = a.top ? layers.topads : layers.ads, ok = (S.show.outside || adInZone(a, bc)) && adOk(a);
     if (ok) lay.addLayer(a._m); else lay.removeLayer(a._m);
   }
   for (const p of PARCELS) {
@@ -879,6 +895,9 @@ function syncMarkers() {
     if (ok) layers.parcels.addLayer(p._m); else { layers.parcels.removeLayer(p._m); if (p._poly) { layers.parcels.removeLayer(p._poly); p._poly = null; } }
   }
 }
+// Annonces d'une carte de la liste ; withCommune : carte « communes voisines », sans en-tête de commune
+const adItems = (ads, withCommune = false) => ads.sort((x, y) => (!!y.top - !!x.top) || (x.prix || 0) - (y.prix || 0)).map((a) => `<li><button type="button" data-aid="${esc(a.id)}"><span class="amark sm${a.top ? " top" : ""}">${a.top ? "★" : "€"}</span>${withCommune ? esc(a.commune || "?") + " · " : ""}${fm2(a)} · ${fmtk(a.prix)}${a.drop ? ` <span class="chip wa">−${fmtk(a.drop)}</span>` : ""}${isNew(a) ? ' <span class="chip g">nouvelle</span>' : ""} ${priceBadge(a, false)}${constrVerdict(a)?.k === "oui" ? "" : " " + constrBadge(a, false)}</button>
+        <a href="${esc(a.url)}" target="_blank" rel="noopener" aria-label="Ouvrir l'annonce">↗</a></li>`).join("");
 // Liste sous la carte = exactement ce que montre la carte : communes visibles dans
 // le cadre, et sous chacune ses annonces et parcelles affichées.
 function renderMapList() {
@@ -887,20 +906,21 @@ function renderMapList() {
   const groups = new Map();
   const g = (code) => { if (!groups.has(code)) groups.set(code, { c: C.find((x) => x.code === code), ads: [], parcels: [] }); return groups.get(code); };
   for (const c of C) if (vis(c._m)) g(c.code);
-  for (const a of ALLADS) if (vis(a._m) && a.insee) g(a.insee).ads.push(a);
+  for (const a of ALLADS) if (vis(a._m)) g(C.some((x) => x.code === a.insee) ? a.insee : "").ads.push(a);
   for (const p of PARCELS) { const c = parcelCommune(p); if (vis(p._m) && c) g(c.code).parcels.push(p); }
+  const others = groups.get("")?.ads || []; // communes voisines, hors de l'étude
   const list = [...groups.values()].filter((x) => x.c).sort((x, y) => (y.c.zone - x.c.zone) || (!x.c.why.length - !y.c.why.length) * -1 || y.c.score - x.c.score);
-  const nAds = list.reduce((n, x) => n + x.ads.length, 0), nP = list.reduce((n, x) => n + x.parcels.length, 0);
-  $("maplist-head").textContent = list.length
+  const nAds = list.reduce((n, x) => n + x.ads.length, others.length), nP = list.reduce((n, x) => n + x.parcels.length, 0);
+  $("maplist-head").textContent = list.length || others.length
     ? `${list.length} commune${list.length > 1 ? "s" : ""}${S.show.outside ? "" : " de la zone verte"} dans le cadre · ${nAds} annonce${nAds > 1 ? "s" : ""} · ${nP} parcelle${nP > 1 ? "s" : ""} repérée${nP > 1 ? "s" : ""}. La liste suit la carte : déplacez ou zoomez.`
     : S.show.outside ? "Rien dans le cadre." : "Aucune commune de la zone verte dans le cadre : élargissez les seuils ou dézoomez.";
   const sc = (c) => `<span class="score" style="background:${colFor(c.score)};color:${c.score > (cuts[2] || 0) ? "var(--bg)" : "var(--ink)"}">${c.score}</span>`;
   $("top5").innerHTML = list.map(({ c, ads, parcels }) => `<article class="mcard${c.why.length ? " out" : ""}">
     <button type="button" class="mhead" data-code="${c.code}">${sc(c)}<b>${esc(c.nom)}</b><span>${c.alt} m · ${esc(workShort())} ${c.wt} min · ${esc(place("famA").short)} ${c.famA} · ${esc(place("famB").short)} ${c.famB} min${c.zone ? "" : " · hors zone"}${c.why.length ? " · exclue : " + esc(c.why.join(", ")) : ""}</span></button>
     ${ads.length || parcels.length ? `<ul>${parcels.map((p) => `<li><button type="button" data-pid="${esc(p.id)}"><span class="pmark ${p.kind} sm"></span>${esc(p.kind === "mixte" ? `${p.constr} m² + ${p.agri} m² A/N` : p.surface)} · ${esc(p.zone)}</button></li>`).join("")}
-      ${ads.sort((x, y) => (!!y.top - !!x.top) || x.prix - y.prix).map((a) => `<li><button type="button" data-aid="${esc(a.id)}"><span class="amark sm${a.top ? " top" : ""}">${a.top ? "★" : "€"}</span>${fm2(a)} · ${fmtk(a.prix)}${a.drop ? ` <span class="chip wa">−${fmtk(a.drop)}</span>` : ""}${isNew(a) ? ' <span class="chip g">nouvelle</span>' : ""} ${priceBadge(a, false)}${constrVerdict(a)?.k === "oui" ? "" : " " + constrBadge(a, false)}</button>
-        <a href="${esc(a.url)}" target="_blank" rel="noopener" aria-label="Ouvrir l'annonce">↗</a></li>`).join("")}</ul>` : ""}
-  </article>`).join("");
+      ${adItems(ads)}</ul>` : ""}
+  </article>`).join("") + (others.length ? `<article class="mcard out"><div class="mhead"><b>Communes voisines, hors de l'étude</b><span>pas de score ni de fiche ; zone verte d'après la grille de trajets</span></div>
+    <ul>${adItems(others, true)}</ul></article>` : "");
   $("top5").onclick = (e) => {
     const b = e.target.closest("button");
     if (!b) return;
@@ -1096,9 +1116,9 @@ function renderAds() {
     <dl><div><dt>Surface</dt><dd>${fm2(a)}</dd></div>${c ? `<div><dt>${esc(workShort())}</dt><dd>${c.wt} min</dd></div><div><dt>${esc(place("famA").short)}</dt><dd>${c.famA} min</dd></div><div><dt>${esc(place("famB").short)}</dt><dd>${c.famB} min</dd></div>` : ""}</dl>
     ${priceBadge(a)}${marketLine(a)}<p>${esc(a.analyse)}</p><div class="act"><a class="go" href="${esc(a.url)}" target="_blank" rel="noopener">Voir l'annonce ↗</a>${a.lat ? `<button type="button" data-ll="${a.lat},${a.lon}">Voir sur la carte</button>` : ""}</div></figcaption></figure>`;
   }).join("");
-  if (hiddenTops) $("atop").insertAdjacentHTML("beforeend", `<p class="hint">${hiddenTops} annonce${hiddenTops > 1 ? "s" : ""} mise${hiddenTops > 1 ? "s" : ""} en avant masquée${hiddenTops > 1 ? "s" : ""} par les filtres (${S.f.prix} k€ max${S.f.m2 ? `, ${S.f.m2} m² min.` : ""}).</p>`);
-  const m2 = S.f.m2, px = S.f.prix * 1000, z = $("a-zone").checked, g = $("a-gone").checked;
-  const rows = ALLADS.filter((a) => sizeOk(a) && a.prix <= px && constrOk(a) && (!z || byCode[a.insee]?.zone) && (g || (!a.gone && !a.stale)))
+  if (hiddenTops) $("atop").insertAdjacentHTML("beforeend", `<p class="hint">${hiddenTops} annonce${hiddenTops > 1 ? "s" : ""} mise${hiddenTops > 1 ? "s" : ""} en avant masquée${hiddenTops > 1 ? "s" : ""} par les filtres (prix ${pxTxt()}${S.f.m2 ? `, ${S.f.m2} m² min.` : ""}).</p>`);
+  const z = $("a-zone").checked, g = $("a-gone").checked;
+  const rows = ALLADS.filter((a) => adOk(a) && (!z || adInZone(a, byCode)) && (g || (!a.gone && !a.stale)))
     .map((a) => ({ a, c: byCode[a.insee] })).sort((x, y) => (!!x.a.gone - !!y.a.gone) || (y.c?.score ?? 0) - (x.c?.score ?? 0));
   $("atbl").tHead.innerHTML = `<tr><th>Score commune</th><th>Commune</th><th>Surface</th><th>Prix</th><th>€/m²</th><th>${esc(workShort())}</th><th>Alt. bourg</th>${MARKET ? "<th>En ligne</th>" : ""}<th>Annonce</th></tr>`;
   $("atbl").tBodies[0].innerHTML = rows.map(({ a, c }) => `<tr data-aid="${esc(a.id)}"${a.gone || a.stale ? ' class="gone"' : ""}><td class="num">${c ? c.score : "–"}${c?.zone ? '<span class="sub">zone verte</span>' : ""}</td>
@@ -1120,7 +1140,7 @@ function renderMarket() {
   const live = ALLADS.filter((a) => !a.gone && !a.stale && a.src && constrVerdict(a)?.k !== "non"), gone = ALLADS.filter((a) => a.gone);
   const bySect = {};
   const sectOf = Object.fromEntries(C.map((c) => [c.code, c.sect]));
-  for (const a of ALLADS) if (a.src) (bySect[sectOf[a.insee] || "?"] ||= []).push(a);
+  for (const a of ALLADS) if (a.src) (bySect[sectOf[a.insee] || "Communes voisines (hors étude)"] ||= []).push(a);
   const recent = (a) => a.gone && Date.parse(todayISO()) - Date.parse(a.gone) <= 30 * DAY;
   const kLive = live.filter(knownAge), kGone = gone.filter(knownAge);
   const fast = kGone.filter((a) => daysOn(a) <= 45).sort((a, b) => b.gone.localeCompare(a.gone)).slice(0, 8);
