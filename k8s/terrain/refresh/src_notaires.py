@@ -26,7 +26,7 @@ def fetch(search, communes):
     depts = sorted({c[:2] for c in communes})
     q = {
         "parPage": PAGE, "departements": ",".join(depts), "typeBiens": "TER",
-        "typeTransactions": TRANSACTIONS, "prixMax": search.get("maxPrice", 250000),
+        "typeTransactions": TRANSACTIONS,  # pas de prix max : le budget se règle dans l'app
     }
     out, total, page, pages = {}, None, 1, 1
     while page <= pages:
