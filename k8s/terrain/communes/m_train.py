@@ -193,19 +193,12 @@ def best_via(points, st, times, osrm, k, extra):
     return out
 
 
-def train_json(stops, trips, day, grid, com, osrm):
+def train_json(gt, grid, com, osrm):
     """data/train.json : même contenu que l'ancien tools/train.py."""
+    stops, day = gt.stops, gt.day
     keys = list(TARGETS)
-    tt = {k: station_times(stops, trips, k) for k in keys}
-    box = grid_box(grid, 0.15)  # une gare juste hors cadre compte
-    st = []
-    for sid in sorted(set(tt["pd"]) | set(tt["pe"]), key=lambda s: stops[s][0]):
-        n, la, lo = stops[sid]
-        if not (box[0] <= la <= box[1] and box[2] <= lo <= box[3]):
-            continue
-        pd, pe = tt["pd"].get(sid), tt["pe"].get(sid)
-        st.append([n, round(la, 5), round(lo, 5), pd and pd[0], pe and pe[0], pd and pd[1], pe and pe[1]])
-    log(f"train : {day}, {len(trips)} trains, {len(st)} gares dans l'emprise")
+    st = gt.stations(grid_box(grid, 0.15))  # une gare juste hors cadre compte
+    log(f"train : {day}, {len(gt.trips)} trains, {len(st)} gares dans l'emprise")
     codes = sorted(com)
     cpts = [(com[c]["lat"], com[c]["lon"]) for c in codes]
     gpts = grid_points(grid)
@@ -321,8 +314,66 @@ def itineraries(trips, x, origins, stops):
     return out
 
 
-def commute(stops, trips, places, grid, com, osrm):
+def commute_best(stops, trips, place):
+    """Gares de départ vers un lieu : {gare: (train + fin de trajet, arrivées utiles,
+    gare d'arrivée, fin de trajet)}."""
+    P = (place["lat"], place["lon"])
+    near = {sid: km(P, (la, lo)) for sid, (n, la, lo) in stops.items() if km(P, (la, lo)) <= NEAR_KM}
+    best = {}
+    for x, dx in near.items():
+        eg = EGRESS_FIX + EGRESS_KM * dx
+        for o, (t, n) in rail_times(trips, {x: 0}, {x}).items():
+            if o in near and t == 0:
+                continue  # déjà à destination : la voiture ou la marche suffit
+            v = round(t + eg)
+            if o not in best or v < best[o][0] or (v == best[o][0] and n > best[o][1]):
+                best[o] = (v, n, x, round(eg))
+    return best
+
+
+def commute_cands(points, sites, osrm):
+    """Les COMMUTE_K gares les plus proches de chaque point et les minutes de voiture
+    pour s'y rendre : [gare, minutes, gare, minutes, …]."""
+    cand = [sorted(range(len(sites)), key=lambda j: km(p, sites[j]))[:COMMUTE_K] for p in points]
+    dur = osrm.minutes(points, [[sites[j] for j in c] for c in cand])
+    return [[v for j, car in zip(c, row) for v in (j, car)] for c, row in zip(cand, dur)]
+
+
+class Gtfs:
+    """Horaires chargés une fois par passage, partagés par m_grid et run()."""
+
+    def __init__(self):
+        path, _ = fetch_file(GTFS_URL, "sncf-gtfs.zip")
+        self.day, self.stops, self.trips = load_gtfs(path)
+        self._tt, self._cb = {}, {}
+
+    def station_times(self, tk):
+        if tk not in self._tt:
+            self._tt[tk] = station_times(self.stops, self.trips, tk)
+        return self._tt[tk]
+
+    def stations(self, box):
+        """Gares de l'emprise box reliées à Part-Dieu ou Perrache :
+        [nom, lat, lon, minutes pd, minutes pe, arrivées pd, arrivées pe]."""
+        tt = {k: self.station_times(k) for k in TARGETS}
+        st = []
+        for sid in sorted(set(tt["pd"]) | set(tt["pe"]), key=lambda s: self.stops[s][0]):
+            n, la, lo = self.stops[sid]
+            if not (box[0] <= la <= box[1] and box[2] <= lo <= box[3]):
+                continue
+            pd, pe = tt["pd"].get(sid), tt["pe"].get(sid)
+            st.append([n, round(la, 5), round(lo, 5), pd and pd[0], pe and pe[0], pd and pd[1], pe and pe[1]])
+        return st
+
+    def commute_best(self, key, place):
+        if key not in self._cb:
+            self._cb[key] = commute_best(self.stops, self.trips, place)
+        return self._cb[key]
+
+
+def commute(gt, places, grid, com, osrm):
     """Bloc « commute » de train.json (voir l'en-tête)."""
+    stops, trips = gt.stops, gt.trips
     codes = sorted(com)
     cpts = [(com[c]["lat"], com[c]["lon"]) for c in codes]
     gpts = grid_points(grid)
@@ -332,16 +383,7 @@ def commute(stops, trips, places, grid, com, osrm):
         if not place:
             continue
         P = (place["lat"], place["lon"])
-        near = {sid: km(P, (la, lo)) for sid, (n, la, lo) in stops.items() if km(P, (la, lo)) <= NEAR_KM}
-        best = {}  # gare de départ → (train + fin de trajet, arrivées utiles, gare d'arrivée, fin de trajet)
-        for x, dx in near.items():
-            eg = EGRESS_FIX + EGRESS_KM * dx
-            for o, (t, n) in rail_times(trips, {x: 0}, {x}).items():
-                if o in near and t == 0:
-                    continue  # déjà à destination : la voiture ou la marche suffit
-                v = round(t + eg)
-                if o not in best or v < best[o][0] or (v == best[o][0] and n > best[o][1]):
-                    best[o] = (v, n, x, round(eg))
+        best = gt.commute_best(key, place)
         orig = sorted(best, key=lambda o: stops[o][0])
         it = {}
         for x in {best[o][2] for o in orig}:  # horaires et tracés, par gare d'arrivée
@@ -350,13 +392,8 @@ def commute(stops, trips, places, grid, com, osrm):
         st = [[stops[o][0], round(stops[o][1], 5), round(stops[o][2], 5), best[o][0], best[o][1],
                stops[best[o][2]][0], best[o][3], *(it.get(o) or ([], []))] for o in orig]
         sites = [s[1:3] for s in st]
-
-        def cands(points):
-            cand = [sorted(range(len(sites)), key=lambda j: km(p, sites[j]))[:COMMUTE_K] for p in points]
-            dur = osrm.minutes(points, [[sites[j] for j in c] for c in cand])
-            return [[v for j, car in zip(c, row) for v in (j, car)] for c, row in zip(cand, dur)]
         log(f"commute {key} : {len(st)} gares de départ")
-        gc, cc = cands(gpts), cands(cpts)
+        gc, cc = commute_cands(gpts, sites, osrm), commute_cands(cpts, sites, osrm)
         gcar = [r[0] for r in osrm.minutes(gpts, [[P]] * len(gpts))]
         ccar = [r[0] for r in osrm.minutes(cpts, [[P]] * len(cpts))]
         out[key] = {"st": st, "grid": gc, "com": dict(zip(codes, cc)),
@@ -364,9 +401,9 @@ def commute(stops, trips, places, grid, com, osrm):
     return out
 
 
-def run(com, cfg, grid, osrm):
-    path, _ = fetch_file(GTFS_URL, "sncf-gtfs.zip")
-    day, stops, trips = load_gtfs(path)
+def run(com, cfg, grid, osrm, gt=None):
+    gt = gt or Gtfs()
+    stops, trips = gt.stops, gt.trips
     places = cfg.get("places") or {}
     codes = sorted(com)
     pts = [(com[c]["lat"], com[c]["lon"]) for c in codes]
@@ -383,6 +420,6 @@ def run(com, cfg, grid, osrm):
     if "work" in places:
         for c, r in zip(codes, to_place(stops, trips, places["work"], pts, osrm, WORK_C, WORK_B)):
             fields[c].update(worktrain=r[0] if r else None, workgare=stops[r[1]][0] if r else None)
-    tj = train_json(stops, trips, day, grid, com, osrm)
-    tj["commute"] = commute(stops, trips, places, grid, com, osrm)
+    tj = train_json(gt, grid, com, osrm)
+    tj["commute"] = commute(gt, places, grid, com, osrm)
     return fields, gares, tj

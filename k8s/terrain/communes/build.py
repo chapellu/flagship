@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
-"""Fiches communes → data/communes.json, et pour les mêmes communes
-data/schools.json, data/creches.json, data/train.json.
+"""Grille de trajets et fiches communes → data/grid.json, data/communes.json, et
+pour les mêmes communes data/schools.json, data/creches.json, data/train.json.
 
 Tourne chaque semaine dans le CronJob terrain-communes (k8s/terrain/communes.yaml),
 sur le volume terrain-data. Ce fichier est public : il ne contient aucun lieu.
 Tout vient de data/config.json (lieux, liste des champs), data/communes.json
 (communes déjà étudiées, secteurs choisis à la main) et data/grid.json
-(emprise de la carte), et de sources publiques (voir chaque m_*.py).
+(grille précédente), et de sources publiques (voir chaque m_*.py).
 
-Zone : les communes de communes.json et toutes celles des mêmes départements
-dont le centre est dans l'emprise de grid.json (même règle que le relevé des
-annonces). Chaque commune a une fiche complète.
+Ordre : la grille d'abord (m_grid : agrandie tant qu'une ligne de trajet aux
+curseurs au maximum toucherait un bord), puis la zone : les communes de
+communes.json et toutes celles, quel que soit leur département, dont le centre
+est dans la zone de la grille (lib.in_area, même règle que le relevé des
+annonces). Chaque commune a une fiche complète. grid.json, creches.json et
+train.json sont écrits ensemble à la fin, grid.json en dernier, et seulement si
+leurs tableaux ont la taille de la grille.
 
 Incrémental : les sources brutes sont gardées dans TERRAIN_CACHE (volume
 terrain-cache) et ne sont relues que si elles ont changé ; les temps OSRM sont
@@ -25,7 +29,8 @@ data/communes-legacy.json et réappliquées à ces communes (README). Supprimer 
 fichier, ou TERRAIN_COMMUNES_LEGACY=0, fait tout recalculer.
 
     TERRAIN_DATA=./data TERRAIN_CACHE=./cache python3 build.py
-    TERRAIN_COMMUNES_SKIP=train,creches …   (modules sautés : valeurs précédentes gardées)
+    TERRAIN_COMMUNES_SKIP=train,creches …   (modules sautés : valeurs précédentes gardées ;
+                                             « grille » garde grid.json tel quel)
 """
 import datetime as dt
 import os
@@ -42,6 +47,7 @@ import m_eau  # noqa: E402
 import m_ecoles  # noqa: E402
 import m_fibre  # noqa: E402
 import m_geo  # noqa: E402
+import m_grid  # noqa: E402
 import m_risques  # noqa: E402
 import m_train  # noqa: E402
 import m_voiture  # noqa: E402
@@ -90,6 +96,17 @@ def report(existing, computed, fields):
     log("écarts avec la fiche précédente :\n" + "\n".join(lines))
 
 
+def grid_arrays(obj):
+    """Tableaux d'un fichier calculés point par point sur grid.json (creches.json, train.json)."""
+    if "stations" not in obj:  # creches.json
+        return [obj["grid"]]
+    out = list(obj["grid"].values()) + list((obj.get("car") or {}).get("grid", {}).values())
+    for k, v in (obj.get("commute") or {}).items():
+        if isinstance(v, dict) and "grid" in v:
+            out += [v["grid"], v["car"]["grid"]]
+    return out
+
+
 def main():
     cfg = lib.load_json(path("config.json"))
     old = lib.load_json(path("communes.json"))
@@ -98,11 +115,6 @@ def main():
         sys.exit("config.json, communes.json et grid.json sont nécessaires")
     F = cfg["fields"]
     existing = {r[F.index("code")]: dict(zip(F, r)) for r in old["c"]}
-
-    com, arr = m_geo.area(existing, grid)
-    m_geo.sectors(com, existing, cfg.get("sectors") or {})
-    m_geo.add_altitude(com)
-    log(f"zone : {len(com)} communes ({len(set(com) - set(existing))} nouvelles)")
 
     osrm = lib.Osrm()
     res, status, extra = {}, {}, {}
@@ -123,6 +135,19 @@ def main():
         finally:
             osrm.save()
 
+    # 1. la grille d'abord : elle décide de la zone (communes, départements)
+    gt = step("horaires", m_train.Gtfs) if "train" not in SKIP else None
+    old_grid = grid
+    if "grille" not in SKIP:
+        grid = step("grille", lambda: m_grid.run(old_grid, cfg, osrm, gt)) or old_grid
+    resized = (grid["nx"], grid["ny"], grid["lon0"], grid["lat0"]) != (old_grid["nx"], old_grid["ny"], old_grid["lon0"], old_grid["lat0"])
+
+    com, arr = m_geo.area(existing, grid)
+    m_geo.sectors(com, existing, cfg.get("sectors") or {})
+    m_geo.add_altitude(com)
+    log(f"zone : {len(com)} communes ({len(set(com) - set(existing))} nouvelles), "
+        f"départements : {len({c['dep'] for c in com.values()})}")
+
     res["voiture"] = step("voiture", lambda: m_voiture.run(com, cfg, osrm))
     res["risques"] = step("risques", lambda: m_risques.run(com))
     if m_risques.partial:
@@ -141,13 +166,29 @@ def main():
             res["ecoles"], schools = r
             lib.save_json(path("schools.json"), schools)
         cr = step("creches", lambda: m_creches.run(com, grid, bpe, osrm))
-        if cr:
-            lib.save_json(path("creches.json"), cr)
-    r = step("train", lambda: m_train.run(com, cfg, grid, osrm))
-    gares = {}
+    else:
+        cr = None
+    r = step("train", lambda: m_train.run(com, cfg, grid, osrm, gt or m_train.Gtfs()))
+    gares, tj = {}, None
     if r:
         res["train"], gares, tj = r
-        lib.save_json(path("train.json"), tj)
+    # Fichiers alignés sur la grille : écrits ensemble, grid.json en dernier. Une
+    # grille agrandie n'est écrite que si crèches et train ont été recalculés sur
+    # elle ; sinon l'ancienne grille et ses fichiers restent tels quels.
+    if resized and (cr is None or tj is None):
+        log("grille agrandie mais crèches ou train non recalculés : ancienne grille gardée")
+        status["grille"] = "erreur : grille non écrite (crèches ou train manquants)"
+        cr = tj = None
+        grid = old_grid
+    n = grid["nx"] * grid["ny"]
+    for name, obj in (("creches.json", cr), ("train.json", tj)):
+        if obj is not None:
+            bad = [len(a) for a in grid_arrays(obj) if len(a) != n]
+            if bad:
+                raise SystemExit(f"{name} : tableaux de {bad[0]} points pour une grille de {n} : rien n'est écrit")
+            lib.save_json(path(name), obj)
+    if grid is not old_grid:
+        lib.save_json(path("grid.json"), grid)
 
     computed = {code: {k: c.get(k) for k in ("sect", "alt", "pop")} for code, c in com.items()}
     for name, out in res.items():
