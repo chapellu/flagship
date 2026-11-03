@@ -14,8 +14,13 @@ de liste autorisées :
 Les slugs (nom + code postal) sont construits à partir de l'API publique
 geo.api.gouv.fr ; pour les communes nouvelles, on interroge aussi les anciens
 noms (communes déléguées), que ParuVendu utilise souvent. Coût : ~250 pages
-par jour quand un département dépasse le plafond (≈ 10-15 min avec la pause). Configuration facultative dans config.json :
+par jour quand un département dépasse le plafond (≈ 10-15 min avec la pause).
+La passe commune est bornée à MINUTES minutes par jour, tous départements
+confondus (la zone suit la grille de trajets et peut compter des milliers de
+communes) : elle commence chaque jour à un rang différent, et le relevé est
+alors incomplet (rien n'est marqué parti). Configuration facultative dans config.json :
     "paruvendu": {"communes": false}   → pas de passe commune (relevé incomplet)
+    "paruvendu": {"minutes": 25}       → durée maximale de la passe commune
 
 Les annonces n'ont ni code INSEE ni coordonnées : on retrouve la commune par
 son nom (norm) et son département, et on la place au centre de la commune.
@@ -35,6 +40,7 @@ BASE = "https://www.paruvendu.fr"
 LISTE = BASE + "/immobilier/vente/terrain/{}/"
 GEO = "https://geo.api.gouv.fr"
 PAUSE = 2
+MINUTES = 25
 
 
 def slug(s):
@@ -131,6 +137,8 @@ def fetch(search, communes):
     depts = sorted({c[:2] for c in communes})
     index = {(norm(c["nom"]), code[:2]): code for code, c in communes.items()}
     raw, complete = {}, True
+    budget = float(cfg.get("minutes", MINUTES))
+    fin = time.time() + 60 * budget
     for dep in depts:
         # Communes nouvelles : ParuVendu range souvent les annonces sous l'ancien
         # nom (« Belleville » pour Belleville-en-Beaujolais). Les communes
@@ -156,9 +164,13 @@ def fetch(search, communes):
         geo = http_json(f"{GEO}/communes?" + urllib.parse.urlencode(
             {"codeDepartement": dep, "fields": "code,nom,codesPostaux", "format": "json"}))
         inconnues, erreurs = [], 0
-        for g in geo:
-            if g["code"] not in communes:
-                continue
+        geo = [g for g in geo if g["code"] in communes]
+        k = time.gmtime().tm_yday * 37 % max(1, len(geo))  # rang de départ tournant
+        for g in geo[k:] + geo[:k]:
+            if time.time() > fin:
+                print(f"paruvendu {dep}: passe commune arrêtée à {budget:g} min (relevé partiel)")
+                complete = False
+                break
             if erreurs >= 5:
                 print("paruvendu : trop d'erreurs, passe commune abandonnée (relevé partiel)")
                 complete = False

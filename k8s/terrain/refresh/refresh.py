@@ -5,8 +5,8 @@ Tourne dans le CronJob terrain-refresh (k8s/terrain/cronjob.yaml), sur le
 volume terrain-data. Ce fichier est public : il ne contient aucun lieu. La zone
 de recherche vient de data/config.json (bloc "search"), de communes.json et de
 grid.json : on garde les annonces des communes de communes.json et de toutes
-les communes des mêmes départements dont le centre tombe dans l'emprise de la
-grille de trajets (voir zone_communes). Le prix n'est pas filtré ici : le
+les communes dont le centre tombe dans la zone de la grille de trajets (voir
+zone_communes) ; les départements interrogés en découlent. Le prix n'est pas filtré ici : le
 budget se règle dans l'app.
 
 Chaque source est un module src_<nom>.py qui expose :
@@ -202,12 +202,34 @@ def in_grid(grid, lat, lon):
             and grid["lat0"] <= lat <= grid["lat0"] + grid["dlat"] * (grid["ny"] - 1))
 
 
+def in_area(grid, lat, lon):
+    """Zone de la grille : son emprise et, si grid.json porte « reach » (générateur
+    hebdomadaire, m_grid), à moins d'une cellule d'un point atteignable aux curseurs
+    au maximum. Même règle que k8s/terrain/communes/lib.in_area."""
+    if not grid or lat is None or lon is None:
+        return False
+    i, j = round((lon - grid["lon0"]) / grid["dlon"]), round((lat - grid["lat0"]) / grid["dlat"])
+    nx, ny = grid["nx"], grid["ny"]
+    if not (0 <= i < nx and 0 <= j < ny):
+        return False
+    r = grid.get("reach")
+    if not r or len(r) != nx * ny:
+        return True
+    return any(r[b * nx + a] for b in range(max(0, j - 1), min(ny, j + 2)) for a in range(max(0, i - 1), min(nx, i + 2)))
+
+
+def departement(code):
+    return code[:3] if code.startswith("97") else code[:2]
+
+
 def zone_communes(communes, grid):
-    """Zone de recherche : communes.json, plus les autres communes des mêmes
-    départements dont le centre est dans l'emprise de la grille (communes
-    limitrophes laissées hors de l'étude, communes trop chères pour le
-    classement…). Une annonce n'y est jamais perdue faute d'être dans
-    communes.json ; l'app la montre avec la zone verte calculée sur la grille.
+    """Zone de recherche : communes.json, plus toutes les communes, quel que soit
+    leur département, dont le centre est dans la zone de la grille (in_area) :
+    communes limitrophes laissées hors de l'étude, communes trop chères pour le
+    classement, départements voisins quand la grille s'agrandit… Une annonce n'y
+    est jamais perdue faute d'être dans communes.json ; l'app la montre avec la
+    zone verte calculée sur la grille. Les départements des sources (deps) en
+    découlent.
 
     Renvoie (communes, alias, ok) : alias associe le code INSEE d'une commune
     déléguée (ancienne commune fusionnée, que certains sites donnent encore) à
@@ -215,23 +237,28 @@ def zone_communes(communes, grid):
     contente de communes.json et ok est faux : le relevé du jour ne doit alors
     marquer aucune annonce partie (celles des communes voisines manqueraient)."""
     zone, alias, ok = dict(communes), {}, True
-    for dep in sorted({c[:2] for c in communes}):
+    try:  # toutes les communes de France en une requête (~3 Mo), filtrées ici
+        geo = http_json(f"{GEO}/communes?" + urllib.parse.urlencode({"fields": "code,nom,centre", "format": "json"}), timeout=120)
+    except Exception as e:
+        print(f"zone : geo.api.gouv.fr indisponible ({type(e).__name__}: {e}), communes.json seul")
+        return zone, alias, False
+    for g in geo:
+        lon, lat = ((g.get("centre") or {}).get("coordinates") or (None, None))
+        if g["code"] not in zone and in_area(grid, lat, lon):
+            zone[g["code"]] = {"nom": g["nom"], "lat": round(lat, 4), "lon": round(lon, 4)}
+    deps = sorted({departement(c) for c in zone})
+    for dep in deps:
         try:
-            geo = http_json(f"{GEO}/communes?" + urllib.parse.urlencode(
-                {"codeDepartement": dep, "fields": "code,nom,centre", "format": "json"}))
             dele = http_json(f"{GEO}/communes_associees_deleguees?" + urllib.parse.urlencode(
                 {"codeDepartement": dep, "fields": "code,chefLieu", "format": "json"}))
         except Exception as e:
-            print(f"zone {dep}: geo.api.gouv.fr indisponible ({type(e).__name__}: {e}), communes.json seul")
+            print(f"zone {dep}: communes déléguées indisponibles ({type(e).__name__}: {e})")
             ok = False
             continue
-        for g in geo:
-            lon, lat = ((g.get("centre") or {}).get("coordinates") or (None, None))
-            if g["code"] not in zone and in_grid(grid, lat, lon):
-                zone[g["code"]] = {"nom": g["nom"], "lat": round(lat, 4), "lon": round(lon, 4)}
         alias.update({d["code"]: d["chefLieu"] for d in dele if d.get("chefLieu")})
     alias = {k: v for k, v in alias.items() if v in zone and k not in zone}
-    print(f"zone : {len(communes)} communes étudiées + {len(zone) - len(communes)} voisines dans l'emprise de la grille")
+    print(f"zone : {len(communes)} communes étudiées + {len(zone) - len(communes)} voisines dans la zone de la grille, "
+          f"{len(deps)} départements")
     return zone, alias, ok
 
 

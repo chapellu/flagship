@@ -61,6 +61,12 @@ const need = (n) => fetch(DATA + n + ".json", { cache: "no-cache" }).then((r) =>
 const maybe = (n) => fetch(DATA + n + ".json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
 Promise.all([...["config", "communes", "grid", "parcels", "ads", "notes"].map(need), maybe("creches"), maybe("schools"), maybe("market"), maybe("train")])
 .then(([cfg, com, grid, parcels, ads, notes, creches, schools, market, train]) => {
+  // creches.json / train.json ont des tableaux point par point sur grid.json : s'ils
+  // ne sont pas de la même grille (fichiers en cours de réécriture), on s'en passe
+  const n = grid.nx * grid.ny, fits = (...a) => a.every((x) => !x || x.length === n);
+  if (creches && !fits(creches.grid)) creches = null;
+  if (train && !fits(...Object.values(train.grid || {}), ...Object.values(train.car?.grid || {}),
+    ...["work", "city"].flatMap((k) => [train.commute?.[k]?.grid, train.commute?.[k]?.car?.grid]))) train = null;
   CFG = cfg; GRID = grid; PARCELS = parcels; ADS = ads; NOTES = notes; GARES = com.g;
   CRECHE = creches; SCHOOLS = schools; MARKET = market; TRAIN = train;
   C = com.c.map((r) => Object.fromEntries(cfg.fields.map((f, i) => [f, r[i]])));
