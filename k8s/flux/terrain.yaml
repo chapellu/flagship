@@ -14,7 +14,7 @@ spec:
   prune: true
   # Pas de wait : la première réconciliation précède la première image GHCR.
   wait: false
-  # k8s/terrain/mail.enc.yaml (boîte des alertes e-mail) est chiffré par SOPS
+  # k8s/terrain/mailin.enc.yaml (adresse des alertes e-mail) est chiffré par SOPS
   decryption:
     provider: sops
     secretRef:

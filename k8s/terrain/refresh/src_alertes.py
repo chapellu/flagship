@@ -5,10 +5,14 @@ propre : les alertes de recherche que l'on reçoit soi-même par e-mail. On les
 fait arriver (directement ou par transfert) dans une boîte dédiée, que ce
 module lit en IMAP, sans rien marquer comme lu (BODY.PEEK).
 
-Identifiants : variables TERRAIN_MAIL_USER / TERRAIN_MAIL_PASSWORD (Secret
-terrain-mail, chiffré par SOPS dans k8s/terrain/mail.enc.yaml). Serveur :
-search.alertes.imap dans config.json (défaut imap.gmail.com). Sans
-identifiants, la source est ignorée (SkipSource), pas en panne.
+Deux façons de recevoir les e-mails :
+- boîte à nous : le serveur mailin (apps/mailin) reçoit l'adresse dédiée
+  sur in.chapellu.fr et dépose un fichier .eml par message dans le volume
+  terrain-inbox, monté ici en TERRAIN_INBOX. Les fichiers de plus de 60 jours
+  sont supprimés ;
+- boîte IMAP (Gmail…) : TERRAIN_MAIL_USER / TERRAIN_MAIL_PASSWORD (Secret
+  terrain-mail), serveur search.alertes.imap (défaut imap.gmail.com).
+Sans l'un ni l'autre, la source est ignorée (SkipSource), pas en panne.
 
 Une alerte ne dit pas quand l'annonce disparaît : le relevé n'est jamais
 « complet », donc rien n'est marqué parti. La date de l'e-mail sert de date de
@@ -121,38 +125,65 @@ def parse_mail(body_html, communes, index, resolve=True):
     return list(out.values())
 
 
-def fetch(search, communes):
-    user, pwd = os.environ.get("TERRAIN_MAIL_USER"), os.environ.get("TERRAIN_MAIL_PASSWORD")
-    if not (user and pwd):
-        raise SkipSource("boîte d'alertes non configurée (Secret terrain-mail)")
-    host = (search.get("alertes") or {}).get("imap", "imap.gmail.com")
-    index = {(norm(c["nom"]), code[:2]): code for code, c in communes.items()}
+KEEP_DAYS = 60
+
+
+def inbox_messages(path):
+    """Messages déposés par mailin (fichiers .eml) ; purge des plus vieux."""
+    now = datetime.now(timezone.utc).timestamp()
+    for e in sorted(os.scandir(path), key=lambda e: e.name):
+        if not e.is_file() or not e.name.endswith(".eml"):
+            continue
+        age = (now - e.stat().st_mtime) / 86400
+        if age > KEEP_DAYS:
+            os.remove(e.path)
+            continue
+        if age <= DAYS:
+            with open(e.path, "rb") as f:
+                yield f.read()
+
+
+def imap_messages(host, user, pwd):
     since = (datetime.now(timezone.utc) - timedelta(days=DAYS)).strftime("%d-%b-%Y")
-    ads = {}
     with imaplib.IMAP4_SSL(host, timeout=60) as M:
         M.login(user, pwd)
         M.select("INBOX", readonly=True)
         _, data = M.search(None, "SINCE", since)
         for num in (data[0] or b"").split():
             _, msg = M.fetch(num, "(BODY.PEEK[])")
-            m = email.message_from_bytes(msg[0][1])
-            if not any(s in (m.get("From", "") + m.get("Subject", "")).lower() or s in str(m).lower()[:20000] for s in SENDERS):
+            yield msg[0][1]
+
+
+def fetch(search, communes):
+    inbox = os.environ.get("TERRAIN_INBOX")
+    user, pwd = os.environ.get("TERRAIN_MAIL_USER"), os.environ.get("TERRAIN_MAIL_PASSWORD")
+    if inbox and os.path.isdir(inbox):
+        raws = inbox_messages(inbox)
+    elif user and pwd:
+        raws = imap_messages((search.get("alertes") or {}).get("imap", "imap.gmail.com"), user, pwd)
+    else:
+        raise SkipSource("boîte d'alertes non configurée")
+    index = {(norm(c["nom"]), code[:2]): code for code, c in communes.items()}
+    ads = {}
+    for raw in raws:
+        m = email.message_from_bytes(raw)
+        if not any(s in (m.get("From", "") + m.get("Subject", "")).lower() or s in str(m).lower()[:20000] for s in SENDERS):
+            continue
+        day = None
+        if m.get("Date"):
+            try:
+                day = email.utils.parsedate_to_datetime(m["Date"]).date().isoformat()
+            except (TypeError, ValueError):
+                pass
+        for part in m.walk():
+            if part.get_content_type() != "text/html":
                 continue
-            day = None
-            if m.get("Date"):
-                try:
-                    day = email.utils.parsedate_to_datetime(m["Date"]).date().isoformat()
-                except (TypeError, ValueError):
-                    pass
-            for part in m.walk():
-                if part.get_content_type() != "text/html":
-                    continue
-                body = part.get_payload(decode=True).decode(part.get_content_charset() or "utf-8", "replace")
-                for a in parse_mail(body, communes, index):
-                    a["published"] = min(filter(None, [a["published"], day]), default=None)
-                    old = ads.get(a["id"])
-                    if not old or (a["prix"] and not old["prix"]):
-                        ads[a["id"]] = a
-                    elif old and day and old["published"] and day < old["published"]:
-                        old["published"] = day
+            body = part.get_payload(decode=True).decode(part.get_content_charset() or "utf-8", "replace")
+            for a in parse_mail(body, communes, index):
+                a["published"] = min(filter(None, [a["published"], day]), default=None)
+                old = ads.get(a["id"])
+                if not old or (a["prix"] and not old["prix"]):
+                    ads[a["id"]] = a
+                elif old and day and old["published"] and day < old["published"]:
+                    old["published"] = day
     return list(ads.values()), False

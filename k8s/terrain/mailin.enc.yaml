@@ -1,0 +1,26 @@
+# Adresse unique acceptée par mailin (k8s/terrain/mailin.yaml). Chiffrée par
+# SOPS : difficile à deviner, elle ne doit pas être lisible dans le dépôt public.
+# Modifier : sops k8s/terrain/mailin.enc.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+    name: mailin
+    namespace: terrain
+type: Opaque
+stringData:
+    address: ENC[AES256_GCM,data:jVe+eN5t5NH3bKISPXRcawmik5AroJb6UKp/IgZxKAns,iv:shFEyP1wMfisAtnOZ9Rzvz9GId/3+d0ozwVUCDXN0AA=,tag:7rpMOERKT9mm+IwH3J8n3g==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBzTUlpaTJyNWJKRDZXZEIv
+            RkkwYWF5aVBiTUhQRWVEeXAzNjRSMVQyOVFRCjJpa0lDR0JtS0pmNWZRWG5XRWJO
+            a3FKaHZuQlB6TVQ0U29hVGgzWGhmcTgKLS0tIEE5Tm1Od296WTBhRno4cFVEZ1BP
+            U09PcXgzbWdxUFZYWS9qME03eENGTzgKFXDIMKpQHL4WuoJ5rgivFPhqeJcTkUfI
+            elmH7PqqC9hHMdjwAeGWkJSyDbMXajLITGVIiSQaHLtMd+a4qIu4Qg==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age146qdcn0v66z6mylvdrnucy5g3zencx8wqlga78jd2zwvzknklctqkgpdkz
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-11-03T09:00:37Z"
+    mac: ENC[AES256_GCM,data:9erxacDLZeB5/8a2sn9BD/1HXwQhr4Do+crR1N9NFlp1LYhDKKrl0c55kNuFBX9/IBzIH9hSabmGAKAqeUEj7S0HNd/kehEpX7HJcAFiIWSsWzwoOiHzRGftlnya7TCOOzUNf+GF4LicHwfFmZd3qtZ4ACVc3zVCNakpLpRIBB4=,iv:NRtHkGQ5XI//n9t9jAsLSD90uHMD86hQ7eCiHBAyo9A=,tag:lZhYJfRRqeRFzmscyZ6rlA==,type:str]
+    version: 3.13.3

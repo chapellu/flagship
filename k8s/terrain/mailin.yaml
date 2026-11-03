@@ -1,0 +1,142 @@
+# mailin : réception des alertes Leboncoin / SeLoger sur in.chapellu.fr (MX).
+#
+# Accepte UNE adresse (Secret mailin, chiffré : mailin.enc.yaml) et dépose
+# chaque message dans le volume terrain-inbox, que le CronJob terrain-refresh
+# lit chaque matin. Port 25 exposé par le LoadBalancer k3s (svclb, hostPort sur
+# le nœud) ; il faut aussi le port 25 ouvert dans la security list OCI et ufw
+# (infra/main.tf, infra/cloud-init.yaml).
+#
+# L'image (apps/mailin) est construite par .github/workflows/mailin-image.yml,
+# qui épingle son tag ici.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: terrain-inbox
+  namespace: terrain
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi
+---
+# Certificat pour STARTTLS. Défi HTTP-01 sur le Gateway, comme les sites :
+# l'enregistrement A in.chapellu.fr pointe sur le nœud (infra/dns.tf).
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mailin-tls
+  namespace: terrain
+spec:
+  secretName: mailin-tls
+  dnsNames:
+    - in.chapellu.fr
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-prod
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mailin
+  namespace: terrain
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate # volume RWO
+  selector:
+    matchLabels:
+      app: mailin
+  template:
+    metadata:
+      labels:
+        app: mailin
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        # le volume local-path appartient à root : on le donne à l'utilisateur 101
+        # (le relevé quotidien, lui aussi en 101, doit pouvoir lire et purger)
+        - name: own-inbox
+          image: busybox:1.37
+          command: ["sh", "-c", "chown 101:101 /inbox && chmod 750 /inbox"]
+          securityContext:
+            runAsNonRoot: false
+            runAsUser: 0
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+              add: ["CHOWN", "FOWNER"]
+          volumeMounts:
+            - name: inbox
+              mountPath: /inbox
+      containers:
+        - name: mailin
+          image: ghcr.io/chapellu/mailin:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MAILIN_ADDRESS
+              valueFrom:
+                secretKeyRef: {name: mailin, key: address}
+            - name: MAILIN_HOSTNAME
+              value: in.chapellu.fr
+            - name: MAILIN_DIR
+              value: /inbox
+          ports:
+            - name: smtp
+              containerPort: 2525
+          readinessProbe:
+            tcpSocket:
+              port: smtp
+            periodSeconds: 20
+          livenessProbe:
+            tcpSocket:
+              port: smtp
+            initialDelaySeconds: 10
+            periodSeconds: 60
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: inbox
+              mountPath: /inbox
+            - name: tls
+              mountPath: /tls
+              readOnly: true
+      volumes:
+        - name: inbox
+          persistentVolumeClaim:
+            claimName: terrain-inbox
+        - name: tls
+          secret:
+            secretName: mailin-tls
+            optional: true # pas encore émis : le serveur démarre sans STARTTLS
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mailin
+  namespace: terrain
+spec:
+  type: LoadBalancer
+  # garder l'IP de l'expéditeur dans les journaux
+  externalTrafficPolicy: Local
+  selector:
+    app: mailin
+  ports:
+    - name: smtp
+      port: 25
+      targetPort: smtp

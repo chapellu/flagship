@@ -9,6 +9,8 @@ resources:
   - securitypolicy.yaml
   - referencegrant.yaml
   - cronjob.yaml
+  - mailin.yaml
+  - mailin.enc.yaml
 # Le code du relevé quotidien, monté dans le CronJob. Le suffixe de hash fait
 # suivre le CronJob à chaque changement de code.
 configMapGenerator:

@@ -142,6 +142,20 @@ resource "oci_core_security_list" "public" {
     }
   }
 
+  # Réception des alertes e-mail (MX in.chapellu.fr → mailin, k8s/terrain).
+  # Une seule adresse acceptée, tout le reste refusé : pas un relais.
+  ingress_security_rules {
+    protocol    = "6" # TCP
+    source      = "0.0.0.0/0"
+    source_type = "CIDR_BLOCK"
+    description = "SMTP (alertes terrain)"
+
+    tcp_options {
+      min = 25
+      max = 25
+    }
+  }
+
   egress_security_rules {
     protocol         = "all"
     destination      = "0.0.0.0/0"
