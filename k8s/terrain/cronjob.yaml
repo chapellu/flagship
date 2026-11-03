@@ -46,7 +46,8 @@ spec:
                 - name: TERRAIN_DATA
                   value: /data
                 - name: TERRAIN_SOURCES
-                  value: bienici
+                  # ParuVendu lit des pages publiques une à une : ~10-15 min par jour
+                  value: bienici,notaires,paruvendu
                 - name: PYTHONDONTWRITEBYTECODE
                   value: "1"
               resources:

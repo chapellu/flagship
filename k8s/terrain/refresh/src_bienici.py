@@ -54,6 +54,7 @@ def fetch(search, communes):
             "vendeur": a.get("accountDisplayName") if a.get("accountType") == "agency" else VENDEUR.get(a.get("accountType"), a.get("accountType")),
             "constructeur": a.get("propertyType") == "programme" or is_constructeur(a.get("title"), a.get("description")),
             "photo": photos[0].get("url") if photos else None,
-            "published": (a.get("publicationDate") or "")[:10] or None,
+            # les annonces importées d'agences ont souvent 1970-01-01 : pas de date
+            "published": p if (p := (a.get("publicationDate") or "")[:10]) >= "2000" else None,
         })
     return ads, complete

@@ -33,7 +33,7 @@ lit en `fetch` :
 ## Relevé quotidien des annonces
 
 `k8s/terrain/cronjob.yaml`, chaque matin à 6 h 30 : `k8s/terrain/refresh/refresh.py`
-interroge chaque source (`src_<nom>.py`, liste dans `TERRAIN_SOURCES`), garde les
+interroge chaque source (`src_<nom>.py`, liste dans `TERRAIN_SOURCES` : Bien'ici, immobilier.notaires.fr, ParuVendu), garde les
 annonces des communes de `communes.json`, et met à jour `market.json`. Une annonce
 absente d'un relevé **complet** est notée partie ce jour-là ; un relevé incomplet ne
 marque rien. Les doublons entre sites (même commune, surface et prix à quelques %

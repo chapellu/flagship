@@ -107,6 +107,9 @@ def merge(market, src, ads, complete, day):
             h["relist"] = h.get("relist", 0) + 1  # revenue après disparition
             h["gone"] = None
         h.update({k: v for k, v in a.items() if v is not None})
+        # date de mise en ligne bidon (Bien'ici : 1970-01-01) : on l'oublie, l'âge partira de "first"
+        if (h.get("published") or "9") < "2000":
+            h.pop("published", None)
         h["last"] = day
         if a["prix"] and (not h["prices"] or h["prices"][-1][1] != a["prix"]):
             h["prices"].append([day, a["prix"]])

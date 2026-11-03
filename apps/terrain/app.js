@@ -761,9 +761,30 @@ let ALLADS = [];
 const DAY = 864e5;
 const todayISO = () => new Date().toISOString().slice(0, 10);
 const adKey = (url) => { const m = /bienici\.com\/annonce\/(?:.*\/)?([^/?#]+)/.exec(url || ""); return m ? "bienici:" + m[1] : url; };
-const since = (a) => a.published && a.published < (a.first || "9") ? a.published : a.first || a.published;
+// Date de mise en ligne : certains sites mettent une date bidon (Bien'ici : 1970-01-01
+// pour les annonces importées d'agences). Hors 2000-aujourd'hui, on l'ignore.
+const validPub = (a) => !!a.published && a.published >= "2000" && a.published <= todayISO();
+const since = (a) => (validPub(a) && a.published < (a.first || "9") ? a.published : a.first || (validPub(a) ? a.published : null));
+// âge fiable : vraie date de mise en ligne, ou annonce apparue après le début du suivi
+const trackStart = () => MARKET?.runs?.[0]?.date;
+const knownAge = (a) => validPub(a) || (!!a.first && !!trackStart() && a.first > trackStart());
 function daysOn(a) { const s = since(a); return s ? Math.max(0, Math.round((Date.parse(a.gone || todayISO()) - Date.parse(s)) / DAY)) : null; }
-const isNew = (a) => !a.gone && daysOn(a) != null && daysOn(a) <= 7 && !!MARKET;
+const isNew = (a) => !a.gone && knownAge(a) && daysOn(a) != null && daysOn(a) <= 7 && !!MARKET;
+// « 12 j », « 5 mois », « 2 ans » ; jamais 20 760 j
+function fmtAge(d) {
+  if (d == null) return "–";
+  if (d < 60) return d + " j";
+  if (d < 365) return Math.round(d / 30.44) + " mois";
+  const y = Math.round(d / 365.25 * 2) / 2;
+  return String(y).replace(".5", ",5") + (y < 2 ? " an" : " ans");
+}
+const fmtFull = (iso) => (iso ? new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "");
+// âge lisible, date exacte au survol ; âge inconnu affiché « ≥ N » (vu depuis le début du suivi)
+function ageHTML(a) {
+  const d = daysOn(a), k = knownAge(a);
+  const t = k ? `En ligne depuis le ${fmtFull(since(a))}` : `Date de mise en ligne inconnue : vue par le relevé depuis le ${fmtFull(a.first)}`;
+  return `<span class="age" title="${esc(t + (a.gone ? ` · partie le ${fmtFull(a.gone)}` : ""))}">${k ? fmtAge(d) : d ? "≥ " + fmtAge(d) : "?"}</span>`;
+}
 const median = (v) => { v = v.filter((x) => x != null).sort((a, b) => a - b); return v.length ? v[Math.floor((v.length - 1) / 2)] : null; };
 const fmtd = (iso) => (iso ? new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : "");
 function buildAdList() {
@@ -782,7 +803,7 @@ function marketLine(a) {
   if (!MARKET) return "";
   if (a.stale) return `<p class="sub">Plus vue au dernier relevé : sans doute vendue ou retirée.</p>`;
   const d = daysOn(a);
-  const bits = [a.gone ? `partie le ${fmtd(a.gone)} après ${d} j en ligne` : `en ligne depuis ${d} j${isNew(a) ? " · nouvelle" : ""}`];
+  const bits = [a.gone ? `partie le ${fmtd(a.gone)} après ${ageHTML(a)} en ligne` : `en ligne depuis ${ageHTML(a)}${isNew(a) ? " · nouvelle" : ""}${knownAge(a) ? "" : " (date exacte inconnue)"}`];
   if (a.drop) bits.push(`prix baissé de ${fmtk(a.drop)}`);
   if (a.relist) bits.push("remise en ligne");
   return `<p class="sub">${bits.join(" · ")}</p>`;
@@ -815,7 +836,7 @@ function renderAds() {
     <td><strong>${esc(a.commune)}</strong>${a.top ? ' <span class="chip g">★</span>' : ""}<span class="sub">${esc(a.titre || "")}</span></td><td class="num">${a.m2} m²</td>
     <td class="num">${fmtk(a.prix)}${a.drop ? `<span class="sub">−${fmtk(a.drop)}</span>` : ""}</td><td class="num">${a.eurm2 ?? "–"}<span class="sub">${priceBadge(a, false)}</span></td>
     <td class="num">${c ? c.wt + " min" : "–"}</td><td class="num">${c ? c.alt + " m" : "–"}</td>
-    ${MARKET ? `<td class="num">${a.stale ? "–" : daysOn(a) + " j"}<span class="sub">${a.stale ? "plus vue" : a.gone ? "partie le " + fmtd(a.gone) : isNew(a) ? "nouvelle" : "depuis le " + fmtd(since(a))}</span></td>` : ""}
+    ${MARKET ? `<td class="num">${a.stale ? "–" : ageHTML(a)}<span class="sub">${a.stale ? "plus vue" : a.gone ? "partie le " + fmtd(a.gone) : isNew(a) ? "nouvelle" : knownAge(a) ? "depuis le " + fmtd(since(a)) : "date inconnue"}</span></td>` : ""}
     <td><a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.agence || a.vendeur || "voir")} ↗</a>${a.src ? `<span class="sub">${esc(a.src)}${a.constructeur ? " · constructeur" : ""}</span>` : a.constructeur ? '<span class="sub">constructeur</span>' : ""}
     ${a.lat && !a.gone ? `<button type="button" class="linkish" data-ll="${a.lat},${a.lon}">carte</button>` : ""}</td></tr>`).join("") || `<tr><td colspan="9">Aucune annonce avec ces filtres.</td></tr>`;
   const goLL = (e) => { const b = e.target.closest("button[data-ll]"); if (!b) return; const [la, lo] = b.dataset.ll.split(",").map(Number); showTab("carte"); setTimeout(() => { map.invalidateSize(); map.setView([la, lo], 15); }, 50); };
@@ -832,21 +853,22 @@ function renderMarket() {
   const sectOf = Object.fromEntries(C.map((c) => [c.code, c.sect]));
   for (const a of ALLADS) if (a.src) (bySect[sectOf[a.insee] || "?"] ||= []).push(a);
   const recent = (a) => a.gone && Date.parse(todayISO()) - Date.parse(a.gone) <= 30 * DAY;
-  const fast = gone.filter((a) => daysOn(a) <= 45).sort((a, b) => b.gone.localeCompare(a.gone)).slice(0, 8);
-  const slow = live.filter((a) => daysOn(a) >= 120).sort((a, b) => daysOn(b) - daysOn(a)).slice(0, 8);
+  const kLive = live.filter(knownAge), kGone = gone.filter(knownAge);
+  const fast = kGone.filter((a) => daysOn(a) <= 45).sort((a, b) => b.gone.localeCompare(a.gone)).slice(0, 8);
+  const slow = kLive.filter((a) => daysOn(a) >= 120).sort((a, b) => daysOn(b) - daysOn(a)).slice(0, 8);
   const li = (a, extra) => `<li><a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.commune)} · ${a.m2} m² · ${fmtk(a.prix)}</a> <span class="sub">${extra}</span></li>`;
   const srcs = Object.entries(last.sources).map(([k, v]) => v.ok ? `${esc(k)} ${v.n}${v.complete ? "" : " (incomplet)"}` : `<b>${esc(k)} en panne</b>`).join(" · ");
   el.innerHTML = `<p class="hint">Relevé chaque matin. Dernier passage le ${fmtd(last.date)} : ${srcs}. Suivi depuis le ${fmtd(start)}${runs.length < 30 ? ` : il faut quelques semaines d'historique pour que les durées de vente veuillent dire quelque chose` : ""}.</p>
   <div class="kpis"><div><b>${live.length}</b><span>en ligne</span></div><div><b>${live.filter(isNew).length}</b><span>nouvelles (7 j)</span></div>
   <div><b>${live.filter((a) => a.drop).length}</b><span>prix baissé</span></div><div><b>${gone.filter(recent).length}</b><span>parties (30 j)</span></div>
-  <div><b>${median(live.map(daysOn)) ?? "–"} j</b><span>en ligne, médiane</span></div><div><b>${median(gone.map(daysOn)) ?? "–"} j</b><span>avant de partir, médiane</span></div></div>
-  <div class="cols2"><div><h3>Parties vite (≤ 45 j)</h3>${fast.length ? `<ul>${fast.map((a) => li(a, `partie le ${fmtd(a.gone)} après ${daysOn(a)} j`)).join("")}</ul>` : `<p class="hint">Rien encore : il faut que des annonces disparaissent du relevé.</p>`}</div>
-  <div><h3>Traînent (≥ 120 j)</h3>${slow.length ? `<ul>${slow.map((a) => li(a, `${daysOn(a)} j${a.drop ? ` · −${fmtk(a.drop)}` : ""} : vendeur peut-être prêt à négocier`)).join("")}</ul>` : `<p class="hint">Aucune.</p>`}</div></div>
+  <div><b>${fmtAge(median(kLive.map(daysOn)))}</b><span>en ligne, médiane${live.length > kLive.length ? ` (${kLive.length} dates connues)` : ""}</span></div><div><b>${fmtAge(median(kGone.map(daysOn)))}</b><span>avant de partir, médiane</span></div></div>
+  <div class="cols2"><div><h3>Parties vite (≤ 45 j)</h3>${fast.length ? `<ul>${fast.map((a) => li(a, `partie le ${fmtd(a.gone)} après ${fmtAge(daysOn(a))}`)).join("")}</ul>` : `<p class="hint">Rien encore : il faut que des annonces disparaissent du relevé.</p>`}</div>
+  <div><h3>Traînent (≥ 120 j)</h3>${slow.length ? `<ul>${slow.map((a) => li(a, `${fmtAge(daysOn(a))}${a.drop ? ` · −${fmtk(a.drop)}` : ""} : vendeur peut-être prêt à négocier`)).join("")}</ul>` : `<p class="hint">Aucune.</p>`}</div></div>
   <h3>Par secteur</h3><div class="tablewrap"><table><thead><tr><th>Secteur</th><th>En ligne</th><th>€/m² médian</th><th>Jours en ligne (médiane)</th><th>Parties (30 j)</th><th>Durée avant départ</th></tr></thead><tbody>
   ${Object.entries(bySect).sort((a, b) => b[1].length - a[1].length).map(([s, v]) => { const l = v.filter((a) => !a.gone), g = v.filter((a) => a.gone);
-    return `<tr><td>${esc(s)}</td><td class="num">${l.length}</td><td class="num">${median(l.map((a) => a.eurm2)) ?? "–"}</td><td class="num">${median(l.map(daysOn)) ?? "–"}</td><td class="num">${g.filter(recent).length}</td><td class="num">${g.length ? median(g.map(daysOn)) + " j" : "–"}</td></tr>`; }).join("")}
+    return `<tr><td>${esc(s)}</td><td class="num">${l.length}</td><td class="num">${median(l.map((a) => a.eurm2)) ?? "–"}</td><td class="num">${fmtAge(median(l.filter(knownAge).map(daysOn)))}</td><td class="num">${g.filter(recent).length}</td><td class="num">${g.some(knownAge) ? fmtAge(median(g.filter(knownAge).map(daysOn))) : "–"}</td></tr>`; }).join("")}
   </tbody></table></div>
-  <p class="hint">Une annonce qui disparaît n'est pas forcément vendue : retrait, compromis, ou remise en ligne plus tard (signalée). Les doublons entre sites sont fusionnés.</p>`;
+  <p class="hint">Durées calculées seulement sur les annonces dont on connaît la date de mise en ligne (vraie date du site, ou apparue depuis le début du suivi) : beaucoup d'agences publient sans date. Une annonce qui disparaît n'est pas forcément vendue : retrait, compromis, ou remise en ligne plus tard (signalée). Les doublons entre sites sont fusionnés.</p>`;
 }
 
 // ---- textes
