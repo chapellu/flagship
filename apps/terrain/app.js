@@ -322,7 +322,7 @@ function buildToggles(extra) {
   ];
   const lay = Object.fromEntries(items.map(([k, , l]) => [k, l]));
   for (const [k, , l] of items) if (l) { if (S.show[k]) map.addLayer(l); else map.removeLayer(l); }
-  $("maptoggles").innerHTML = items.map(([k, label, , ic]) => `<label class="chk"><input type="checkbox" data-k="${k}">${ic}${esc(label)}</label>`).join("");
+  $("maptoggles").innerHTML = items.map(([k, label, , ic]) => `<label class="chk"><input type="checkbox" data-k="${k}">${ic}${esc(label)}<span class="cnt" data-cnt="${k}"></span></label>`).join("");
   syncToggles = () => $("maptoggles").querySelectorAll("input").forEach((i) => (i.checked = lay[i.dataset.k] ? map.hasLayer(lay[i.dataset.k]) : !!S.show[i.dataset.k]));
   $("maptoggles").addEventListener("change", (e) => {
     const k = e.target.dataset.k;
@@ -330,11 +330,16 @@ function buildToggles(extra) {
     S.show[k] = e.target.checked;
     if (!lay[k]) { render(); return; } // « hors zone verte » : filtre, pas calque
     if (S.show[k]) map.addLayer(lay[k]); else map.removeLayer(lay[k]);
+    if (k === "parcels" && !S.show[k]) layers.hl.clearLayers(); // pas de contour orphelin
     renderMapList();
     if (k === "cadastre" && S.show[k] && map.getZoom() < 14) map.setZoom(15); // le cadastre ne s'affiche qu'en zoomant
     save();
   });
-  map.on("overlayadd overlayremove", () => { for (const k in lay) if (lay[k]) S.show[k] = map.hasLayer(lay[k]); syncToggles(); renderMapList(); save(); });
+  map.on("overlayadd overlayremove", () => {
+    for (const k in lay) if (lay[k]) S.show[k] = map.hasLayer(lay[k]);
+    if (!S.show.parcels) layers.hl.clearLayers();
+    syncToggles(); renderMapList(); save();
+  });
   syncToggles();
 }
 function drawLegend() {
@@ -877,6 +882,20 @@ function syncMarkers() {
     if (!p._m) continue;
     const ok = (S.show.outside || !!parcelCommune(p)?.zone) && parcelOk(p);
     if (ok) layers.parcels.addLayer(p._m); else { layers.parcels.removeLayer(p._m); if (p._poly) { layers.parcels.removeLayer(p._poly); p._poly = null; } }
+  }
+  // Compteurs sur la barre « afficher » : combien sont montrés, et combien sont
+  // cachés hors zone verte ou par les filtres (sinon le bouton paraît sans effet).
+  const n = (list, lay) => { const m = list.filter((x) => x._m); const shown = m.filter((x) => lay(x).hasLayer(x._m)).length; return [shown, m.length - shown]; };
+  const cnt = {
+    parcels: n(PARCELS, () => layers.parcels),
+    topads: n(ALLADS.filter((a) => a.top), () => layers.topads),
+    ads: n(ALLADS.filter((a) => !a.top), () => layers.ads),
+  };
+  for (const [k, [shown, hid]] of Object.entries(cnt)) {
+    const el = document.querySelector(`#maptoggles [data-cnt="${k}"]`);
+    if (!el) continue;
+    el.textContent = ` ${shown}${hid ? ` (+${hid} cachée${hid > 1 ? "s" : ""})` : ""}`;
+    el.title = hid ? `${hid} hors zone verte ou exclue${hid > 1 ? "s" : ""} par les filtres : cochez « Hors zone verte aussi » ou élargissez les filtres` : "";
   }
 }
 // Liste sous la carte = exactement ce que montre la carte : communes visibles dans
