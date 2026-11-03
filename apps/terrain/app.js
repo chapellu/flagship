@@ -25,7 +25,7 @@ const DEF = {
   profiles: { A: { w: { ...DEF_W }, famshare: 80 }, B: { w: { ...DEF_W }, famshare: 80 } },
   days: 4,
   iso: { work: 55, famA: 40, famB: 75, alt: 350, rush: 1.4 },
-  f: { fibre: true, ecole: true, zone: false, prix: 200, m2: 0 },
+  f: { fibre: true, ecole: true, zone: false, prix: 200, m2: 0, constr: true },
   show: { parcels: true, topads: true, ads: false, creches: false, cadastre: false, outside: false },
   workAt: "qg", // "qg" : le lieu de travail de config.json ; "creche" : la crèche la plus proche de chez soi
 };
@@ -123,7 +123,7 @@ function buildControls() {
     $("i-" + k).value = S.iso[k];
     $("i-" + k).addEventListener("input", (e) => { S.iso[k] = +e.target.value; render(); });
   }
-  for (const k of ["fibre", "ecole", "zone"]) {
+  for (const k of ["fibre", "ecole", "zone", "constr"]) {
     $("f-" + k).checked = S.f[k];
     $("f-" + k).addEventListener("change", (e) => { S.f[k] = e.target.checked; render(); });
   }
@@ -137,7 +137,7 @@ function buildControls() {
     const keep = S.profile;
     S = structuredClone(DEF); S.profile = keep === "mix" ? "A" : keep;
     for (const k of ["work", "famA", "famB", "alt", "rush"]) $("i-" + k).value = S.iso[k];
-    for (const k of ["fibre", "ecole", "zone"]) $("f-" + k).checked = S.f[k];
+    for (const k of ["fibre", "ecole", "zone", "constr"]) $("f-" + k).checked = S.f[k];
     $("f-prix").value = S.f.prix;
     syncProfile(); syncWeights(); render();
   });
@@ -472,10 +472,10 @@ function parcelPopup(p) {
 // de la commune (communes.json, au moins 5 ventes). À défaut, les annonces en ligne
 // du même secteur (au moins 5) ; sinon 2 à 4 ventes, marqué « indicatif ». Seuils : ±15 %.
 function priceVerdict(a) {
-  if (!a.m2 || !a.prix) return null;
+  if (!a.m2 || !a.prix || constrVerdict(a)?.k === "non") return null; // vignes, loisir : pas comparable
   const e = a.prix / a.m2, c = C.find((x) => x.code === a.insee);
   if (!c) return null;
-  const peers = () => ALLADS.filter((x) => x !== a && !x.gone && !x.stale && x.m2 && C.find((y) => y.code === x.insee)?.sect === c.sect).map((x) => x.prix / x.m2);
+  const peers = () => ALLADS.filter((x) => x !== a && !x.gone && !x.stale && x.m2 && constrVerdict(x)?.k !== "non" && C.find((y) => y.code === x.insee)?.sect === c.sect).map((x) => x.prix / x.m2);
   let ref, src, typ, weak = false;
   if (c.eurm2 && c.nv >= 5) { ref = c.eurm2; src = `médiane de ${c.nv} ventes à ${c.nom}`; typ = c.m2; }
   else if (peers().length >= 5) { const p = peers(); ref = median(p); src = `médiane de ${p.length} annonces en ligne, secteur ${c.sect}`; }
@@ -495,12 +495,12 @@ function priceBadge(a, full = true) {
   const x = Math.max(0, Math.min(100, 50 + v.pct)); // jauge de −50 % à +50 %
   return `<div class="pverdict"><span class="chip ${v.cls}">${esc(v.label)} · ${pctTxt(v.pct)}</span>
     <div class="pgauge" role="img" aria-label="${esc(v.label)}, ${pctTxt(v.pct)} par rapport au marché"><span style="left:${x}%"></span></div>
-    <div class="sub">${v.eurm2} €/m² contre ${v.ref} €/m² (${esc(v.src)})${v.size ? `. Attention : ${esc(v.size)}.` : ""}</div></div>`;
+    <div class="sub">${v.eurm2} €/m² contre ${v.ref} €/m² (${esc(v.src)})${v.size ? `. Attention : ${esc(v.size)}.` : ""}${v.cls === "g" && constrVerdict(a) && constrVerdict(a).k !== "oui" ? " <b>Prix bas : vérifier d'abord que le terrain est constructible.</b>" : ""}</div></div>`;
 }
 function adPopup(a) {
   return `<div class="pop"><span class="tag ad">Annonce${a.top ? " mise en avant" : ""}</span>${a.photo ? `<img src="${esc(a.photo)}" alt="">` : ""}<h3>${esc(a.commune)} · ${fmtk(a.prix)}</h3>
   <div class="sub">${a.m2} m² · ${a.eurm2} €/m²${a.vendeur ? " · " + esc(a.vendeur) : ""}${a.top ? " · " + esc(a.top) : ""}</div>
-  ${priceBadge(a)}${marketLine(a)}${a.analyse ? `<p>${esc(a.analyse)}</p>` : ""}
+  ${constrBadge(a)}${priceBadge(a)}${marketLine(a)}${a.analyse ? `<p>${esc(a.analyse)}</p>` : ""}
   ${a.lat ? routeAct(a.lat, a.lon, a.pos) : ""}
   <div class="act"><a class="go" href="${esc(a.url)}" target="_blank" rel="noopener">Voir l'annonce ↗</a><button type="button" onclick="window.__goAd('${esc(a.id)}')">Dans la liste</button>
   ${a.lat ? `<a href="${cadastreUrl(a.lat, a.lon)}" target="_blank" rel="noopener">Cadastre ↗</a>` : ""}</div></div>`;
@@ -607,7 +607,32 @@ const priceOk = (a) => !a.prix || a.prix <= S.f.prix * 1000;
 // surface d'une parcelle repérée : « 3 002 m² » ; terrain mixte : constructible + zone A/N
 const parcelM2 = (p) => (p.kind === "mixte" ? (+p.constr || 0) + (+p.agri || 0) : +String(p.surface || "").replace(/[^0-9]/g, "") || 0);
 const sizeOk = (a) => !a.m2 || a.m2 >= S.f.m2;
-const adOk = (a) => priceOk(a) && sizeOk(a);
+// Constructibilité d'une annonce (relevé quotidien) : texte de l'annonce (constr_txt)
+// et zone du PLU au point (ztype), fiable seulement si la position est exacte.
+// Bien'ici floute la plupart des positions (~250 m) : un point flouté tombe souvent
+// dans le pré d'à côté, donc une zone A/N y vaut « à vérifier », pas « non ».
+const ZOK = /^(U|AUc)/, ZNO = /^(A|N)(?!U)/;
+function constrVerdict(a) {
+  if (!a.src) return null; // annonce commentée à la main : déjà vérifiée
+  const exact = a.pos === "exact", z = a.ztype, cheap = a.m2 && (a.prix / a.m2 < 20 || a.m2 > 10000);
+  const zl = z ? ` (zone ${a.zone || z} du PLU${exact ? "" : " près du point flouté"})` : "";
+  if (a.constr_txt === false) return { k: "non", why: "l'annonce parle de vignes, de loisir, d'agricole ou de non constructible" + zl };
+  if (exact && z && ZNO.test(z)) return { k: "non", why: `zone ${a.zone || z} du PLU : agricole ou naturelle` };
+  if (exact && z && ZOK.test(z)) return { k: "oui", why: `zone ${a.zone || z} du PLU` };
+  if (a.constr_txt === true && !cheap && !(z && ZNO.test(z))) return { k: "oui", why: "l'annonce le dit" + zl };
+  if (z && ZNO.test(z)) return { k: "?", why: "zone agricole ou naturelle autour du point" + zl };
+  if (z && /^AUs/.test(z)) return { k: "?", why: "zone à urbaniser plus tard (AUs) : pas constructible tout de suite" };
+  if (cheap) return { k: "?", why: "très grand ou très bon marché : souvent agricole, vérifier le zonage" + zl };
+  return { k: "?", why: "l'annonce ne le dit pas" + zl };
+}
+const constrOk = (a) => !S.f.constr || constrVerdict(a)?.k !== "non";
+function constrBadge(a, full = true) {
+  const v = constrVerdict(a);
+  if (!v) return "";
+  const [cls, txt] = v.k === "oui" ? ["g", "constructible"] : v.k === "non" ? ["b", "non constructible"] : ["wa", "constructible ? à vérifier"];
+  return full ? `<div class="sub"><span class="chip ${cls}">${txt}</span> ${esc(v.why)}</div>` : `<span class="chip ${cls}" title="${esc(v.why)}">${txt}</span>`;
+}
+const adOk = (a) => priceOk(a) && sizeOk(a) && constrOk(a);
 const parcelOk = (p) => !S.f.m2 || parcelM2(p) >= S.f.m2;
 function syncMarkers() {
   const bc = byCodeC();
@@ -641,7 +666,7 @@ function renderMapList() {
   $("top5").innerHTML = list.map(({ c, ads, parcels }) => `<article class="mcard${c.why.length ? " out" : ""}">
     <button type="button" class="mhead" data-code="${c.code}">${sc(c)}<b>${esc(c.nom)}</b><span>${c.alt} m · ${esc(workShort())} ${c.wt} min · ${esc(place("famA").short)} ${c.famA} · ${esc(place("famB").short)} ${c.famB} min${c.zone ? "" : " · hors zone"}${c.why.length ? " · exclue : " + esc(c.why.join(", ")) : ""}</span></button>
     ${ads.length || parcels.length ? `<ul>${parcels.map((p) => `<li><button type="button" data-pid="${esc(p.id)}"><span class="pmark ${p.kind} sm"></span>${esc(p.kind === "mixte" ? `${p.constr} m² + ${p.agri} m² A/N` : p.surface)} · ${esc(p.zone)}</button></li>`).join("")}
-      ${ads.sort((x, y) => (!!y.top - !!x.top) || x.prix - y.prix).map((a) => `<li><button type="button" data-aid="${esc(a.id)}"><span class="amark sm${a.top ? " top" : ""}">${a.top ? "★" : "€"}</span>${a.m2} m² · ${fmtk(a.prix)}${a.drop ? ` <span class="chip wa">−${fmtk(a.drop)}</span>` : ""}${isNew(a) ? ' <span class="chip g">nouvelle</span>' : ""} ${priceBadge(a, false)}</button>
+      ${ads.sort((x, y) => (!!y.top - !!x.top) || x.prix - y.prix).map((a) => `<li><button type="button" data-aid="${esc(a.id)}"><span class="amark sm${a.top ? " top" : ""}">${a.top ? "★" : "€"}</span>${a.m2} m² · ${fmtk(a.prix)}${a.drop ? ` <span class="chip wa">−${fmtk(a.drop)}</span>` : ""}${isNew(a) ? ' <span class="chip g">nouvelle</span>' : ""} ${priceBadge(a, false)}${constrVerdict(a)?.k === "oui" ? "" : " " + constrBadge(a, false)}</button>
         <a href="${esc(a.url)}" target="_blank" rel="noopener" aria-label="Ouvrir l'annonce">↗</a></li>`).join("")}</ul>` : ""}
   </article>`).join("");
   $("top5").onclick = (e) => {
@@ -829,12 +854,12 @@ function renderAds() {
   }).join("");
   if (hiddenTops) $("atop").insertAdjacentHTML("beforeend", `<p class="hint">${hiddenTops} annonce${hiddenTops > 1 ? "s" : ""} mise${hiddenTops > 1 ? "s" : ""} en avant masquée${hiddenTops > 1 ? "s" : ""} par les filtres (${S.f.prix} k€ max${S.f.m2 ? `, ${S.f.m2} m² min.` : ""}).</p>`);
   const m2 = S.f.m2, px = S.f.prix * 1000, z = $("a-zone").checked, g = $("a-gone").checked;
-  const rows = ALLADS.filter((a) => a.m2 >= m2 && a.prix <= px && (!z || byCode[a.insee]?.zone) && (g || (!a.gone && !a.stale)))
+  const rows = ALLADS.filter((a) => a.m2 >= m2 && a.prix <= px && constrOk(a) && (!z || byCode[a.insee]?.zone) && (g || (!a.gone && !a.stale)))
     .map((a) => ({ a, c: byCode[a.insee] })).sort((x, y) => (!!x.a.gone - !!y.a.gone) || (y.c?.score ?? 0) - (x.c?.score ?? 0));
   $("atbl").tHead.innerHTML = `<tr><th>Score commune</th><th>Commune</th><th>Surface</th><th>Prix</th><th>€/m²</th><th>${esc(workShort())}</th><th>Alt. bourg</th>${MARKET ? "<th>En ligne</th>" : ""}<th>Annonce</th></tr>`;
   $("atbl").tBodies[0].innerHTML = rows.map(({ a, c }) => `<tr data-aid="${esc(a.id)}"${a.gone || a.stale ? ' class="gone"' : ""}><td class="num">${c ? c.score : "–"}${c?.zone ? '<span class="sub">zone verte</span>' : ""}</td>
     <td><strong>${esc(a.commune)}</strong>${a.top ? ' <span class="chip g">★</span>' : ""}<span class="sub">${esc(a.titre || "")}</span></td><td class="num">${a.m2} m²</td>
-    <td class="num">${fmtk(a.prix)}${a.drop ? `<span class="sub">−${fmtk(a.drop)}</span>` : ""}</td><td class="num">${a.eurm2 ?? "–"}<span class="sub">${priceBadge(a, false)}</span></td>
+    <td class="num">${fmtk(a.prix)}${a.drop ? `<span class="sub">−${fmtk(a.drop)}</span>` : ""}</td><td class="num">${a.eurm2 ?? "–"}<span class="sub">${priceBadge(a, false)} ${constrBadge(a, false)}</span></td>
     <td class="num">${c ? c.wt + " min" : "–"}</td><td class="num">${c ? c.alt + " m" : "–"}</td>
     ${MARKET ? `<td class="num">${a.stale ? "–" : ageHTML(a)}<span class="sub">${a.stale ? "plus vue" : a.gone ? "partie le " + fmtd(a.gone) : isNew(a) ? "nouvelle" : knownAge(a) ? "depuis le " + fmtd(since(a)) : "date inconnue"}</span></td>` : ""}
     <td><a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.agence || a.vendeur || "voir")} ↗</a>${a.src ? `<span class="sub">${esc(a.src)}${a.constructeur ? " · constructeur" : ""}</span>` : a.constructeur ? '<span class="sub">constructeur</span>' : ""}
@@ -848,7 +873,7 @@ function renderMarket() {
   const el = $("market");
   if (!MARKET) { el.innerHTML = `<p class="hint">Le relevé quotidien n'a pas encore tourné : les annonces ci-dessous sont celles du relevé manuel.</p>`; return; }
   const runs = MARKET.runs || [], last = runs[runs.length - 1] || { sources: {} }, start = runs[0]?.date;
-  const live = ALLADS.filter((a) => !a.gone && !a.stale && a.src), gone = ALLADS.filter((a) => a.gone);
+  const live = ALLADS.filter((a) => !a.gone && !a.stale && a.src && constrVerdict(a)?.k !== "non"), gone = ALLADS.filter((a) => a.gone);
   const bySect = {};
   const sectOf = Object.fromEntries(C.map((c) => [c.code, c.sect]));
   for (const a of ALLADS) if (a.src) (bySect[sectOf[a.insee] || "?"] ||= []).push(a);
@@ -868,7 +893,7 @@ function renderMarket() {
   ${Object.entries(bySect).sort((a, b) => b[1].length - a[1].length).map(([s, v]) => { const l = v.filter((a) => !a.gone), g = v.filter((a) => a.gone);
     return `<tr><td>${esc(s)}</td><td class="num">${l.length}</td><td class="num">${median(l.map((a) => a.eurm2)) ?? "–"}</td><td class="num">${fmtAge(median(l.filter(knownAge).map(daysOn)))}</td><td class="num">${g.filter(recent).length}</td><td class="num">${g.some(knownAge) ? fmtAge(median(g.filter(knownAge).map(daysOn))) : "–"}</td></tr>`; }).join("")}
   </tbody></table></div>
-  <p class="hint">Durées calculées seulement sur les annonces dont on connaît la date de mise en ligne (vraie date du site, ou apparue depuis le début du suivi) : beaucoup d'agences publient sans date. Une annonce qui disparaît n'est pas forcément vendue : retrait, compromis, ou remise en ligne plus tard (signalée). Les doublons entre sites sont fusionnés.</p>`;
+  <p class="hint">Chiffres hors annonces non constructibles (vignes, loisir, zone agricole). Durées calculées seulement sur les annonces dont on connaît la date de mise en ligne (vraie date du site, ou apparue depuis le début du suivi) : beaucoup d'agences publient sans date. Une annonce qui disparaît n'est pas forcément vendue : retrait, compromis, ou remise en ligne plus tard (signalée). Les doublons entre sites sont fusionnés.</p>`;
 }
 
 // ---- textes

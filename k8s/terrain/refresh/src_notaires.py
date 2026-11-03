@@ -55,7 +55,7 @@ def fetch(search, communes):
             "pos": "commune",
             "prix": a.get("prixAffiche") or a.get("prixTotal"),
             "m2": a.get("surfaceTerrain") or a.get("surface"),
-            "titre": desc[:160] or None,
+            "titre": desc[:160] or None, "desc": desc,
             "vendeur": "notaire",
             "constructeur": is_constructeur(desc),
             "photo": a.get("urlPhotoPrincipale"),

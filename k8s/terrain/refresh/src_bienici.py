@@ -50,7 +50,7 @@ def fetch(search, communes):
             "insee": insee, "commune": a.get("city"), "lat": pos.get("lat"), "lon": pos.get("lon"),
             "pos": {"exact": "exact", "disk": "approx"}.get(blur.get("type"), "commune"),
             "prix": a.get("price"), "m2": a.get("landSurfaceArea") or a.get("surfaceArea"),
-            "titre": a.get("title"),
+            "titre": a.get("title"), "desc": a.get("description"),
             "vendeur": a.get("accountDisplayName") if a.get("accountType") == "agency" else VENDEUR.get(a.get("accountType"), a.get("accountType")),
             "constructeur": a.get("propertyType") == "programme" or is_constructeur(a.get("title"), a.get("description")),
             "photo": photos[0].get("url") if photos else None,

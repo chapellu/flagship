@@ -194,7 +194,7 @@ def fetch(search, communes):
         out.append({
             "id": "paruvendu:" + k, "src": NAME, "url": a["url"],
             "insee": insee, "commune": a["ville"], "lat": c.get("lat"), "lon": c.get("lon"), "pos": "commune",
-            "prix": a["prix"], "m2": a["m2"], "titre": a["titre"],
+            "prix": a["prix"], "m2": a["m2"], "titre": a["titre"], "desc": a["desc"],
             "vendeur": a["vendeur"],
             "constructeur": is_constructeur(a["titre"], a["desc"]),
             "photo": a["photo"],
