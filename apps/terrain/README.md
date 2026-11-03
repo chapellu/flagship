@@ -107,15 +107,15 @@ EPCI dans `communes.json`, sinon le nom de l'EPCI raccourci (« CC du Pays de X 
 | `alt` | IGN RGE ALTI au centre | 198 identiques, les autres à quelques mètres |
 | `workcar`, `famA`, `famB`, `car` | OSRM sans trafic vers `work`, `famA`, `famB`, `city` (comme `grid.json`) | 228–229 / 229 à la minute |
 | `work`, `workmode` | le plus court de `worktrain` et `workcar` × 1,4 (heure de pointe) | 229 / 229 |
-| `prix`, `m2`, `eurm2`, `nv`, `big` | DVF, 3 dernières années complètes : ventes sans local, parcelles AB/S/AG/J, ≥ 300 m², 30–1 500 €/m² ; médianes, nombre, ventes ≥ 1 500 m² | PRIXSTAT |
-| `fibre` | ARCEP, dernier trimestre : locaux raccordables FTTH / locaux | FIBRESTAT |
+| `prix`, `m2`, `eurm2`, `nv`, `big` | DVF, 3 dernières années complètes : ventes sans local, parcelles AB/S/AG/J, ≥ 300 m², 30–1 500 €/m² ; médianes, nombre, ventes ≥ 1 500 m² | prix 165, m2 159, €/m² 163, ventes 158 (207 à ±1), grands 200 identiques ; écart médian 0 |
+| `fibre` | ARCEP, dernier trimestre : locaux raccordables FTTH / locaux | 167 identiques, 227 à ±1 point (trimestre plus récent) |
 | `cl25`, `cl19`, `priv` | classes à la dernière rentrée et en 2019 (écoles ouvertes), écoles privées sous contrat | 229 / 229 |
-| `col`, `colc`, `colkm`, `va` | collège privé sous contrat le plus proche, sa valeur ajoutée (note à l'écrit du brevet) | COLSTAT |
+| `col`, `colc`, `colkm`, `va` | collège privé sous contrat le plus proche, sa valeur ajoutée (note à l'écrit du brevet) | 229 / 229 (nom de commune parfois écrit autrement) |
 | `inond`, `sech`, `mvt`, `feu`, `indus` | Géorisques : arrêtés CatNat inondation / sécheresse / mouvement de terrain ; risques feu de forêt et industriel recensés | 229 / 229 |
-| `src`, `srckm` | BD TOPO : sources, sources captées, fontaines, lavoirs ; par km² | SRCSTAT |
-| `train`, `gare`, `tmin`, `arr`, `ntr` | horaires SNCF : voiture jusqu'à la gare + 4 min + train vers une gare à moins de 6 km de `city` + 3 min/km | TRAINSTAT |
-| `worktrain`, `workgare` | idem vers `work` : + 14 min, + 4 min/km de la gare d'arrivée | WTSTAT |
-| `workpr` | voiture + 7 min (pas utilisé par l'app) | WPSTAT |
+| `src`, `srckm` | BD TOPO : sources, sources captées, fontaines, lavoirs ; par km² | 178 identiques, jamais plus haut (gelés, voir plus bas) |
+| `train`, `gare`, `tmin`, `arr`, `ntr` | horaires SNCF : voiture jusqu'à la gare + 4 min + train vers une gare à moins de 6 km de `city` + 3 min/km | écart médian 0, 2 min en valeur absolue (gelés) |
+| `worktrain`, `workgare` | idem vers `work` : + 14 min, + 4 min/km de la gare d'arrivée | écart médian −1, 3 min en valeur absolue (gelés) |
+| `workpr` | voiture + 7 min (pas utilisé par l'app) | 119 identiques (gelé) |
 
 **Champs gelés.** Pour `train`, `gare`, `tmin`, `arr`, `ntr`, `worktrain`, `workgare`,
 `workpr`, `src` et `srckm`, la méthode des fiches d'origine n'a pas pu être
