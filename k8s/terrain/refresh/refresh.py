@@ -36,7 +36,7 @@ UA = "Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) Ch
 SOURCES = [s for s in os.environ.get("TERRAIN_SOURCES", "bienici").split(",") if s]
 
 # Champs d'une annonce normalisée. id doit être stable d'un jour à l'autre et
-# préfixé par la source ("bienici:iad-france-966297").
+# préfixé par la source ("bienici:agence-123456").
 AD_FIELDS = (
     "id", "src", "url", "insee", "commune", "lat", "lon", "pos",  # pos : exact | approx | commune
     "prix", "m2", "titre", "vendeur",  # vendeur : "particulier" | "mandataire" | "agence" | "constructeur" | nom

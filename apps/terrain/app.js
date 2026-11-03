@@ -271,6 +271,7 @@ function buildMap() {
   layers.ads = L.layerGroup();
   layers.places = L.layerGroup().addTo(map);
   layers.route = L.layerGroup().addTo(map); // un seul itinéraire à la fois
+  layers.hl = L.layerGroup().addTo(map); // une seule parcelle surlignée à la fois
   const over = {
     "Relief (ombrage)": relief, "Cadastre (zoomer)": cadastre, "Zone verte": layers.zone, "Lignes de trajet": layers.iso, "Communes": layers.communes,
     "Parcelles repérées et mixtes": layers.parcels, "Annonces mises en avant": layers.topads, "Toutes les annonces en ligne": layers.ads,
@@ -296,7 +297,7 @@ function buildMap() {
     if (p.lat == null) continue;
     const m = L.marker([p.lat, p.lon], { icon: L.divIcon({ className: "", html: `<div class="pmark ${p.kind}"></div>`, iconSize: [14, 14] }), title: `Parcelle repérée · ${p.commune}` });
     m.bindPopup(() => parcelPopup(p), { maxWidth: 300 });
-    m.on("popupopen", () => { if (p.ring && !p._poly) p._poly = L.polygon(p.ring.map(([x, y]) => [y, x]), { color: "#ffcf33", weight: 2, fill: false }).addTo(layers.parcels); });
+    m.on("popupopen", () => { hlParcel(p.id); spotZon(p); });
     p._m = m;
   }
   for (const a of ALLADS) {
@@ -480,19 +481,28 @@ function schoolHTML(c, open = false) {
 }
 
 // ---- parcelles et annonces : liens rapides
-const cadastreUrl = (lat, lon) => `https://cartes.gouv.fr/explorer-les-cartes/?c=${lon},${lat}&z=18&l=CADASTRALPARCELS.PARCELLAIRE_EXPRESS$GEOPORTAIL:OGC:WMTS(1;1;1;0)&permalink=yes`;
+// Avec l'identifiant : cadastre.data.gouv.fr colore la parcelle (filtre sur l'id des tuiles)
+// et se cale sur #zoom/lat/lon. Sans identifiant : carte IGN centrée sur le point.
+const cadastreUrl = (lat, lon, id) => (id && PID.test(id)
+  ? `https://cadastre.data.gouv.fr/map?style=ortho&parcelleId=${id}#18/${(+lat).toFixed(6)}/${(+lon).toFixed(6)}`
+  : `https://cartes.gouv.fr/explorer-les-cartes/?c=${lon},${lat}&z=18&l=CADASTRALPARCELS.PARCELLAIRE_EXPRESS$GEOPORTAIL:OGC:WMTS(1;1;1;0)&permalink=yes`);
 const plu = (lat, lon) => `https://www.geoportail-urbanisme.gouv.fr/map/#tile=1&lon=${lon}&lat=${lat}&zoom=17`;
 // identifiant cadastral 14 caractères : INSEE (5) + préfixe (3) + section (2) + numéro (4)
+const PID = /^[0-9A-Z]{14}$/;
 const parcelRef = (id) => (id && id.length === 14 ? `section ${id.slice(8, 10).replace(/^0/, "")} n° ${+id.slice(10)}` : id || "");
+const parcelName = (id) => `Parcelle ${id.slice(8, 10).replace(/^0/, "")} ${+id.slice(10)}`; // « Parcelle AB 12 »
+const fmtm2 = (n) => Math.round(n).toLocaleString("fr-FR") + " m²";
 function parcelPopup(p) {
   const c = C.find((x) => x.nom === p.commune);
   return `<div class="pop"><span class="tag">Parcelle repérée</span><img src="${DATA + esc(p.img)}" alt=""><h3>${esc(p.commune)}</h3>
+  <div class="pref">${PID.test(p.id) ? esc(parcelName(p.id)) : esc(p.id)}${parcelM2(p) ? " · " + fmtm2(parcelM2(p)) : ""}</div>
   <div class="sub">${p.kind === "mixte" ? `${p.constr} m² constructibles + ${p.agri} m² en zone A/N` : esc(p.surface) + " · " + esc(p.zone)} · ${esc(parcelRef(p.id))}</div>
   <p>${esc(p.note)}</p><dl><dt>Altitude</dt><dd>${esc(p.alt)}</dd><dt>Pente</dt><dd>${esc(p.pente)}</dd><dt>Exposition</dt><dd>${esc(p.expo)}</dd>
   ${c ? `<dt>${esc(workShort())}</dt><dd>${c.wt} min</dd>` : ""}</dl>
+  ${p.ring && SPOTZ.has(p.id) ? `<div class="cada">${zonHtml(spotGeo(p), SPOTZ.get(p.id))}</div>` : ""}
   ${routeAct(p.lat, p.lon, "exact")}
-  <div class="act"><button type="button" onclick="window.__goParcel('${esc(p.id)}')">Fiche de la parcelle</button>
-  <a href="${cadastreUrl(p.lat, p.lon)}" target="_blank" rel="noopener">Cadastre ↗</a><a href="${plu(p.lat, p.lon)}" target="_blank" rel="noopener">Zonage ↗</a></div></div>`;
+  <div class="act">${p.ring && PID.test(p.id) ? `<button type="button" onclick="window.__seeParcel('${p.id}')">Voir la parcelle</button>` : ""}<button type="button" onclick="window.__goParcel('${esc(p.id)}')">Fiche de la parcelle</button>
+  <a href="${cadastreUrl(p.lat, p.lon, p.id)}" target="_blank" rel="noopener">Cadastre ↗</a><a href="${plu(p.lat, p.lon)}" target="_blank" rel="noopener">Zonage ↗</a></div></div>`;
 }
 // Prix d'une annonce face au marché : son €/m² contre le €/m² médian des ventes
 // de la commune (communes.json, au moins 5 ventes). À défaut, les annonces en ligne
@@ -528,7 +538,7 @@ function adPopup(a) {
   <div class="sub">${a.m2} m² · ${a.eurm2} €/m²${a.vendeur ? " · " + esc(a.vendeur) : ""}${a.top ? " · " + esc(a.top) : ""}</div>
   ${constrBadge(a)}${priceBadge(a)}${marketLine(a)}${a.analyse ? `<p>${esc(a.analyse)}</p>` : ""}
   ${communeInAd(a)}
-  ${a.lat ? routeAct(a.lat, a.lon, a.pos) : ""}
+  ${a.lat ? routeAct(a.lat, a.lon, a.pos) : ""}${cadaAct(a)}
   <div class="act"><a class="go" href="${esc(a.url)}" target="_blank" rel="noopener">Voir l'annonce ↗</a><button type="button" onclick="window.__goAd('${esc(a.id)}')">Dans la liste</button>
   ${a.lat ? `<a href="${cadastreUrl(a.lat, a.lon)}" target="_blank" rel="noopener">Cadastre ↗</a>` : ""}</div></div>`;
 }
@@ -595,6 +605,201 @@ window.__route = async (lat, lon) => {
   refresh();
 };
 
+// ---------------------------------------------------------------- parcelle cadastrale
+// Au clic seulement : API Carto de l'IGN (GeoJSON, CORS ouvert), une requête par annonce
+// pour les parcelles, puis le zonage (plus bas) sur le même disque.
+// Annonce « exacte » : le point est souvent l'adresse (sur la rue) : on cherche dans 50 m.
+// Annonce floutée : disque de 250 m, candidates dont la contenance est à ±5 % de la surface.
+const APICARTO = "https://apicarto.ign.fr/api/cadastre/parcelle";
+const CADA = new Map(); // recherche par annonce : "wait" | { err } | résultat
+const PARC = new Map(); // id → { id, m2, ll, lat, lon } pour surligner / cadrer
+const RADIUS = { exact: 50, approx: 250 };
+function diskGeom(lat, lon, r) {
+  const k = Math.cos(lat * Math.PI / 180), pts = [];
+  for (let i = 0; i < 24; i++) { const t = 2 * Math.PI * i / 24; pts.push([+(lon + r * Math.cos(t) / (111320 * k)).toFixed(6), +(lat + r * Math.sin(t) / 111320).toFixed(6)]); }
+  pts.push(pts[0]);
+  return { type: "Polygon", coordinates: [pts] };
+}
+// point dans un anneau [[lon, lat]…] (lancer de rayon)
+function inRing(x, y, ring) {
+  let ins = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) ins = !ins;
+  }
+  return ins;
+}
+// point dans un Polygon / MultiPolygon GeoJSON (trous compris : pair-impair sur tous les anneaux)
+function inGeom(x, y, g) {
+  const polys = g?.type === "MultiPolygon" ? g.coordinates : g?.type === "Polygon" ? [g.coordinates] : [];
+  return polys.some((q) => q.filter((r) => inRing(x, y, r)).length % 2 === 1);
+}
+function featParcel(f) {
+  const p = f.properties || {}, g = f.geometry || {};
+  const polys = g.type === "MultiPolygon" ? g.coordinates : g.type === "Polygon" ? [g.coordinates] : [];
+  if (!PID.test(p.idu || "") || !polys.length) return null;
+  const xs = polys.flatMap((q) => q[0].map((c) => c[0])), ys = polys.flatMap((q) => q[0].map((c) => c[1]));
+  return { id: p.idu, m2: +p.contenance || 0, polys, ll: polys.map((q) => q.map((r) => r.map(([x, y]) => [y, x]))),
+    lat: (Math.min(...ys) + Math.max(...ys)) / 2, lon: (Math.min(...xs) + Math.max(...xs)) / 2 };
+}
+function parcelGeo(id) {
+  if (PARC.has(id)) return PARC.get(id);
+  const p = PARCELS.find((x) => x.id === id);
+  return p && p.ring ? { id, ll: [p.ring.map(([x, y]) => [y, x])], lat: p.lat, lon: p.lon } : null;
+}
+function hlParcel(id, fit) {
+  const g = parcelGeo(id);
+  if (!g) return;
+  layers.hl.clearLayers();
+  const poly = L.polygon(g.ll, { color: "#e0157a", weight: 3, fillColor: "#e0157a", fillOpacity: 0.18, interactive: false }).addTo(layers.hl);
+  if (fit) map.fitBounds(poly.getBounds(), { maxZoom: 18, padding: [40, 40] });
+}
+window.__seeParcel = (id) => { try { hlParcel(id, true); } catch (e) { /* carte indisponible */ } };
+const cadaKey = (a) => `${a.lat},${a.lon},${a.m2},${a.pos}`;
+function cadaAct(a) {
+  if (a.lat == null) return "";
+  if (!RADIUS[a.pos]) return `<div class="cada"><div class="sub">Parcelle : position trop vague${a.pos === "commune" ? " (centre du village)" : ""}, impossible de la retrouver au cadastre.</div></div>`;
+  const st = CADA.get(cadaKey(a));
+  const btn = (txt) => `<button type="button" onclick="window.__cada('${esc(a.id)}')">${txt}</button>`;
+  const body = !st ? btn("Trouver la parcelle")
+    : st === "wait" ? `<div class="sub">Recherche au cadastre…</div>`
+    : st.err ? `<div class="sub">Cadastre indisponible (${esc(st.err)}).</div>${btn("Réessayer")}`
+    : cadaHtml(a, st);
+  return `<div class="cada">${body}</div>`;
+}
+const ecart = (m2, ref) => (ref ? pctTxt(Math.round(100 * (m2 / ref - 1))) : "");
+function candLi(f, ref, zon) {
+  return `<li><button type="button" onclick="window.__seeParcel('${f.id}')">${esc(parcelName(f.id))} · ${fmtm2(f.m2)}</button>${ref ? ` <span class="sub">${ecart(f.m2, ref)}</span>` : ""}
+    <a href="${cadastreUrl(f.lat, f.lon, f.id)}" target="_blank" rel="noopener">Cadastre ↗</a><a href="${plu(f.lat, f.lon)}" target="_blank" rel="noopener">Zonage ↗</a>${zonHtml(f, zon)}</li>`;
+}
+function cadaHtml(a, r) {
+  const m2 = +a.m2 || 0, out = [];
+  if (a.pos === "exact") {
+    if (r.under) {
+      const off = m2 && Math.abs(r.under.m2 / m2 - 1) > 0.2;
+      out.push(`<div class="sub"><b>Sous le point</b>${off ? ` : ${fmtm2(r.under.m2)} au cadastre contre ${fmtm2(m2)} annoncés, le point est sans doute l'adresse, pas le terrain` : ""}</div><ul class="cands">${candLi(r.under, m2, r.zon)}</ul>`);
+    } else out.push(`<div class="sub">Le point tombe hors parcelle (sur la rue sans doute).</div>`);
+  }
+  const c = r.cands.filter((f) => f !== r.under);
+  const where = a.pos === "exact" ? "à moins de 50 m" : "dans un rayon de 250 m (position floutée)";
+  if (!m2) out.push(`<div class="sub">Surface non annoncée : pas de candidates.</div>`);
+  else if (!c.length) out.push(`<div class="sub">Aucune parcelle de ${fmtm2(m2)} ±5 % ${where}${r.more ? " (recherche tronquée)" : ""}. Le terrain peut être un lot à détacher ou plusieurs parcelles.</div>`);
+  else out.push(`<div class="sub"><b>${c.length} candidate${c.length > 1 ? "s" : ""}</b> de ${fmtm2(m2)} ±5 % ${where} : des pistes, pas une certitude${c.length > 5 ? " (5 plus proches en surface)" : ""}.</div>
+    <ul class="cands">${c.slice(0, 5).map((f) => candLi(f, m2, r.zon)).join("")}</ul>`);
+  return out.join("");
+}
+window.__cada = async (id) => {
+  const a = ALLADS.find((x) => x.id === id);
+  if (!a || a.lat == null || !RADIUS[a.pos]) return;
+  const key = cadaKey(a), pop = openPop, refresh = () => pop && pop.isOpen() && pop.update();
+  let r = CADA.get(key);
+  if (r === "wait") return;
+  if (!r || r.err) {
+    CADA.set(key, "wait"); refresh();
+    try {
+      const res = await fetch(`${APICARTO}?_limit=1000&geom=${encodeURIComponent(JSON.stringify(diskGeom(+a.lat, +a.lon, RADIUS[a.pos])))}`);
+      if (!res.ok) throw new Error(res.status === 429 ? "trop de demandes, réessayer dans un moment" : "erreur " + res.status);
+      const j = await res.json();
+      const fs = (j.features || []).map(featParcel).filter(Boolean);
+      fs.forEach((f) => PARC.set(f.id, f));
+      const m2 = +a.m2 || 0, k = Math.cos(a.lat * Math.PI / 180), d2 = (f) => (f.lat - a.lat) ** 2 + ((f.lon - a.lon) * k) ** 2;
+      const under = a.pos === "exact" ? fs.find((f) => f.polys.some((q) => inRing(+a.lon, +a.lat, q[0]))) || null : null;
+      const cands = m2 ? fs.filter((f) => Math.abs(f.m2 / m2 - 1) <= 0.05).sort((x, y) => Math.abs(x.m2 - m2) - Math.abs(y.m2 - m2) || d2(x) - d2(y)) : [];
+      r = { under, cands, more: (j.numberMatched || 0) > fs.length };
+    } catch (e) { r = { err: e.message || "réseau" }; }
+    CADA.set(key, r);
+  }
+  if (r.under) hlParcel(r.under.id);
+  refresh();
+  // zonage et protections : une requête par couche sur le même disque, réparties ensuite par parcelle
+  if (!r.err && (r.under || r.cands.length) && (!r.zon || r.zon.err)) {
+    r.zon = "wait"; refresh();
+    r.zon = await zonFetch(diskGeom(+a.lat, +a.lon, RADIUS[a.pos]));
+    refresh();
+  }
+};
+
+// ---- constructible ? Zonage du PLU (Géoportail de l'urbanisme) et zones protégées, via API Carto.
+// Une lookup = 7 requêtes en parallèle (+ carte communale si aucun PLU), au clic, gardée en mémoire.
+const ZLAYERS = { zones: "gpu/zone-urba", presc: "gpu/prescription-surf", info: "gpu/info-surf",
+  n2h: "nature/natura-habitat", n2o: "nature/natura-oiseaux", z1: "nature/znieff1", z2: "nature/znieff2" };
+async function zonFetch(geom) {
+  const q = (path) => fetch(`https://apicarto.ign.fr/api/${path}?geom=${encodeURIComponent(JSON.stringify(geom))}`)
+    .then((res) => { if (!res.ok) throw new Error("erreur " + res.status); return res.json(); })
+    .then((j) => j.features || []);
+  const keys = Object.keys(ZLAYERS), got = await Promise.allSettled(keys.map((k) => q(ZLAYERS[k])));
+  const z = {};
+  keys.forEach((k, i) => (z[k] = got[i].status === "fulfilled" ? got[i].value : null)); // null : couche indisponible
+  if (z.zones && !z.zones.length) { // pas de PLU publié : carte communale ? commune au RNU ?
+    [z.cc, z.muni] = await Promise.all([q("gpu/secteur-cc").catch(() => null), q("gpu/municipality").catch(() => null)]);
+  }
+  return z;
+}
+// parcelle → points témoins : centre et sommets ramenés de 10 % vers le centre (évite les limites partagées)
+function samplePts(f) {
+  const out = [[f.lon, f.lat]];
+  for (const q of f.polys || []) for (const [x, y] of q[0]) out.push([f.lon + (x - f.lon) * 0.9, f.lat + (y - f.lat) * 0.9]);
+  return out;
+}
+const hits = (feats, pts) => (feats || []).filter((g) => pts.some(([x, y]) => inGeom(x, y, g.geometry)));
+const uniq = (xs) => [...new Set(xs.filter(Boolean))];
+function zoneChip(p) {
+  const t = String(p.typezone || ""), lib = esc(p.libelle || t), title = ` title="${esc(p.libelong || "")}"`;
+  if (/^AUs/i.test(t)) return `<span class="chip wa"${title}>${lib} : à urbaniser plus tard, pas constructible tout de suite</span>`;
+  if (/^(U|AUc)/i.test(t)) return `<span class="chip g"${title}>${lib} : constructible</span>`;
+  if (/^[AN]/i.test(t)) return `<span class="chip b"${title}>${lib} : non constructible (${/^A/i.test(t) ? "agricole" : "naturelle"})</span>`;
+  return `<span class="chip"${title}>${lib}</span>`;
+}
+// prescriptions qui pèsent sur la constructibilité : EBC, emplacement réservé, patrimoine / paysage,
+// terrains cultivés, continuités écologiques ; risques (02) seulement s'ils restreignent (fort, moyen, rouge…)
+const PSC_WARN = new Set(["01", "05", "07", "08", "25"]);
+const pscWarn = (p) => PSC_WARN.has(String(p.typepsc)) || (String(p.typepsc) === "02" && /inconstr|non constr|interdi|fort|moyen|rouge/i.test(p.libelle || ""));
+const pscLib = (p) => String(p.libelle || "").replace(/\s*\(articles? [^)]*\)/gi, "");
+function zonHtml(f, z) {
+  if (!f) return "";
+  if (z === "wait") return `<div class="zon sub">Zonage en cours…</div>`;
+  if (!z) return "";
+  if (z.err) return `<div class="zon sub">Zonage indisponible.</div>`;
+  const pts = samplePts(f), chips = [];
+  const zs = hits(z.zones, pts), seen = new Set();
+  for (const g of zs) { const k = g.properties.libelle + "|" + g.properties.typezone; if (!seen.has(k)) { seen.add(k); chips.push(zoneChip(g.properties)); } }
+  if (!z.zones) chips.push(`<span class="chip">zonage indisponible</span>`);
+  else if (!z.zones.length) {
+    const cc = hits(z.cc, pts);
+    if (z.cc === null) chips.push(`<span class="chip">Pas de PLU ; carte communale indisponible</span>`);
+    else if (cc.length) chips.push(...uniq(cc.map((g) => g.properties.typesect)).map((t) => t === "99"
+      ? `<span class="chip b">Carte communale : secteur non constructible</span>` : `<span class="chip g">Carte communale : secteur constructible</span>`));
+    else if (z.muni?.some((g) => g.properties.is_rnu)) chips.push(`<span class="chip wa">Pas de PLU (RNU) : constructibilité limitée aux parties urbanisées, à vérifier en mairie</span>`);
+    else chips.push(`<span class="chip wa">PLU non publié au Géoportail de l'urbanisme : zonage à vérifier en mairie</span>`);
+  } else if (!zs.length) chips.push(`<span class="chip">zone du PLU non trouvée</span>`);
+  const prot = [
+    ...hits(z.n2h, pts).map((g) => "Natura 2000 (habitats) : " + (g.properties.sitename || g.properties.sitecode)),
+    ...hits(z.n2o, pts).map((g) => "Natura 2000 (oiseaux) : " + (g.properties.sitename || g.properties.sitecode)),
+    ...hits(z.z1, pts).map((g) => "ZNIEFF 1 : " + g.properties.nom),
+    ...hits(z.z2, pts).map((g) => "ZNIEFF 2 : " + g.properties.nom),
+    ...hits(z.presc, pts).filter((g) => pscWarn(g.properties)).map((g) => pscLib(g.properties)),
+  ];
+  const info = [...hits(z.presc, pts).filter((g) => !pscWarn(g.properties)), ...hits(z.info, pts)].map((g) => pscLib(g.properties));
+  const miss = ["n2h", "n2o", "z1", "z2", "presc"].some((k) => !z[k]);
+  return `<div class="zon">${chips.join("")}${uniq(prot).map((t) => `<span class="chip wa">${esc(t)}</span>`).join("")}
+    ${info.length ? `<div class="sub">Aussi : ${uniq(info).slice(0, 4).map(esc).join(" · ")}</div>` : ""}${miss ? `<div class="sub">Zones protégées : vérification incomplète.</div>` : ""}</div>`;
+}
+// parcelle repérée : son propre contour sert de requête
+const SPOTZ = new Map();
+function spotGeo(p) {
+  if (!p.ring) return null;
+  const xs = p.ring.map((c) => c[0]), ys = p.ring.map((c) => c[1]);
+  return { polys: [[p.ring]], lat: (Math.min(...ys) + Math.max(...ys)) / 2, lon: (Math.min(...xs) + Math.max(...xs)) / 2 };
+}
+async function spotZon(p) {
+  const st = SPOTZ.get(p.id);
+  if (!p.ring || st === "wait" || (st && !st.err && st.zones)) return;
+  const pop = p._m?.getPopup() || openPop, refresh = () => pop && pop.isOpen() && pop.update();
+  SPOTZ.set(p.id, "wait"); refresh();
+  SPOTZ.set(p.id, await zonFetch({ type: "Polygon", coordinates: [p.ring] }));
+  refresh();
+}
+
 // ---------------------------------------------------------------- rendu
 let raf = 0;
 function render() { cancelAnimationFrame(raf); raf = requestAnimationFrame(doRender); }
@@ -631,7 +836,7 @@ function doRender() {
 const byCodeC = () => Object.fromEntries(C.map((c) => [c.code, c]));
 const parcelCommune = (p) => C.find((x) => x.nom === p.commune);
 const priceOk = (a) => !a.prix || a.prix <= S.f.prix * 1000;
-// surface d'une parcelle repérée : « 3 002 m² » ; terrain mixte : constructible + zone A/N
+// surface d'une parcelle repérée : « 1 234 m² » ; terrain mixte : constructible + zone A/N
 const parcelM2 = (p) => (p.kind === "mixte" ? (+p.constr || 0) + (+p.agri || 0) : +String(p.surface || "").replace(/[^0-9]/g, "") || 0);
 const sizeOk = (a) => !a.m2 || a.m2 >= S.f.m2;
 // Constructibilité d'une annonce (relevé quotidien) : texte de l'annonce (constr_txt)
@@ -804,7 +1009,7 @@ function renderParcels() {
     <p>${esc(p.note)}</p>
     <dl><div><dt>Altitude</dt><dd>${esc(p.alt)}</dd></div><div><dt>Pente</dt><dd>${esc(p.pente)}</dd></div><div><dt>Expo.</dt><dd>${esc(p.expo)}</dd></div>
     ${c ? `<div><dt>${esc(workShort())}</dt><dd>${c.wt} min</dd></div><div><dt>Score</dt><dd>${c.score}${c.zone ? " ✓" : ""}</dd></div>` : ""}</dl>
-    <div class="act"><button type="button" data-ll="${p.lat},${p.lon}">Voir sur la carte</button><a href="${cadastreUrl(p.lat, p.lon)}" target="_blank" rel="noopener">Cadastre ↗</a><a href="${plu(p.lat, p.lon)}" target="_blank" rel="noopener">Zonage ↗</a><span class="sub">${esc(parcelRef(p.id))}</span></div>
+    <div class="act"><button type="button" data-ll="${p.lat},${p.lon}">Voir sur la carte</button><a href="${cadastreUrl(p.lat, p.lon, p.id)}" target="_blank" rel="noopener">Cadastre ↗</a><a href="${plu(p.lat, p.lon)}" target="_blank" rel="noopener">Zonage ↗</a><span class="sub">${esc(parcelRef(p.id))}</span></div>
     </figcaption></figure>`).join("");
   const hidden = kind.length - list.length;
   if (hidden) $("plist").insertAdjacentHTML("afterbegin", `<p class="hint">${hidden} parcelle${hidden > 1 ? "s" : ""} sous ${S.f.m2} m², masquée${hidden > 1 ? "s" : ""} par le filtre surface.</p>`);
