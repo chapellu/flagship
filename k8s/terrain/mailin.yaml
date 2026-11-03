@@ -76,7 +76,7 @@ spec:
               mountPath: /inbox
       containers:
         - name: mailin
-          image: ghcr.io/chapellu/mailin:latest
+          image: ghcr.io/chapellu/mailin:d63d45f574704390aae7e12fda6f589b101a240b
           imagePullPolicy: IfNotPresent
           env:
             - name: MAILIN_ADDRESS
