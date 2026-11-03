@@ -40,6 +40,14 @@ marque rien. Les doublons entre sites (même commune, surface et prix à quelque
 près) sont fusionnés. L'onglet Annonces en tire « Le marché » : nouvelles, baisses de
 prix, ce qui part vite, ce qui traîne, par secteur.
 
+**Leboncoin et SeLoger** bloquent la lecture automatique (DataDome, robots.txt).
+On passe par leurs alertes e-mail : recherches enregistrées avec alerte vers une
+boîte Gmail dédiée (ou transfert), lue en IMAP en lecture seule par
+`src_alertes.py`. Identifiants dans `k8s/terrain/mail.enc.yaml`, chiffré par
+SOPS (mode d'emploi dans `mail.enc.yaml.example`). Sans ce fichier, la source est
+ignorée. Une alerte ne signale pas les retraits : sans nouvelle alerte depuis
+45 jours, l'annonce passe en « statut inconnu ».
+
 Lancer un relevé à la main : `kubectl -n terrain create job --from=cronjob/terrain-refresh refresh-now`.
 
 Le job tourne en utilisateur 101 (comme nginx) : le dossier `/data` du volume doit lui
