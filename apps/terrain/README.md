@@ -86,6 +86,7 @@ python3 tools/ecoles.py  BPE25.zip ./data
 ```bash
 curl -o sncf.zip https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip
 python3 tools/train.py sncf.zip ./data [AAAAMMJJ]   # ~2 min (OSRM) ; à refaire au changement de service (décembre)
+python3 tools/train.py --voiture ./data            # ne refait que le trajet tout en voiture (l'app garde le plus rapide des deux)
 ```
 
 Horaires théoriques SNCF (GTFS publié sur transport.data.gouv.fr), un jour de semaine

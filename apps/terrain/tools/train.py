@@ -2,6 +2,7 @@
 """Train vers Lyon Part-Dieu et Lyon Perrache → data/train.json (lignes « chrono train »).
 
     python3 tools/train.py SNCF_GTFS.zip ./data [AAAAMMJJ]
+    python3 tools/train.py --voiture ./data    (ne refait que le trajet tout en voiture)
 
 SNCF_GTFS.zip : horaires théoriques SNCF (TER, tram-train, Intercités), GTFS publié
 sur transport.data.gouv.fr (jeu « horaires-sncf ») :
@@ -18,12 +19,18 @@ Les gares de Lyon intra-muros (Saint-Paul, Gorge de Loup, Vaise, Jean Macé) son
 reliées à Part-Dieu / Perrache par un trajet TCL forfaitaire (URBAIN) quand le
 train s'y arrête. TGV, OUIGO et cars exclus : ce n'est pas un trajet quotidien.
 
+Trajet tout en voiture jusqu'à la gare de Lyon (OSRM sans trafic) : l'app y
+applique le coefficient d'heure de pointe, ajoute PARK_LYON (se garer en ville)
+et garde le plus rapide des deux modes.
+
 Sortie :
   stations [[nom, lat, lon, pd, pe, npd, npe], …] gares utiles : minutes de train
            vers Part-Dieu (pd) et Perrache (pe), nombre de départs le matin
   grid     { pd: […], pe: […] } minutes porte à porte, même grille que grid.json
   com      { insee: [pd, gare_pd, voiture_pd, pe, gare_pe, voiture_pe] } depuis le
            bourg (gare_* : indice dans stations)
+  car      { grid: { pd: […], pe: […] }, com: { insee: [pd, pe] } } minutes de
+           voiture sans trafic, tout le trajet ; park : PARK_LYON
 Ne garde rien de personnel : tout vient de data/ et de sources publiques.
 """
 import bisect
@@ -53,6 +60,7 @@ URBAIN = {
     "Lyon Part Dieu": {"pe": 20},                # tram T1 / métro B puis A
     "Lyon Perrache": {"pd": 20},
 }
+PARK_LYON = 10            # min : se garer près de la gare en ville et finir à pied
 K = 6           # gares candidates par point (les plus proches à vol d'oiseau)
 BATCH = 36      # points d'origine par requête OSRM
 OSRM = "https://router.project-osrm.org/table/v1/driving/"
@@ -198,7 +206,40 @@ def nearest(points, st, keys):
     return out
 
 
+def direct(points, dst):
+    """Minutes de voiture sans trafic de chaque point vers chaque cible."""
+    out = []
+    for b in range(0, len(points), 98):
+        out += [[None if x is None else round(x / 60) for x in row] for row in osrm(points[b:b + 98], dst)]
+        print(f"  voiture {min(b + 98, len(points))}/{len(points)}", file=sys.stderr)
+        time.sleep(1.1)
+    return out
+
+
+def add_car(out, grid, rows):
+    """Ajoute à train.json le trajet tout en voiture vers les gares cibles."""
+    nx, ny, lon0, lat0, dlon, dlat = (grid[k] for k in ("nx", "ny", "lon0", "lat0", "dlon", "dlat"))
+    keys = list(TARGETS)
+    pos = {s[0]: (s[1], s[2]) for s in out["stations"]}
+    dst = [pos[TARGETS[k]] for k in keys]
+    pts = [(lat0 + j * dlat, lon0 + i * dlon) for j in range(ny) for i in range(nx)]
+    g = direct(pts, dst)
+    c = direct([(r["lat"], r["lon"]) for r in rows], dst)
+    out["car"] = {"grid": {k: [row[n] for row in g] for n, k in enumerate(keys)},
+                  "com": {r["code"]: v for r, v in zip(rows, c)}}
+    out["park"] = PARK_LYON
+
+
 def main(gtfs, data, day=None):
+    if gtfs == "--voiture":  # train.json existant : on n'ajoute que la voiture
+        cfg = json.load(open(os.path.join(data, "config.json")))
+        com = json.load(open(os.path.join(data, "communes.json")))
+        out = json.load(open(os.path.join(data, "train.json")))
+        add_car(out, json.load(open(os.path.join(data, "grid.json"))), [dict(zip(cfg["fields"], c)) for c in com["c"]])
+        with open(os.path.join(data, "train.json"), "w") as fh:
+            json.dump(out, fh, ensure_ascii=False, separators=(",", ":"))
+        print("train.json : voiture ajoutée", file=sys.stderr)
+        return
     grid = json.load(open(os.path.join(data, "grid.json")))
     cfg = json.load(open(os.path.join(data, "config.json")))
     com = json.load(open(os.path.join(data, "communes.json")))
@@ -235,6 +276,8 @@ def main(gtfs, data, day=None):
         "grid": {k: [g[k][0] if g.get(k) else None for g in gm] for k in keys},
         "com": {c["code"]: flat(r.get("pd")) + flat(r.get("pe")) for c, r in zip(rows, cm)},
     }
+    print("voiture…", file=sys.stderr)
+    add_car(out, grid, rows)
     with open(os.path.join(data, "train.json"), "w") as fh:
         json.dump(out, fh, ensure_ascii=False, separators=(",", ":"))
     print("écrit train.json", file=sys.stderr)
