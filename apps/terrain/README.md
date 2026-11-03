@@ -24,6 +24,7 @@ lit en `fetch` :
 | `img/` | photos aériennes des parcelles |
 | `creches.json` | crèches (INSEE BPE) et minutes de voiture vers la plus proche, par commune et sur la grille ; facultatif, fait apparaître l'option « travail en crèche » |
 | `schools.json` | écoles et collèges par commune : public/privé, contrat, élèves, IPS, cantine, rythme, brevet et valeur ajoutée ; facultatif |
+| `train.json` | minutes porte à porte en train vers Lyon Part-Dieu et Lyon Perrache, par commune et sur la grille, et les gares utilisées ; facultatif, fait apparaître les deux lignes « Train → » et leurs cases « dans la zone verte » |
 | `market.json` | relevé quotidien des annonces et leur historique (première/dernière vue, prix, départ) ; écrit par le CronJob `terrain-refresh` |
 
 `config.json` porte aussi le bloc `search` lu par le relevé :
@@ -79,6 +80,24 @@ curl -O https://www.insee.fr/fr/statistiques/fichier/8217525/BPE25.zip
 python3 tools/creches.py BPE25.zip ./data   # ~5 min (OSRM, serveur de démonstration)
 python3 tools/ecoles.py  BPE25.zip ./data
 ```
+
+### Lignes train (Part-Dieu, Perrache)
+
+```bash
+curl -o sncf.zip https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip
+python3 tools/train.py sncf.zip ./data [AAAAMMJJ]   # ~2 min (OSRM) ; à refaire au changement de service (décembre)
+```
+
+Horaires théoriques SNCF (GTFS publié sur transport.data.gouv.fr), un jour de semaine
+type (par défaut le premier mardi une semaine après le début de validité). Pour chaque
+point : voiture sans trafic jusqu'à l'une des 6 gares les plus proches (OSRM, comme
+`grid.json`) + 8 min pour se garer et rejoindre le quai + le trajet le plus court en
+TER / tram-train / Intercités arrivant entre 7 h et 9 h, au plus une correspondance
+(5 min minimum). Pas d'attente comptée au départ : on prend le train qui arrange.
+Les gares de Lyon intra-muros terminus du tram-train (Saint-Paul, Gorge de Loup) et
+Vaise / Jean Macé sont prolongées par un trajet TCL forfaitaire (12 à 25 min, table
+`URBAIN` du script). TGV et cars exclus. Dans l'app, chaque ligne a son seuil ; la
+zone verte ne l'exige que si sa case est cochée (par défaut non).
 
 Il n'existe pas de classement officiel des écoles primaires : la fiche école montre
 l'IPS (milieu social des élèves, comparé au département) et, pour les collèges, la

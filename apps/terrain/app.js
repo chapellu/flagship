@@ -10,6 +10,7 @@
 //   parcels.json  parcelles repérées et terrains mixtes
 //   ads.json      annonces relevées
 //   notes.json    textes d'analyse (HTML)
+//   train.json    facultatif : minutes de train vers Part-Dieu / Perrache (tools/train.py)
 "use strict";
 const $ = (id) => document.getElementById(id);
 const DATA = "data/";
@@ -24,9 +25,9 @@ const DEF = {
   profile: "A",
   profiles: { A: { w: { ...DEF_W }, famshare: 80 }, B: { w: { ...DEF_W }, famshare: 80 } },
   days: 4,
-  iso: { work: 55, famA: 40, famB: 75, alt: 350, rush: 1.4 },
+  iso: { work: 55, famA: 40, famB: 75, alt: 350, rush: 1.4, tpd: 60, tpe: 60, zpd: false, zpe: false },
   f: { fibre: true, ecole: true, zone: false, prix: 200, m2: 0, constr: true },
-  show: { parcels: true, topads: true, ads: false, creches: false, cadastre: false, outside: false },
+  show: { parcels: true, topads: true, ads: false, creches: false, cadastre: false, outside: false, tpd: true, tpe: true },
   workAt: "qg", // "qg" : le lieu de travail de config.json ; "creche" : la crèche la plus proche de chez soi
 };
 const STORE = "terrain.state.v1";
@@ -48,7 +49,7 @@ function deepMerge(a, b) {
 }
 
 let CFG, C, GARES, GRID, PARCELS, ADS, NOTES;
-let CRECHE = null, SCHOOLS = null, MARKET = null; // facultatifs : l'app marche sans
+let CRECHE = null, SCHOOLS = null, MARKET = null, TRAIN = null; // facultatifs : l'app marche sans
 let LBL;
 
 // ---------------------------------------------------------------- chargement
@@ -58,10 +59,10 @@ const need = (n) => fetch(DATA + n + ".json", { cache: "no-cache" }).then((r) =>
   return r.json();
 });
 const maybe = (n) => fetch(DATA + n + ".json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-Promise.all([...["config", "communes", "grid", "parcels", "ads", "notes"].map(need), maybe("creches"), maybe("schools"), maybe("market")])
-.then(([cfg, com, grid, parcels, ads, notes, creches, schools, market]) => {
+Promise.all([...["config", "communes", "grid", "parcels", "ads", "notes"].map(need), maybe("creches"), maybe("schools"), maybe("market"), maybe("train")])
+.then(([cfg, com, grid, parcels, ads, notes, creches, schools, market, train]) => {
   CFG = cfg; GRID = grid; PARCELS = parcels; ADS = ads; NOTES = notes; GARES = com.g;
-  CRECHE = creches; SCHOOLS = schools; MARKET = market;
+  CRECHE = creches; SCHOOLS = schools; MARKET = market; TRAIN = train;
   C = com.c.map((r) => Object.fromEntries(cfg.fields.map((f, i) => [f, r[i]])));
   init();
 }).catch((e) => {
@@ -123,6 +124,7 @@ function buildControls() {
     $("i-" + k).value = S.iso[k];
     $("i-" + k).addEventListener("input", (e) => { S.iso[k] = +e.target.value; render(); });
   }
+  buildTrain();
   for (const k of ["fibre", "ecole", "zone", "constr"]) {
     $("f-" + k).checked = S.f[k];
     $("f-" + k).addEventListener("change", (e) => { S.f[k] = e.target.checked; render(); });
@@ -139,11 +141,36 @@ function buildControls() {
     for (const k of ["work", "famA", "famB", "alt", "rush"]) $("i-" + k).value = S.iso[k];
     for (const k of ["fibre", "ecole", "zone", "constr"]) $("f-" + k).checked = S.f[k];
     $("f-prix").value = S.f.prix;
-    syncProfile(); syncWeights(); render();
+    syncTrain(); syncProfile(); syncWeights(); render();
   });
   $("share").addEventListener("click", share);
   syncWeights();
 }
+// ---- lignes « train » (train.json) : trajet porte à porte en train vers Part-Dieu et Perrache.
+// Chaque ligne s'affiche seule ; la zone verte ne l'exige que si on coche « dans la zone verte ».
+const TKEYS = { pd: "Part-Dieu", pe: "Perrache" };
+let syncTrain = () => {};
+function buildTrain() {
+  if (!TRAIN) return;
+  $("train-box").hidden = false;
+  const els = [];
+  for (const k in TKEYS) {
+    const t = "t" + k, z = "z" + k;
+    $("i-" + t).addEventListener("input", (e) => { S.iso[t] = +e.target.value; render(); });
+    $("i-" + z).addEventListener("change", (e) => { S.iso[z] = e.target.checked; render(); });
+    els.push(() => { $("i-" + t).value = S.iso[t]; $("i-" + z).checked = S.iso[z]; });
+  }
+  syncTrain = () => els.forEach((f) => f());
+  syncTrain();
+}
+// [minutes, gare, minutes de voiture] depuis le bourg, ou null
+function trainOf(c, k) {
+  const r = TRAIN?.com?.[c.code];
+  if (!r) return null;
+  const o = k === "pd" ? 0 : 3;
+  return r[o] == null ? null : { t: r[o], gare: TRAIN.stations[r[o + 1]]?.[0] ?? "", car: r[o + 2] };
+}
+
 // En mode compromis, les poids affichés sont la moyenne des deux et ne se règlent pas.
 function prof() { return S.profile === "mix" ? null : S.profiles[S.profile]; }
 function effW(p) {
@@ -188,7 +215,7 @@ function readShared() {
   $("rcv-ok").onclick = () => {
     S.profiles[into] = { w: { ...DEF_W, ...r.w }, famshare: r.famshare ?? 80 };
     if (r.workAt) { S.workAt = r.workAt; syncWork(); }
-    if (r.iso) { S.iso = { ...S.iso, ...r.iso }; for (const k of ["work", "famA", "famB", "alt", "rush"]) $("i-" + k).value = S.iso[k]; }
+    if (r.iso) { S.iso = { ...S.iso, ...r.iso }; for (const k of ["work", "famA", "famB", "alt", "rush"]) $("i-" + k).value = S.iso[k]; syncTrain(); }
     S.profile = "mix"; syncProfile(); syncWeights(); render();
     b.hidden = true; history.replaceState(null, "", location.pathname);
   };
@@ -230,7 +257,12 @@ function scoreWith(s, c, prof) {
 const pxMax = () => (S.f.prix >= +$("f-prix").max ? Infinity : S.f.prix * 1000);
 const pxTxt = () => (pxMax() === Infinity ? "sans limite" : S.f.prix + " k");
 function inZone(c, wt) {
-  return wt <= S.iso.work && c.famA <= S.iso.famA && c.famB <= S.iso.famB && c.alt >= S.iso.alt;
+  return wt <= S.iso.work && c.famA <= S.iso.famA && c.famB <= S.iso.famB && c.alt >= S.iso.alt && trainOk(c);
+}
+// critères train cochés « dans la zone verte » : sans donnée, la commune n'y est pas
+function trainOk(c) {
+  if (!TRAIN) return true;
+  return Object.keys(TKEYS).every((k) => !S.iso["z" + k] || (trainOf(c, k)?.t ?? 999) <= S.iso["t" + k]);
 }
 function compute() {
   for (const c of C) {
@@ -267,6 +299,7 @@ function buildMap() {
   const cadastre = L.tileLayer("https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS&STYLE=PCI%20vecteur&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image/png", { maxZoom: 20, minZoom: 13, attribution: "© IGN cadastre" });
   layers.zone = L.layerGroup().addTo(map);
   layers.iso = L.layerGroup().addTo(map);
+  layers.tpd = L.layerGroup(); layers.tpe = L.layerGroup(); // lignes train : affichées selon S.show
   layers.communes = L.layerGroup().addTo(map);
   layers.creches = L.layerGroup();
   layers.parcels = L.layerGroup().addTo(map);
@@ -280,6 +313,7 @@ function buildMap() {
     "Parcelles repérées et mixtes": layers.parcels, "Annonces mises en avant": layers.topads, "Toutes les annonces en ligne": layers.ads,
   };
   if (CRECHE) over["Crèches"] = layers.creches;
+  if (TRAIN) for (const k in TKEYS) over["Train → " + TKEYS[k]] = layers["t" + k];
   L.control.layers({ "Plan IGN": plan, "Photo aérienne": ortho }, over, { collapsed: true }).addTo(map);
   buildToggles({ cadastre });
   map.on("moveend", renderMapList); // la liste sous la carte suit ce qu'on voit
@@ -320,6 +354,7 @@ function buildToggles(extra) {
     ["topads", "Annonces mises en avant", layers.topads, `<span class="amark top sm">★</span>`],
     ["ads", "Toutes les annonces", layers.ads, `<span class="amark sm">€</span>`],
     ...(CRECHE ? [["creches", "Crèches", layers.creches, `<span class="cmark"></span>`]] : []),
+    ...(TRAIN ? Object.entries(TKEYS).map(([k, n]) => ["t" + k, "Train → " + n, layers["t" + k], `<span class="key k-t${k}"></span>`]) : []),
     ["cadastre", "Cadastre", extra.cadastre, ""],
     ["outside", "Hors zone verte aussi", null, ""],
   ];
@@ -350,12 +385,16 @@ function drawLegend() {
     <span><span class="ln" style="background:var(--work)"></span>${esc(workShort())}</span>
     <span><span class="ln" style="background:var(--famA)"></span>${esc(place("famA").short)}</span>
     <span><span class="ln" style="background:var(--famB)"></span>${esc(place("famB").short)}</span>
+    ${TRAIN ? Object.entries(TKEYS).map(([k, n]) => `<span title="${esc(trainHow())}"><span class="ln dot" style="color:var(--t${k})"></span>Train → ${esc(n)} ${S.iso["t" + k]} min${S.iso["z" + k] ? " (zone verte)" : ""}</span>`).join("") : ""}
     <span><span class="sw" style="background:var(--s5)"></span>Commune, couleur = score</span>
     <span><span class="sq" style="background:#ffcf33"></span>Parcelle repérée</span><span><span class="sq" style="background:#ff7ad1;transform:rotate(45deg)"></span>Terrain mixte</span>
     <span><span class="amark lg top">★</span>Annonce mise en avant</span><span><span class="amark lg">€</span>Annonce en ligne (calque à cocher)</span>
     ${crecheMode() ? `<span><span class="sw" style="background:var(--work)"></span>Crèche</span>` : ""}`;
 }
 
+function trainHow() {
+  return `Porte à porte en train, arrivée entre 7 h et 9 h un jour de semaine : voiture jusqu'à la gare la plus avantageuse (sans trafic) + ${TRAIN.marge} min pour se garer et rejoindre le quai + trajet le plus rapide en TER ou tram-train (au plus une correspondance). Depuis une gare de Lyon (Saint-Paul, Gorge de Loup, Vaise, Jean Macé), fin du trajet en TCL forfaitaire. Horaires SNCF du ${TRAIN.day.slice(6)}/${TRAIN.day.slice(4, 6)}/${TRAIN.day.slice(0, 4)}.`;
+}
 // Isochrones : contours d3 sur la grille, convertis en lon/lat.
 // d3.contours place la valeur (i, j) au centre de la cellule [i, i+1] × [j, j+1].
 function toGeo(mp) {
@@ -377,7 +416,9 @@ const gridWork = (i) => (crecheMode() ? CRECHE.grid[i] ?? 999 : gridGet("work", 
 function gridRatio(i) {
   const I = S.iso;
   const m = Math.max(gridWork(i) / I.work, gridGet("famA", i) / I.famA, gridGet("famB", i) / I.famB);
-  return I.alt > 0 ? Math.max(m, I.alt / Math.max(1, GRID.alt[i])) : m;
+  let r = I.alt > 0 ? Math.max(m, I.alt / Math.max(1, GRID.alt[i])) : m;
+  if (TRAIN) for (const k in TKEYS) if (I["z" + k]) r = Math.max(r, (TRAIN.grid[k][i] ?? 999) / I["t" + k]); // train coché : critère de zone
+  return r;
 }
 function drawIso() {
   const n = GRID.nx * GRID.ny, I = S.iso;
@@ -391,6 +432,11 @@ function drawIso() {
   const lines = [["work", w, I.work], ["famA", a, I.famA], ["famB", b, I.famB]];
   for (const [k, vals, t] of lines) {
     L.geoJSON(contour(vals, -t), { style: { color: css("--" + k), weight: 2.2, dashArray: k === "work" ? null : "6 5", fill: false }, interactive: false }).addTo(layers.iso);
+  }
+  layers.tpd.clearLayers(); layers.tpe.clearLayers();
+  if (TRAIN) for (const k in TKEYS) {
+    const v = Float64Array.from(TRAIN.grid[k], (x) => -(x ?? 999));
+    L.geoJSON(contour(v, -I["t" + k]), { style: { color: css("--t" + k), weight: 2.4, dashArray: "1 5", lineCap: "round", fill: false }, interactive: false }).addTo(layers["t" + k]);
   }
 }
 function drawCommunes(rows) {
@@ -418,7 +464,17 @@ function zoneWhy(c) {
   if (c.famA > I.famA) w.push(`${place("famA").short} ${c.famA} min > ${I.famA}`);
   if (c.famB > I.famB) w.push(`${place("famB").short} ${c.famB} min > ${I.famB}`);
   if (c.alt < I.alt) w.push(`altitude ${c.alt} m < ${I.alt} m`);
+  if (TRAIN) for (const k in TKEYS) {
+    const t = trainOf(c, k)?.t;
+    if (I["z" + k] && !(t <= I["t" + k])) w.push(`train ${TKEYS[k]} ${t ?? "–"} min > ${I["t" + k]}`);
+  }
   return w;
+}
+function trainRows(c) {
+  return Object.entries(TKEYS).map(([k, n]) => {
+    const r = trainOf(c, k);
+    return `<dt title="${esc(trainHow())}">Train → ${esc(n)}</dt><dd>${r ? `${r.t} min · ${esc(r.gare)} (${r.car} min de voiture)` : "pas de gare utile"}</dd>`;
+  }).join("");
 }
 // Fiche d'une commune : popup de la commune, et rappelée dans chaque annonce
 // (la commune peut être hors zone verte ou exclue, donc absente de la carte).
@@ -430,7 +486,7 @@ function communeBody(c) {
   <dt>Altitude</dt><dd>${c.alt} m</dd>
   <dt>${esc(workShort())}</dt><dd>${c.wt} min · ${esc(c.wmode)} · ${hw} h/sem.</dd>
   <dt>${esc(place("famA").short)}</dt><dd>${c.famA} min</dd><dt>${esc(place("famB").short)}</dt><dd>${c.famB} min</dd>
-  <dt>Train</dt><dd>${c.train != null ? `${c.train} min${c.gare ? " · " + esc(c.gare) : ""}` : "pas de gare proche"}</dd>
+  ${TRAIN ? trainRows(c) : `<dt>Train</dt><dd>${c.train != null ? `${c.train} min${c.gare ? " · " + esc(c.gare) : ""}` : "pas de gare proche"}</dd>`}
   <dt>Terrain médian</dt><dd>${fmtk(c.prix)}${c.eurm2 ? ` · ${c.eurm2} €/m²` : ""}${c.nv != null ? ` · ${c.nv} ventes` : ""}</dd>
   ${live ? `<dt>Annonces</dt><dd>${live} en ligne</dd>` : ""}
   <dt>Fibre</dt><dd>${c.fibre ?? "–"} %</dd></dl>
@@ -818,6 +874,7 @@ function doRender() {
   save();
   for (const k of ["work", "famA", "famB"]) document.querySelector(`output[for=i-${k}]`).textContent = S.iso[k] + " min";
   document.querySelector("output[for=i-alt]").textContent = S.iso.alt + " m";
+  if (TRAIN) for (const k in TKEYS) document.querySelector(`output[for=i-t${k}]`).textContent = S.iso["t" + k] + " min";
   document.querySelector("output[for=i-rush]").textContent = "×" + S.iso.rush.toFixed(2).replace(/0$/, "");
   for (const id of ["f-prix", "a-prix"]) { $(id).value = S.f.prix; document.querySelector(`output[for=${id}]`).textContent = pxTxt(); }
   for (const id of ["f-m2", "a-m2"]) { $(id).value = S.f.m2; document.querySelector(`output[for=${id}]`).textContent = S.f.m2 ? S.f.m2 + " m²" : "toutes"; }
@@ -835,6 +892,8 @@ function doRender() {
   $("zone-count").textContent = crecheMode()
     ? `${inz} communes dans la zone verte (bourg). Travail : crèche la plus proche, en voiture sans trafic.`
     : `${inz} communes dans la zone verte (bourg). Voiture ${place("work").short} : temps sans trafic × ${S.iso.rush.toFixed(2)}.`;
+  const tz = TRAIN ? Object.keys(TKEYS).filter((k) => S.iso["z" + k]).map((k) => `train ${TKEYS[k]} ≤ ${S.iso["t" + k]} min`) : [];
+  if (tz.length) $("zone-count").textContent += ` Avec ${tz.join(" et ")}.`;
   document.querySelectorAll("[data-place=work]").forEach((el) => (el.textContent = workShort()));
   syncMarkers();
   renderMapList();
