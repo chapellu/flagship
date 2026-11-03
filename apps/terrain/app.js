@@ -355,8 +355,16 @@ function inZone(c, wt) {
 }
 // lignes Part-Dieu / Perrache exigées par la zone verte : cochées, et seulement sans trajets par personne
 const tzKeys = () => (TRAIN && !COM() ? Object.keys(TKEYS).filter((k) => S.iso["z" + k]) : []);
+// annonces en ligne dans le budget (prix connu, curseurs prix / surface, constructibilité), par commune
+function cheapAds() {
+  const n = {};
+  for (const a of ALLADS) if (a.insee && !a.gone && !a.dup && a.prix && adOk(a)) n[a.insee] = (n[a.insee] || 0) + 1;
+  return n;
+}
 function compute() {
+  const cheap = cheapAds();
   for (const c of C) {
+    c.cheap = cheap[c.code] || 0;
     const w = workTime(c);
     c.wt = w.t; c.wmode = w.mode; c.walt = w.alt; c.wf = w.f;
     if (useCity()) { const l = commuteCom(c, "city"); c.lt = l.t; c.lmode = l.mode; c.lf = l.f; } else c.lt = c.lmode = c.lf = null;
@@ -368,8 +376,9 @@ function compute() {
     const why = [];
     if (S.f.fibre && (c.fibre ?? 0) < 80) why.push("fibre < 80 %");
     if (S.f.ecole && c.cl25 < 2) why.push("pas d'école");
-    if (c.nv < 2) why.push("trop peu de ventes");
-    else if (c.prix > pxMax()) why.push("terrain trop cher");
+    // trop cher : la médiane des ventes dépasse le budget ET aucune annonce en ligne n'y entre
+    if (c.nv < 2 && !c.cheap) why.push("trop peu de ventes");
+    else if (c.prix > pxMax() && !c.cheap) why.push("terrain trop cher");
     if (S.f.zone && !c.zone) why.push("hors zone verte");
     c.why = why;
   }
@@ -626,7 +635,7 @@ function communeBody(c) {
   ${useCity() ? `<dt>${esc(who("city"))}</dt><dd>${c.lt} min · ${esc(c.lmode)}</dd>` : ""}
   <dt>${esc(place("famA").short)}</dt><dd>${c.famA} min</dd><dt>${esc(place("famB").short)}</dt><dd>${c.famB} min</dd>
   ${TRAIN ? trainRows(c) : `<dt>Train</dt><dd>${c.train != null ? `${c.train} min${c.gare ? " · " + esc(c.gare) : ""}` : "pas de gare proche"}</dd>`}
-  <dt>Terrain médian</dt><dd>${fmtk(c.prix)}${c.eurm2 ? ` · ${c.eurm2} €/m²` : ""}${c.nv != null ? ` · ${c.nv} ventes` : ""}</dd>
+  <dt>Terrain médian</dt><dd>${fmtk(c.prix)}${c.eurm2 ? ` · ${c.eurm2} €/m²` : ""}${c.nv != null ? ` · ${c.nv} ventes` : ""}${c.cheap ? `<span class="sub">${c.cheap} annonce${c.cheap > 1 ? "s" : ""} en ligne dans le budget${c.prix > pxMax() ? " (médiane au-dessus)" : ""}</span>` : ""}</dd>
   ${live ? `<dt>Annonces</dt><dd>${live} en ligne</dd>` : ""}
   <dt>Fibre</dt><dd>${c.fibre ?? "–"} %</dd></dl>
   ${schoolHTML(c)}
