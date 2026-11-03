@@ -515,7 +515,8 @@ function communePopup(c) {
 // Résumé de la commune dans la fiche d'une annonce, détail dépliable
 function communeInAd(a) {
   const c = C.find((x) => x.code === a.insee);
-  if (!c) return a.insee ? `<div class="sub">Commune voisine, hors de l'étude : pas de fiche. ${adInZone(a) ? "Dans la zone verte" : "Hors zone verte"} d'après la grille de trajets.</div>` : "";
+  // pas de fiche : commune entrée dans la zone depuis le dernier calcul hebdomadaire (CronJob terrain-communes)
+  if (!c) return a.insee ? `<div class="sub">Fiche de la commune pas encore calculée (mise à jour chaque semaine). ${adInZone(a) ? "Dans la zone verte" : "Hors zone verte"} d'après la grille de trajets.</div>` : "";
   const sc = `<span class="score" style="background:${colFor(c.score)};color:${c.score > (cuts[2] || 0) ? "var(--bg)" : "var(--ink)"}">${c.score}</span>`;
   return `<details class="school commune-in-ad"><summary>${sc} ${esc(c.nom)} · ${c.alt} m · ${esc(workShort())} ${c.wt} min${c.zone ? "" : " · hors zone"}${c.why.length ? " · exclue" : ""}</summary>
     ${communeBody(c)}<div class="act"><button type="button" onclick="window.__goRow('${c.code}')">Voir dans le classement</button></div></details>`;
@@ -948,9 +949,9 @@ function constrBadge(a, full = true) {
   return full ? `<div class="sub"><span class="chip ${cls}">${txt}</span> ${esc(v.why)}</div>` : `<span class="chip ${cls}" title="${esc(v.why)}">${txt}</span>`;
 }
 const adOk = (a) => priceOk(a) && sizeOk(a) && constrOk(a);
-// Zone verte d'une annonce : celle de sa commune ; pour une commune voisine hors de
-// l'étude (pas dans communes.json), le point de grille le plus proche, mêmes seuils
-// que le contour dessiné sur la carte.
+// Zone verte d'une annonce : celle de sa commune ; pour une commune sans fiche (pas
+// encore dans communes.json), le point de grille le plus proche, mêmes seuils que le
+// contour dessiné sur la carte.
 function adInZone(a, bc = byCodeC()) {
   const c = bc[a.insee];
   if (c) return !!c.zone;
@@ -986,7 +987,7 @@ function syncMarkers() {
     el.title = hid ? `${hid} hors zone verte ou exclue${hid > 1 ? "s" : ""} par les filtres : cochez « Hors zone verte aussi » ou élargissez les filtres` : "";
   }
 }
-// Annonces d'une carte de la liste ; withCommune : carte « communes voisines », sans en-tête de commune
+// Annonces d'une carte de la liste ; withCommune : carte « communes sans fiche », sans en-tête de commune
 const adItems = (ads, withCommune = false) => ads.sort((x, y) => (!!y.top - !!x.top) || (x.prix || 0) - (y.prix || 0)).map((a) => `<li><button type="button" data-aid="${esc(a.id)}"><span class="amark sm${a.top ? " top" : ""}">${a.top ? "★" : "€"}</span>${withCommune ? esc(a.commune || "?") + " · " : ""}${fm2(a)} · ${fmtk(a.prix)}${a.drop ? ` <span class="chip wa">−${fmtk(a.drop)}</span>` : ""}${isNew(a) ? ' <span class="chip g">nouvelle</span>' : ""} ${priceBadge(a, false)}${constrVerdict(a)?.k === "oui" ? "" : " " + constrBadge(a, false)}</button>
         <a href="${esc(a.url)}" target="_blank" rel="noopener" aria-label="Ouvrir l'annonce">↗</a></li>`).join("");
 // Liste sous la carte = exactement ce que montre la carte : communes visibles dans
@@ -999,7 +1000,7 @@ function renderMapList() {
   for (const c of C) if (vis(c._m)) g(c.code);
   for (const a of ALLADS) if (vis(a._m)) g(C.some((x) => x.code === a.insee) ? a.insee : "").ads.push(a);
   for (const p of PARCELS) { const c = parcelCommune(p); if (vis(p._m) && c) g(c.code).parcels.push(p); }
-  const others = groups.get("")?.ads || []; // communes voisines, hors de l'étude
+  const others = groups.get("")?.ads || []; // communes sans fiche (pas encore calculée)
   const list = [...groups.values()].filter((x) => x.c).sort((x, y) => (y.c.zone - x.c.zone) || (!x.c.why.length - !y.c.why.length) * -1 || y.c.score - x.c.score);
   const nAds = list.reduce((n, x) => n + x.ads.length, others.length), nP = list.reduce((n, x) => n + x.parcels.length, 0);
   $("maplist-head").textContent = list.length || others.length
@@ -1010,7 +1011,7 @@ function renderMapList() {
     <button type="button" class="mhead" data-code="${c.code}">${sc(c)}<b>${esc(c.nom)}</b><span>${c.alt} m · ${esc(workShort())} ${c.wt} min · ${esc(place("famA").short)} ${c.famA} · ${esc(place("famB").short)} ${c.famB} min${c.zone ? "" : " · hors zone"}${c.why.length ? " · exclue : " + esc(c.why.join(", ")) : ""}</span></button>
     ${ads.length || parcels.length ? `<ul>${parcels.map((p) => `<li><button type="button" data-pid="${esc(p.id)}"><span class="pmark ${p.kind} sm"></span>${esc(p.kind === "mixte" ? `${p.constr} m² + ${p.agri} m² A/N` : p.surface)} · ${esc(p.zone)}</button></li>`).join("")}
       ${adItems(ads)}</ul>` : ""}
-  </article>`).join("") + (others.length ? `<article class="mcard out"><div class="mhead"><b>Communes voisines, hors de l'étude</b><span>pas de score ni de fiche ; zone verte d'après la grille de trajets</span></div>
+  </article>`).join("") + (others.length ? `<article class="mcard out"><div class="mhead"><b>Communes sans fiche</b><span>fiche calculée au prochain passage hebdomadaire ; zone verte d'après la grille de trajets</span></div>
     <ul>${adItems(others, true)}</ul></article>` : "");
   $("top5").onclick = (e) => {
     const b = e.target.closest("button");
@@ -1231,7 +1232,7 @@ function renderMarket() {
   const live = ALLADS.filter((a) => !a.gone && !a.stale && a.src && constrVerdict(a)?.k !== "non"), gone = ALLADS.filter((a) => a.gone);
   const bySect = {};
   const sectOf = Object.fromEntries(C.map((c) => [c.code, c.sect]));
-  for (const a of ALLADS) if (a.src) (bySect[sectOf[a.insee] || "Communes voisines (hors étude)"] ||= []).push(a);
+  for (const a of ALLADS) if (a.src) (bySect[sectOf[a.insee] || "Communes sans fiche"] ||= []).push(a);
   const recent = (a) => a.gone && Date.parse(todayISO()) - Date.parse(a.gone) <= 30 * DAY;
   const kLive = live.filter(knownAge), kGone = gone.filter(knownAge);
   const fast = kGone.filter((a) => daysOn(a) <= 45).sort((a, b) => b.gone.localeCompare(a.gone)).slice(0, 8);

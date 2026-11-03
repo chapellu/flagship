@@ -16,15 +16,16 @@ lit en `fetch` :
 | Fichier | Contenu |
 |---|---|
 | `config.json` | lieux de référence (`work`, `famA`, `famB`, `home`, `city`), prénoms, titre, liste des champs de `communes.json` |
-| `communes.json` | une ligne par commune (champs de `config.fields`) + gares |
+| `communes.json` | une ligne par commune (champs de `config.fields`) + gares ; écrit chaque semaine par le CronJob `terrain-communes` (voir « Fiches communes ») |
 | `grid.json` | grille régulière ~1,5 km : minutes de voiture sans trafic vers `work`/`famA`/`famB`, altitude |
 | `parcels.json` | parcelles repérées et terrains mixtes (photo, contour, zone) |
 | `ads.json` | annonces relevées |
 | `notes.json` | textes d'analyse, en HTML |
 | `img/` | photos aériennes des parcelles |
-| `creches.json` | crèches (INSEE BPE) et minutes de voiture vers la plus proche, par commune et sur la grille ; facultatif, fait apparaître l'option « travail en crèche » |
-| `schools.json` | écoles et collèges par commune : public/privé, contrat, élèves, IPS, cantine, rythme, brevet et valeur ajoutée ; facultatif |
-| `train.json` | minutes porte à porte en train vers Lyon Part-Dieu et Lyon Perrache, par commune et sur la grille, et les gares utilisées ; facultatif, fait apparaître les deux lignes « Train → » et leurs cases « dans la zone verte » |
+| `creches.json` | crèches (INSEE BPE) et minutes de voiture vers la plus proche, par commune et sur la grille ; facultatif, fait apparaître l'option « travail en crèche » ; écrit par le CronJob `terrain-communes` |
+| `schools.json` | écoles et collèges par commune : public/privé, contrat, élèves, IPS, cantine, rythme, brevet et valeur ajoutée ; facultatif ; écrit par le CronJob `terrain-communes` |
+| `train.json` | minutes porte à porte en train vers Lyon Part-Dieu et Lyon Perrache, par commune et sur la grille, et les gares utilisées ; facultatif, fait apparaître les deux lignes « Train → » et leurs cases « dans la zone verte » ; écrit par le CronJob `terrain-communes` |
+| `communes-legacy.json` | valeurs gelées des fiches d'origine, réappliquées par le générateur (voir « Fiches communes ») |
 | `market.json` | relevé quotidien des annonces et leur historique (première/dernière vue, prix, départ) ; écrit par le CronJob `terrain-refresh` |
 
 `config.json` porte aussi le bloc `search` lu par le relevé :
@@ -43,8 +44,10 @@ centre tombe dans l'emprise de `grid.json` (geo.api.gouv.fr) : une commune voisi
 laissée hors de l'étude ne fait plus disparaître ses annonces. Les codes INSEE de
 communes déléguées (communes nouvelles) sont ramenés à la commune actuelle ; une
 annonce sans code est rattachée par son nom, ou par la commune la plus proche de son
-point. Dans l'app, ces annonces de communes voisines n'ont ni score ni fiche ; leur
-zone verte est lue sur la grille de trajets, au point de l'annonce. Une annonce
+point. Ces communes voisines ont leur fiche complète depuis le générateur
+hebdomadaire (ci-dessous) ; une commune qui n'en a pas encore (entrée dans la zone
+depuis le dernier passage) voit sa zone verte lue sur la grille de trajets, au point
+de l'annonce. Une annonce
 absente d'un relevé **complet** est notée partie ce jour-là ; un relevé incomplet ne
 marque rien. Les doublons entre sites (même commune, surface et prix à quelques %
 près) sont fusionnés. L'onglet Annonces en tire « Le marché » : nouvelles, baisses de
@@ -71,39 +74,78 @@ Lancer un relevé à la main : `kubectl -n terrain create job --from=cronjob/ter
 Le job tourne en utilisateur 101 (comme nginx) : le dossier `/data` du volume doit lui
 appartenir (`chown 101:101 /data` depuis le pod temporaire ci-dessous, une fois).
 
-## Crèches et écoles
+## Fiches communes (chaque semaine)
 
-Calculés à la main, une fois par an suffit (sources publiques, rien de personnel) :
+`k8s/terrain/communes.yaml`, le dimanche à 3 h 15 : `k8s/terrain/communes/build.py`
+recalcule **toutes** les fiches de la zone — les communes de `communes.json` et les
+autres communes des mêmes départements dont le centre est dans l'emprise de
+`grid.json` (la règle du relevé des annonces) — et réécrit `communes.json`, ainsi que,
+pour les mêmes communes, `schools.json`, `creches.json` et `train.json`. Une commune
+voisine devient une commune comme les autres : score, classement, zone verte, fiche.
 
-```bash
-curl -O https://www.insee.fr/fr/statistiques/fichier/8217525/BPE25.zip
-python3 tools/creches.py BPE25.zip ./data   # ~5 min (OSRM, serveur de démonstration)
-python3 tools/ecoles.py  BPE25.zip ./data
-```
+Lancer à la main : `kubectl -n terrain create job --from=cronjob/terrain-communes communes-now`
+(premier passage ~30 à 60 min, surtout les temps OSRM ; ensuite quelques minutes).
+En local : `TERRAIN_DATA=./data TERRAIN_CACHE=./cache python3 -I k8s/terrain/communes/build.py`
+(`TERRAIN_COMMUNES_SKIP=train,creches` saute des modules, leurs champs gardent la valeur précédente).
 
-### Lignes train (Part-Dieu, Perrache)
+Les sources brutes, toutes publiques, sont gardées dans le volume `terrain-cache`
+(jamais servi) et relues seulement quand elles changent ; les temps de voiture
+sont mis en cache par couple de points (180 jours). Une source en panne ne vide
+rien : ses champs gardent la valeur de la fiche précédente, une nouvelle commune
+sans altitude ou temps de voiture attend la semaine suivante, l'écriture est
+atomique et le job finit en erreur pour qu'on le voie. La version précédente de
+`communes.json` est gardée dans le cache (`communes.prev.json`) ; `meta` dans
+`communes.json` dit quand et avec quelles sources il a été construit.
 
-```bash
-curl -o sncf.zip https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip
-python3 tools/train.py sncf.zip ./data [AAAAMMJJ]   # ~2 min (OSRM) ; à refaire au changement de service (décembre)
-python3 tools/train.py --voiture ./data            # ne refait que le trajet tout en voiture (l'app garde le plus rapide des deux)
-```
+Les secteurs (`sect`) suivent l'EPCI : le secteur déjà porté par les communes de cet
+EPCI dans `communes.json`, sinon le nom de l'EPCI raccourci (« CC du Pays de X » →
+« Pays de X »), sauf si `config.json` en impose un : `"sectors": {"<code ou nom EPCI>": "<secteur>"}`.
 
-Horaires théoriques SNCF (GTFS publié sur transport.data.gouv.fr), un jour de semaine
-type (par défaut le premier mardi une semaine après le début de validité). Pour chaque
-point : voiture sans trafic jusqu'à l'une des 6 gares les plus proches (OSRM, comme
-`grid.json`) + 8 min pour se garer et rejoindre le quai + le trajet le plus court en
-TER / tram-train / Intercités arrivant entre 7 h et 9 h, au plus une correspondance
-(5 min minimum). Pas d'attente comptée au départ : on prend le train qui arrange.
-Les gares de Lyon intra-muros terminus du tram-train (Saint-Paul, Gorge de Loup) et
-Vaise / Jean Macé sont prolongées par un trajet TCL forfaitaire (12 à 25 min, table
-`URBAIN` du script). TGV et cars exclus. Dans l'app, chaque ligne a son seuil ; la
-zone verte ne l'exige que si sa case est cochée (par défaut non).
+| Champs | Source et définition | Fiches d'origine (229) retrouvées |
+|---|---|---|
+| `nom`, `lat`, `lon`, `pop` | geo.api.gouv.fr : centre de la commune, population municipale | 229 / 229 |
+| `alt` | IGN RGE ALTI au centre | 198 identiques, les autres à quelques mètres |
+| `workcar`, `famA`, `famB`, `car` | OSRM sans trafic vers `work`, `famA`, `famB`, `city` (comme `grid.json`) | 228–229 / 229 à la minute |
+| `work`, `workmode` | le plus court de `worktrain` et `workcar` × 1,4 (heure de pointe) | 229 / 229 |
+| `prix`, `m2`, `eurm2`, `nv`, `big` | DVF, 3 dernières années complètes : ventes sans local, parcelles AB/S/AG/J, ≥ 300 m², 30–1 500 €/m² ; médianes, nombre, ventes ≥ 1 500 m² | PRIXSTAT |
+| `fibre` | ARCEP, dernier trimestre : locaux raccordables FTTH / locaux | FIBRESTAT |
+| `cl25`, `cl19`, `priv` | classes à la dernière rentrée et en 2019 (écoles ouvertes), écoles privées sous contrat | 229 / 229 |
+| `col`, `colc`, `colkm`, `va` | collège privé sous contrat le plus proche, sa valeur ajoutée (note à l'écrit du brevet) | COLSTAT |
+| `inond`, `sech`, `mvt`, `feu`, `indus` | Géorisques : arrêtés CatNat inondation / sécheresse / mouvement de terrain ; risques feu de forêt et industriel recensés | 229 / 229 |
+| `src`, `srckm` | BD TOPO : sources, sources captées, fontaines, lavoirs ; par km² | SRCSTAT |
+| `train`, `gare`, `tmin`, `arr`, `ntr` | horaires SNCF : voiture jusqu'à la gare + 4 min + train vers une gare à moins de 6 km de `city` + 3 min/km | TRAINSTAT |
+| `worktrain`, `workgare` | idem vers `work` : + 14 min, + 4 min/km de la gare d'arrivée | WTSTAT |
+| `workpr` | voiture + 7 min (pas utilisé par l'app) | WPSTAT |
 
-Il n'existe pas de classement officiel des écoles primaires : la fiche école montre
-l'IPS (milieu social des élèves, comparé au département) et, pour les collèges, la
-valeur ajoutée du brevet (« fait mieux / moins bien qu'attendu »). Les lignes de car
-scolaire du Rhône (SYTRAL) ne sont pas en open data ; seul le RPI dispersé est signalé.
+**Champs gelés.** Pour `train`, `gare`, `tmin`, `arr`, `ntr`, `worktrain`, `workgare`,
+`workpr`, `src` et `srckm`, la méthode des fiches d'origine n'a pas pu être
+retrouvée (autre source d'horaires, autre décompte des sources) : les constantes
+ci-dessus sont calées pour que les nouvelles communes leur soient comparables, et
+les 229 communes d'origine gardent leurs valeurs, gelées au premier passage dans
+`data/communes-legacy.json`. Supprimer ce fichier (ou `TERRAIN_COMMUNES_LEGACY=0`)
+fait tout recalculer avec les nouvelles méthodes.
+
+### Crèches, écoles, train (même job)
+
+- `creches.json` : BPE de l'INSEE (équipement D502), minutes de voiture vers la crèche
+  la plus proche depuis chaque commune et chaque point de la grille.
+- `schools.json` : data.education.gouv.fr (annuaire, effectifs, IPS, temps scolaire,
+  valeur ajoutée du brevet) et BPE (RPI dispersé). Il n'existe pas de classement officiel
+  des écoles primaires : la fiche école montre l'IPS (milieu social des élèves, comparé au
+  département) et, pour les collèges, la valeur ajoutée du brevet (« fait mieux / moins bien
+  qu'attendu »). Les lignes de car scolaire du Rhône (SYTRAL) ne sont pas en open data ;
+  seul le RPI dispersé est signalé.
+- `train.json` : horaires théoriques SNCF (GTFS publié sur transport.data.gouv.fr), un
+  mardi type au moins une semaine après le passage. Pour chaque point : voiture sans trafic
+  jusqu'à l'une des gares les plus proches (OSRM, comme `grid.json`) + 8 min pour se garer et
+  rejoindre le quai + le trajet le plus court en TER / tram-train / Intercités arrivant entre
+  7 h et 9 h, au plus une correspondance (5 min minimum). Pas d'attente comptée au départ :
+  on prend le train qui arrange. Les gares de Lyon intra-muros terminus du tram-train
+  (Saint-Paul, Gorge de Loup) et Vaise / Jean Macé sont prolongées par un trajet TCL
+  forfaitaire (12 à 25 min, table `URBAIN` de `m_train.py`). TGV et cars exclus. Plus le
+  trajet tout en voiture jusqu'aux deux gares : l'app y applique l'heure de pointe, ajoute
+  10 min pour se garer et garde le plus rapide des deux. Dans l'app, chaque ligne a son
+  seuil ; la zone verte ne l'exige que si sa case est cochée (par défaut non).
 
 **Sauvegarde.** Velero sauvegarde le volume chaque nuit (Kopia, 7 jours),
 avec le reste du cluster. Jusqu'au 2026-11-02 c'était un `hostPath`

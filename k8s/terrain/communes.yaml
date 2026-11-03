@@ -1,0 +1,104 @@
+# Fiches communes, chaque semaine (k8s/terrain/communes/build.py) → data/communes.json,
+# et pour les mêmes communes data/schools.json, data/creches.json, data/train.json.
+#
+# Toutes les communes de la zone (communes.json + voisines des mêmes départements
+# dans l'emprise de grid.json) reçoivent une fiche complète, calculée depuis des
+# sources publiques : geo.api.gouv.fr, IGN (altitude, BD TOPO), OSRM, horaires
+# SNCF, DVF, ARCEP, data.education.gouv.fr, INSEE BPE, Géorisques.
+#
+# Les sources brutes et les temps OSRM sont gardés dans le volume terrain-cache
+# (données publiques seulement) : une semaine ordinaire ne relit que ce qui a
+# changé. Le premier passage demande tous les temps de voiture (~30 à 60 min).
+#
+# Le code est public et ne contient aucun lieu : tout vient de data/config.json,
+# data/communes.json et data/grid.json. Écriture atomique ; si une source est en
+# panne, ses champs gardent la valeur précédente et le job finit en erreur.
+#
+# Lancer à la main : kubectl -n terrain create job --from=cronjob/terrain-communes communes-now
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: terrain-cache
+  namespace: terrain
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: terrain-communes
+  namespace: terrain
+spec:
+  # dimanche, 3 h 15 : loin du relevé quotidien des annonces (6 h 30)
+  schedule: "15 3 * * 0"
+  timeZone: Europe/Paris
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      # pas de reprise automatique : un échec garde les valeurs précédentes, on regarde les logs
+      backoffLimit: 0
+      activeDeadlineSeconds: 14400
+      ttlSecondsAfterFinished: 1209600
+      template:
+        metadata:
+          labels:
+            app: terrain-communes
+        spec:
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            # même utilisateur que nginx et le relevé ; le dossier data lui appartient
+            runAsUser: 101
+            runAsGroup: 101
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: communes
+              image: python:3.13-alpine
+              command: ["python3", "-I", "/app/build.py"]
+              env:
+                - name: TERRAIN_DATA
+                  value: /data
+                - name: TERRAIN_CACHE
+                  value: /cache
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: "1"
+                  # horaires SNCF d'une journée et DVF d'une année en mémoire
+                  memory: 1Gi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              volumeMounts:
+                - name: app
+                  mountPath: /app
+                  readOnly: true
+                - name: data
+                  mountPath: /data
+                - name: cache
+                  mountPath: /cache
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: app
+              configMap:
+                name: terrain-communes
+            - name: data
+              persistentVolumeClaim:
+                claimName: terrain-data
+            - name: cache
+              persistentVolumeClaim:
+                claimName: terrain-cache
+            - name: tmp
+              emptyDir: {}
