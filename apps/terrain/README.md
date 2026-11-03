@@ -24,7 +24,7 @@ lit en `fetch` :
 | `img/` | photos aériennes des parcelles |
 | `creches.json` | crèches (INSEE BPE) et minutes de voiture vers la plus proche, par commune et sur la grille ; facultatif, fait apparaître l'option « travail en crèche » ; écrit par le CronJob `terrain-communes` |
 | `schools.json` | écoles et collèges par commune : public/privé, contrat, élèves, IPS, cantine, rythme, brevet et valeur ajoutée ; facultatif ; écrit par le CronJob `terrain-communes` |
-| `train.json` | minutes porte à porte en train vers Lyon Part-Dieu et Lyon Perrache, par commune et sur la grille, et les gares utilisées ; facultatif, fait apparaître les deux lignes « Train → » et leurs cases « dans la zone verte » ; écrit par le CronJob `terrain-communes` |
+| `train.json` | minutes porte à porte en train vers Lyon Part-Dieu et Lyon Perrache, par commune et sur la grille, et les gares utilisées ; facultatif, fait apparaître les deux lignes « → Part-Dieu / Perrache » (repères sous « Avancé ») ; écrit par le CronJob `terrain-communes` |
 | `communes-legacy.json` | valeurs gelées des fiches d'origine, réappliquées par le générateur (voir « Fiches communes ») |
 | `market.json` | relevé quotidien des annonces et leur historique (première/dernière vue, prix, départ) ; écrit par le CronJob `terrain-refresh` |
 
@@ -145,7 +145,9 @@ fait tout recalculer avec les nouvelles méthodes.
   forfaitaire (12 à 25 min, table `URBAIN` de `m_train.py`). TGV et cars exclus. Plus le
   trajet tout en voiture jusqu'aux deux gares : l'app y applique l'heure de pointe, ajoute
   10 min pour se garer et garde le plus rapide des deux. Dans l'app, chaque ligne a son
-  seuil ; la zone verte ne l'exige que si sa case est cochée (par défaut non).
+  seuil. Avec le bloc `commute` (trajets par personne), ce sont de simples repères sur la
+  carte : la zone verte ne dépend que des trajets de chacun. Sans lui, une case « dans la
+  zone verte » permet de les exiger (par défaut non).
 
 **Sauvegarde.** Velero sauvegarde le volume chaque nuit (Kopia, 7 jours),
 avec le reste du cluster. Jusqu'au 2026-11-02 c'était un `hostPath`
@@ -207,6 +209,14 @@ limite voiture + reste du trajet / limite train ≤ 1. Attente du train : moiti�
 de l'intervalle moyen entre trains du matin, plafonnée à 15 min, plus 5 min pour
 se garer (3 à vélo). Ces réglages sont dans `commute.rules`. Le bouton « Trajet »
 d'une annonce ou d'une parcelle détaille ce trajet et le dessine sur la carte.
+
+Le panneau « Zone atteignable » est rangé par intention : une phrase de synthèse
+(ce que veut dire la zone verte avec les réglages du moment), « Nos trajets
+travail » (une carte par personne : limite en voiture, limite en train, un exemple
+de trajet mixte avec ses chiffres, et le plan B crèche dans la carte de `work`, le
+seul trajet qu'il change), « Famille », « Le terrain » et « Avancé » (heure de
+pointe, lignes repères). Sous chaque critère : combien de communes (bourg) il
+écarte, et combien seraient vertes sans lui.
 
 ## Isochrones
 

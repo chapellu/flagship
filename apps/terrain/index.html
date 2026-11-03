@@ -40,35 +40,67 @@
       <p class="hint" id="share-out" hidden></p>
     </section>
 
-    <section class="box" id="workat-box">
-      <h2>Lieu de travail</h2>
-      <div class="seg" role="radiogroup" aria-label="Lieu de travail" id="workat"></div>
-      <p class="hint">Plan B si le trajet devient trop lourd : travailler dans une crèche près de la maison. Le trajet, la zone verte et le score suivent ce choix.</p>
-    </section>
-
-    <section class="box">
+    <section class="box" id="zone-box">
       <h2>Zone atteignable</h2>
-      <p class="hint">La zone verte réunit tous les points qui respectent les quatre seuils. Les lignes montrent chaque trajet seul.</p>
-      <div class="w"><label for="i-work"><span class="key k-work"></span><span id="lbl-work"><span data-place="work">Travail</span></span></label><input type="range" id="i-work" min="20" max="90" step="5"><output for="i-work"></output></div>
-      <div id="commute-box" hidden>
-        <div class="w"><label for="i-workTr"><span class="key k-work"></span>… ou en train</label><input type="range" id="i-workTr" min="20" max="120" step="5"><output for="i-workTr"></output></div>
-        <div class="w"><label for="i-city"><span class="key k-city"></span><span id="lbl-city">Ville · voiture</span></label><input type="range" id="i-city" min="20" max="120" step="5"><output for="i-city"></output></div>
-        <div class="w"><label for="i-cityTr"><span class="key k-city"></span>… ou en train</label><input type="range" id="i-cityTr" min="20" max="120" step="5"><output for="i-cityTr"></output></div>
-        <label class="chk sub-chk"><input type="checkbox" id="i-zcity"> Ce trajet dans la zone verte</label>
-        <p class="hint">Chacun a une limite en voiture et une en train. Un trajet mixte en consomme une part de chaque : 10 min de voiture sur 45 laissent 78 % de la limite train. Gare à pied (≤ 2 km) ou à vélo (≤ 6 km) : pas de voiture. Attente : moitié de l'intervalle entre trains du matin (15 min au plus), plus le temps de se garer.</p>
+      <p class="zsum" id="zone-count" aria-live="polite"></p>
+
+      <h3 class="zh">Nos trajets travail</h3>
+      <div class="pcard" id="card-work" style="--c:var(--work)">
+        <p class="pc-head"><span class="key k-work"></span><b id="pc-work-who"></b><span id="pc-work-dest"></span></p>
+        <div id="workat-box" hidden>
+          <div class="seg" role="radiogroup" aria-label="Lieu de travail" id="workat"></div>
+          <p class="hint" id="workat-hint"></p>
+        </div>
+        <div class="w"><label for="i-work" id="lbl-work">En voiture</label><input type="range" id="i-work" min="20" max="90" step="5"><output for="i-work"></output></div>
+        <div class="w" id="row-workTr" hidden><label for="i-workTr">En train</label><input type="range" id="i-workTr" min="20" max="120" step="5"><output for="i-workTr"></output></div>
+        <p class="hint" id="mix-work" hidden></p>
+        <p class="crit" id="x-work"></p>
       </div>
+      <div class="pcard" id="card-city" style="--c:var(--city)" hidden>
+        <p class="pc-head"><span class="key k-city"></span><b id="pc-city-who"></b><span id="pc-city-dest"></span></p>
+        <div class="w"><label for="i-city">En voiture</label><input type="range" id="i-city" min="20" max="120" step="5"><output for="i-city"></output></div>
+        <div class="w"><label for="i-cityTr">En train</label><input type="range" id="i-cityTr" min="20" max="120" step="5"><output for="i-cityTr"></output></div>
+        <p class="hint" id="mix-city"></p>
+        <label class="chk"><input type="checkbox" id="i-zcity"> Compter ce trajet dans la zone verte</label>
+        <p class="crit" id="x-city"></p>
+      </div>
+      <details class="how" id="commute-box" hidden>
+        <summary>Comment on compte un trajet ?</summary>
+        <ul>
+          <li><b>En voiture</b> : de porte à porte, aux heures de pointe.</li>
+          <li><b>En train</b> : de porte à porte aussi : aller à la gare, se garer, attendre le train, le trajet, puis finir jusqu'au travail. Arrivée entre 7 h et 9 h.</li>
+          <li><b>Voiture puis train</b> : chacun des deux temps prend sa part de la limite. Le trajet passe si les deux parts ensemble ne dépassent pas 100 %.</li>
+          <li><b>Gare proche</b> : à pied jusqu'à 2 km, à vélo jusqu'à 6 km. Pas de voiture, donc tout compte dans la limite train.</li>
+          <li><b>Attente</b> : la moitié du temps entre deux trains du matin (15 min au plus).</li>
+          <li>On garde le meilleur des trajets possibles.</li>
+        </ul>
+      </details>
+
+      <h3 class="zh">Famille</h3>
+      <p class="hint">Temps en voiture au plus.</p>
       <div class="w"><label for="i-famA"><span class="key k-famA"></span><span data-place="famA">Famille 1</span></label><input type="range" id="i-famA" min="10" max="90" step="5"><output for="i-famA"></output></div>
+      <p class="crit" id="x-famA"></p>
       <div class="w"><label for="i-famB"><span class="key k-famB"></span><span data-place="famB">Famille 2</span></label><input type="range" id="i-famB" min="10" max="120" step="5"><output for="i-famB"></output></div>
+      <p class="crit" id="x-famB"></p>
+
+      <h3 class="zh">Le terrain</h3>
       <div class="w"><label for="i-alt"><span class="key k-alt"></span>Altitude min.</label><input type="range" id="i-alt" min="0" max="800" step="25"><output for="i-alt"></output></div>
-      <div class="w"><label for="i-rush">Heure de pointe</label><input type="range" id="i-rush" min="1" max="1.8" step="0.05"><output for="i-rush"></output></div>
-      <div id="train-box" hidden>
-        <p class="hint">Part-Dieu / Perrache : porte à porte, le plus rapide entre tout en voiture (heure de pointe, se garer) et voiture jusqu'à une gare puis TER, arrivée entre 7 h et 9 h. Cochées, elles s'ajoutent aux seuils de la zone verte.</p>
-        <div class="w"><label for="i-tpd"><span class="key k-tpd"></span>→ Part-Dieu</label><input type="range" id="i-tpd" min="20" max="120" step="5"><output for="i-tpd"></output></div>
-        <label class="chk sub-chk"><input type="checkbox" id="i-zpd"> Part-Dieu dans la zone verte</label>
-        <div class="w"><label for="i-tpe"><span class="key k-tpe"></span>→ Perrache</label><input type="range" id="i-tpe" min="20" max="120" step="5"><output for="i-tpe"></output></div>
-        <label class="chk sub-chk"><input type="checkbox" id="i-zpe"> Perrache dans la zone verte</label>
-      </div>
-      <p class="hint" id="zone-count"></p>
+      <p class="crit" id="x-alt"></p>
+
+      <details class="how adv">
+        <summary>Avancé</summary>
+        <div class="w"><label for="i-rush">Heure de pointe</label><input type="range" id="i-rush" min="1" max="1.8" step="0.05"><output for="i-rush"></output></div>
+        <p class="hint" id="rush-hint"></p>
+        <div id="train-box" hidden>
+          <p class="hint" id="train-hint"></p>
+          <div class="w"><label for="i-tpd"><span class="key k-tpd"></span>→ Part-Dieu</label><input type="range" id="i-tpd" min="20" max="120" step="5"><output for="i-tpd"></output></div>
+          <label class="chk sub-chk" id="row-zpd"><input type="checkbox" id="i-zpd"> Part-Dieu dans la zone verte</label>
+          <p class="crit" id="x-tpd" hidden></p>
+          <div class="w"><label for="i-tpe"><span class="key k-tpe"></span>→ Perrache</label><input type="range" id="i-tpe" min="20" max="120" step="5"><output for="i-tpe"></output></div>
+          <label class="chk sub-chk" id="row-zpe"><input type="checkbox" id="i-zpe"> Perrache dans la zone verte</label>
+          <p class="crit" id="x-tpe" hidden></p>
+        </div>
+      </details>
     </section>
 
     <section class="box">

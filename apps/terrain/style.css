@@ -137,6 +137,23 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body)
 .k-work{background:var(--work)}.k-famA{background:var(--famA)}.k-famB{background:var(--famB)}.k-alt{background:var(--muted)}
 .k-tpd{background:var(--tpd)}.k-city{background:var(--city)}.k-tpe{background:var(--tpe)}
 .sub-chk{margin:-2px 0 4px 0;font-size:12.5px;color:var(--muted)}
+/* « Zone atteignable » : synthèse, groupes, une carte par trajet travail */
+.zsum{font-size:13px;background:var(--accent-soft);border-radius:8px;padding:8px 10px}
+.zh{font:700 13px var(--f-body);color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:6px;padding-top:8px;border-top:1px solid var(--line)}
+.pcard{border:1px solid var(--line);border-left:4px solid var(--c,var(--line));border-radius:8px;padding:10px;display:grid;gap:7px}
+.pc-head{display:flex;align-items:center;gap:6px;font-size:14px;flex-wrap:wrap}
+.pc-head b{font-family:var(--f-display)}
+.pcard .w{grid-template-columns:84px 1fr 52px}
+#workat-box{display:grid;gap:6px}
+.crit{font:12px var(--f-data);color:var(--muted);margin-top:-4px}
+.pcard .crit{margin-top:0}
+details.how{font-size:12.5px;color:var(--muted)}
+details.how summary{cursor:pointer;font-weight:600;color:var(--accent);padding-block:2px}
+details.how ul{margin:6px 0 0;padding-left:16px;display:grid;gap:4px}
+details.adv{border-top:1px solid var(--line);padding-top:8px;margin-top:6px}
+details.adv[open]{display:grid;gap:8px}
+details.adv .w{color:var(--ink)}
+#train-box{display:grid;gap:8px}
 input[type=range]{width:100%;accent-color:var(--accent)}
 input[type=range]:disabled{opacity:.45}
 .seg{display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;justify-self:start}

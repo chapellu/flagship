@@ -108,30 +108,29 @@ let syncProfile, syncWork = () => {};
 function buildControls() {
   syncProfile = seg($("profiles"), [["A", CFG.people[0]], ["B", CFG.people[1]], ["mix", "Compromis"]], () => S.profile, (v) => { S.profile = v; syncWeights(); render(); });
   seg($("days"), [["2", "2 j"], ["3", "3 j"], ["4", "4 j"]], () => S.days, (v) => { S.days = +v; render(); });
+  // Plan B « crèche » : ne change que le trajet « work », donc il vit dans sa carte
   if (CRECHE) {
+    $("workat-box").hidden = false;
     syncWork = seg($("workat"), [["qg", place("work").short], ["creche", "Crèche près de chez nous"]], () => S.workAt, (v) => {
       S.workAt = v;
       if (v === "creche") { map.addLayer(layers.creches); S.show.creches = true; syncToggles(); }
       render();
     });
-  } else $("workat-box").hidden = true;
+  }
 
   $("weights").innerHTML = WKEYS.map((k) => `<div class="w"><label for="w-${k}">${esc(LBL[k])}</label><input type="range" id="w-${k}" min="0" max="40" step="5"><output for="w-${k}"></output></div>`).join("");
   WKEYS.forEach((k) => $("w-" + k).addEventListener("input", (e) => { prof().w[k] = +e.target.value; render(); }));
   $("famshare").addEventListener("input", (e) => { prof().famshare = +e.target.value; render(); });
 
-  for (const k of ISO_KEYS) {
-    $("i-" + k).value = S.iso[k];
-    $("i-" + k).addEventListener("input", (e) => { S.iso[k] = +e.target.value; render(); });
-  }
+  for (const k of ISO_KEYS) $("i-" + k).addEventListener("input", (e) => { S.iso[k] = +e.target.value; render(); });
   buildTrain();
-  $("i-zcity").checked = S.iso.zcity;
   $("i-zcity").addEventListener("change", (e) => { S.iso.zcity = e.target.checked; render(); });
-  if (COM()) {
-    $("commute-box").hidden = false;
-    $("lbl-work").textContent = who("work") + " · voiture";
-    $("lbl-city").textContent = who("city") + " · voiture";
+  if (COM()) $("commute-box").hidden = false;
+  if (useCity()) {
+    $("card-city").hidden = false;
+    head("city", place("city").short);
   }
+  syncIso();
   for (const k of ["fibre", "ecole", "zone", "constr"]) {
     $("f-" + k).checked = S.f[k];
     $("f-" + k).addEventListener("change", (e) => { S.f[k] = e.target.checked; render(); });
@@ -145,23 +144,39 @@ function buildControls() {
   $("reset").addEventListener("click", () => {
     const keep = S.profile;
     S = structuredClone(DEF); S.profile = keep === "mix" ? "A" : keep;
-    for (const k of ISO_KEYS) $("i-" + k).value = S.iso[k];
-    $("i-zcity").checked = S.iso.zcity;
     for (const k of ["fibre", "ecole", "zone", "constr"]) $("f-" + k).checked = S.f[k];
     $("f-prix").value = S.f.prix;
-    syncTrain(); syncProfile(); syncWeights(); render();
+    syncIso(); syncProfile(); syncWeights(); render();
   });
   $("share").addEventListener("click", share);
   syncWeights();
 }
+// curseurs et cases de « Zone atteignable » ← S.iso (et S.workAt)
+function syncIso() {
+  for (const k of ISO_KEYS) $("i-" + k).value = S.iso[k];
+  $("i-zcity").checked = S.iso.zcity;
+  syncTrain(); syncWork();
+}
+// en-tête d'une carte « trajet » : « Nom → lieu », ou le lieu seul sans config.commuters
+function head(k, dest) {
+  const n = CFG.commuters?.[k];
+  $(`pc-${k}-who`).textContent = n || dest;
+  $(`pc-${k}-dest`).textContent = n ? ` → ${dest}` : "";
+}
 // ---- lignes Part-Dieu / Perrache (train.json) : trajet porte à porte, le plus rapide de
 // « tout en voiture » (× coefficient de pointe + se garer en ville) et « voiture + train ».
-// Chaque ligne s'affiche seule ; la zone verte ne l'exige que si on coche « dans la zone verte ».
+// Chaque ligne s'affiche seule. Sans trajets par personne (pas de bloc « commute »), la zone
+// verte peut les exiger (case « dans la zone verte ») ; avec, ce sont de simples repères :
+// le trajet vers Part-Dieu est déjà celui de la carte « city », avec ses deux limites.
 const TKEYS = { pd: "Part-Dieu", pe: "Perrache" };
 let syncTrain = () => {};
 function buildTrain() {
   if (!TRAIN) return;
   $("train-box").hidden = false;
+  $("row-zpd").hidden = $("row-zpe").hidden = !!COM();
+  $("train-hint").textContent = COM()
+    ? "Repères sur la carte (pointillés), pour information : le plus rapide de porte à porte, tout en voiture ou voiture + train, arrivée entre 7 h et 9 h. Ils ne changent pas la zone verte : les trajets travail ci-dessus la décident."
+    : "Porte à porte, le plus rapide entre tout en voiture (heure de pointe, se garer) et voiture jusqu'à une gare puis train, arrivée entre 7 h et 9 h. Cochées, elles s'ajoutent à la zone verte.";
   const els = [];
   for (const k in TKEYS) {
     const t = "t" + k, z = "z" + k;
@@ -230,8 +245,9 @@ function readShared() {
   b.innerHTML = `<span>Réglage reçu de <b>${esc(person(r.from))}</b>.</span><button class="ghost" type="button" id="rcv-ok">L'enregistrer comme profil ${esc(person(into))}</button><button class="ghost" type="button" id="rcv-no">Ignorer</button>`;
   $("rcv-ok").onclick = () => {
     S.profiles[into] = { w: { ...DEF_W, ...r.w }, famshare: r.famshare ?? 80 };
-    if (r.workAt) { S.workAt = r.workAt; syncWork(); }
-    if (r.iso) { S.iso = { ...S.iso, ...r.iso }; for (const k of ISO_KEYS) $("i-" + k).value = S.iso[k]; $("i-zcity").checked = S.iso.zcity; syncTrain(); }
+    if (r.workAt) S.workAt = r.workAt;
+    if (r.iso) S.iso = { ...S.iso, ...r.iso };
+    syncIso();
     S.profile = "mix"; syncProfile(); syncWeights(); render();
     b.hidden = true; history.replaceState(null, "", location.pathname);
   };
@@ -317,16 +333,22 @@ function scoreWith(s, c, prof) {
 // Curseur de prix : tout à droite, pas de limite (le relevé garde toutes les annonces, quel que soit le prix).
 const pxMax = () => (S.f.prix >= +$("f-prix").max ? Infinity : S.f.prix * 1000);
 const pxTxt = () => (pxMax() === Infinity ? "sans limite" : S.f.prix + " k");
+// Zone verte : chaque critère un par un (true = tenu), pour la zone et pour les compteurs du panneau.
+// « city » est toujours évalué, mais ne compte que si sa case est cochée.
+function zoneTests(c, wt) {
+  const I = S.iso, t = { work: COM() && !crecheMode() ? c.wf <= 1 : wt <= I.work };
+  if (useCity()) t.city = c.lf <= 1;
+  t.famA = c.famA <= I.famA; t.famB = c.famB <= I.famB; t.alt = c.alt >= I.alt;
+  for (const k of tzKeys()) t["t" + k] = (trainOf(c, k)?.t ?? 999) <= I["t" + k]; // sans donnée : hors zone
+  return t;
+}
+const counted = (k) => k !== "city" || S.iso.zcity;
 function inZone(c, wt) {
-  const ok = COM() && !crecheMode() ? c.wf <= 1 : wt <= S.iso.work;
-  if (useCity() && S.iso.zcity && !(c.lf <= 1)) return false;
-  return ok && c.famA <= S.iso.famA && c.famB <= S.iso.famB && c.alt >= S.iso.alt && trainOk(c);
+  c.zt = zoneTests(c, wt);
+  return Object.keys(c.zt).every((k) => c.zt[k] || !counted(k));
 }
-// critères train cochés « dans la zone verte » : sans donnée, la commune n'y est pas
-function trainOk(c) {
-  if (!TRAIN) return true;
-  return Object.keys(TKEYS).every((k) => !S.iso["z" + k] || (trainOf(c, k)?.t ?? 999) <= S.iso["t" + k]);
-}
+// lignes Part-Dieu / Perrache exigées par la zone verte : cochées, et seulement sans trajets par personne
+const tzKeys = () => (TRAIN && !COM() ? Object.keys(TKEYS).filter((k) => S.iso["z" + k]) : []);
 function compute() {
   for (const c of C) {
     const w = workTime(c);
@@ -462,7 +484,7 @@ function drawLegend() {
     ${useCity() ? `<span><span class="ln" style="background:var(--city)"></span>${esc(who("city"))}${S.iso.zcity ? "" : " (hors zone verte)"}</span>` : ""}
     <span><span class="ln" style="background:var(--famA)"></span>${esc(place("famA").short)}</span>
     <span><span class="ln" style="background:var(--famB)"></span>${esc(place("famB").short)}</span>
-    ${TRAIN ? Object.entries(TKEYS).map(([k, n]) => `<span title="${esc(trainHow())}"><span class="ln dot" style="color:var(--t${k})"></span>→ ${esc(n)} ${S.iso["t" + k]} min${S.iso["z" + k] ? " (zone verte)" : ""}</span>`).join("") : ""}
+    ${TRAIN ? Object.entries(TKEYS).map(([k, n]) => `<span title="${esc(trainHow())}"><span class="ln dot" style="color:var(--t${k})"></span>→ ${esc(n)} ${S.iso["t" + k]} min${tzKeys().includes(k) ? " (zone verte)" : ""}</span>`).join("") : ""}
     <span><span class="sw" style="background:var(--s5)"></span>Commune, couleur = score</span>
     <span><span class="sq" style="background:#ffcf33"></span>Parcelle repérée</span><span><span class="sq" style="background:#ff7ad1;transform:rotate(45deg)"></span>Terrain mixte</span>
     <span><span class="amark lg top">★</span>Annonce mise en avant</span><span><span class="amark lg">€</span>Annonce en ligne (calque à cocher)</span>
@@ -516,7 +538,7 @@ function gridRatio(i) {
   let m = Math.max(gridWorkF(i), gridGet("famA", i) / I.famA, gridGet("famB", i) / I.famB);
   if (useCity() && I.zcity) m = Math.max(m, commuteGrid("city", i).f);
   let r = I.alt > 0 ? Math.max(m, I.alt / Math.max(1, GRID.alt[i])) : m;
-  if (TRAIN) for (const k in TKEYS) if (I["z" + k]) r = Math.max(r, tripGrid(k, i) / I["t" + k]); // Part-Dieu / Perrache cochés : critère de zone
+  for (const k of tzKeys()) r = Math.max(r, tripGrid(k, i) / I["t" + k]); // Part-Dieu / Perrache cochés : critère de zone
   return r;
 }
 function drawIso() {
@@ -568,9 +590,9 @@ function zoneWhy(c) {
   if (c.famA > I.famA) w.push(`${place("famA").short} ${c.famA} min > ${I.famA}`);
   if (c.famB > I.famB) w.push(`${place("famB").short} ${c.famB} min > ${I.famB}`);
   if (c.alt < I.alt) w.push(`altitude ${c.alt} m < ${I.alt} m`);
-  if (TRAIN) for (const k in TKEYS) {
+  for (const k of tzKeys()) {
     const t = trainOf(c, k)?.t;
-    if (I["z" + k] && !(t <= I["t" + k])) w.push(`${TKEYS[k]} ${t ?? "–"} min > ${I["t" + k]}`);
+    if (!(t <= I["t" + k])) w.push(`${TKEYS[k]} ${t ?? "–"} min > ${I["t" + k]}`);
   }
   return w;
 }
@@ -1085,7 +1107,7 @@ function doRender() {
   for (const k of ["work", "famA", "famB", "workTr", "city", "cityTr"]) document.querySelector(`output[for=i-${k}]`).textContent = S.iso[k] + " min";
   document.querySelector("output[for=i-alt]").textContent = S.iso.alt + " m";
   if (TRAIN) for (const k in TKEYS) document.querySelector(`output[for=i-t${k}]`).textContent = S.iso["t" + k] + " min";
-  document.querySelector("output[for=i-rush]").textContent = "×" + S.iso.rush.toFixed(2).replace(/0$/, "");
+  document.querySelector("output[for=i-rush]").textContent = "×" + fmtX(S.iso.rush);
   for (const id of ["f-prix", "a-prix"]) { $(id).value = S.f.prix; document.querySelector(`output[for=${id}]`).textContent = pxTxt(); }
   for (const id of ["f-m2", "a-m2"]) { $(id).value = S.f.m2; document.querySelector(`output[for=${id}]`).textContent = S.f.m2 ? S.f.m2 + " m²" : "toutes"; }
   const p = effW(S.profile);
@@ -1098,21 +1120,63 @@ function doRender() {
   drawIso();
   drawCommunes(rows);
   drawLegend();
-  const inz = C.filter((c) => c.zone).length;
-  $("zone-count").textContent = crecheMode()
-    ? `${inz} communes dans la zone verte (bourg). Travail : crèche la plus proche, en voiture sans trafic.`
-    : COM() ? `${inz} communes dans la zone verte (bourg). Voiture : temps sans trafic × ${S.iso.rush.toFixed(2)} ; un trajet mixte consomme une part de chaque limite.`
-    : `${inz} communes dans la zone verte (bourg). Voiture ${place("work").short} : temps sans trafic × ${S.iso.rush.toFixed(2)}.`;
-  const tz = TRAIN ? Object.keys(TKEYS).filter((k) => S.iso["z" + k]).map((k) => `${TKEYS[k]} ≤ ${S.iso["t" + k]} min`) : [];
-  if (tz.length) $("zone-count").textContent += ` Avec ${tz.join(" et ")}.`;
-  document.querySelectorAll("[data-place=work]").forEach((el) => (el.textContent = workShort()));
-  if (COM()) $("lbl-work").textContent = crecheMode() ? "Crèche proche · voiture" : who("work") + " · voiture";
+  renderZonePanel();
   syncMarkers();
   renderMapList();
   renderTable(rows);
   renderParcels();
   renderAds();
 }
+// Panneau « Zone atteignable » : textes qui suivent les réglages, phrase de synthèse,
+// et pour chaque critère le nombre de communes (bourg) qu'il écarte.
+const nb = (n, w) => `${n} ${w}${n > 1 ? "s" : ""}`;
+const pct = (x) => Math.round(100 * x) + " %";
+function renderZonePanel() {
+  const I = S.iso, cm = crecheMode(), mix = COM() && !cm;
+  head("work", cm ? "crèche la plus proche" : place("work").short);
+  $("lbl-work").textContent = mix || cm ? "En voiture" : "Voiture ou train";
+  $("row-workTr").hidden = $("mix-work").hidden = !mix;
+  if (CRECHE) $("workat-hint").textContent = cm
+    ? "Plan B : travail dans la crèche la plus proche de la maison, en voiture (petit trajet, sans heure de pointe). Seul ce trajet change ; le score et la zone verte suivent."
+    : "Plan B si ce trajet devient trop lourd : travailler dans une crèche près de la maison. Seul ce trajet change.";
+  // une ligne d'exemple, avec les limites de la personne : 10 min de voiture jusqu'à la gare…
+  const mixLine = (car, train) => {
+    const a = Math.min(10, car), left = 1 - a / car;
+    return `Voiture puis train : ${a} min de voiture jusqu'à la gare prennent ${pct(a / car)} de la limite voiture ; il reste ${Math.round(train * left)} min (${pct(left)} de ${train}) pour se garer, attendre et prendre le train.`;
+  };
+  if (mix) $("mix-work").textContent = mixLine(I.work, I.workTr);
+  if (useCity()) $("mix-city").textContent = mixLine(I.city, I.cityTr);
+  $("rush-hint").textContent = `Temps en voiture des trajets travail (pas la famille) : temps sans trafic × ${fmtX(I.rush)}. 30 min sans trafic en font ${Math.round(30 * I.rush)}.`;
+
+  const inz = C.filter((c) => c.zone).length;
+  const crit = (k) => {
+    const fail = C.filter((c) => c.zt && !c.zt[k]);
+    if (!counted(k)) {
+      const n = fail.filter((c) => c.zone).length;
+      return n ? `Pas compté. Le compter retirerait ${nb(n, "commune")} de la zone verte.` : "Pas compté. Le compter ne changerait rien à la zone verte.";
+    }
+    if (!fail.length) return "N'écarte aucune commune.";
+    const only = fail.filter((c) => Object.keys(c.zt).every((j) => j === k || c.zt[j] || !counted(j))).length;
+    return `Écarte ${nb(fail.length, "commune")}` + (only ? ` ; ${only > 1 ? only + " seraient vertes" : "1 serait verte"} sans cette limite.` : ".");
+  };
+  for (const k of ["work", "city", "famA", "famB", "alt"]) if (k !== "city" || useCity()) $("x-" + k).textContent = crit(k);
+  if (TRAIN) for (const k in TKEYS) { const on = tzKeys().includes(k); $("x-t" + k).hidden = !on; if (on) $("x-t" + k).textContent = crit("t" + k); }
+
+  // phrase de synthèse
+  const name = (k) => CFG.commuters?.[k];
+  const tr = (k, car, train) => `${name(k) ? name(k) + " à" : ""} ${car} min max de ${place(k).short} en voiture (ou ${train} min en train)`.trim();
+  const p = [];
+  if (cm) p.push(`${name("work") ? name("work") + " à" : "une crèche à"} ${I.work} min max${name("work") ? " d'une crèche" : ""} en voiture`);
+  else if (mix) p.push(tr("work", I.work, I.workTr));
+  else p.push(`${place("work").short} à ${I.work} min max (voiture ou train)`);
+  if (useCity() && I.zcity) p.push(tr("city", I.city, I.cityTr));
+  p.push(`${place("famA").short} à ${I.famA} min max`, `${place("famB").short} à ${I.famB} min max`);
+  for (const k of tzKeys()) p.push(`${TKEYS[k]} à ${I["t" + k]} min max`);
+  if (I.alt > 0) p.push(`au moins ${I.alt} m d'altitude`);
+  $("zone-count").innerHTML = `<b>Zone verte : ${nb(inz, "commune")} sur ${C.length}.</b> Partout dedans : ${esc(p.join(" ; "))}.`
+    + (useCity() && !I.zcity ? ` Le trajet ${name("city") ? "de " + esc(name("city")) : "vers " + esc(place("city").short)} n'est pas compté.` : "");
+}
+const fmtX = (x) => x.toFixed(2).replace(/0$/, "").replace(".", ",");
 // Annonces et parcelles : sur la carte seulement si leur commune est dans la zone verte
 // (ou si « hors zone verte aussi » est coché).
 const byCodeC = () => Object.fromEntries(C.map((c) => [c.code, c]));
