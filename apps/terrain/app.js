@@ -509,6 +509,24 @@ function contour(values, thr) {
   for (let j = 0; j < ny; j++) { values[j * nx] = -9999; values[j * nx + nx - 1] = -9999; }
   return toGeo(d3.contours().size([nx, ny]).smooth(true).thresholds([thr])(values)[0]);
 }
+// Ligne d'un contour sans ses morceaux le long du bord de la grille : le bord n'est
+// pas une limite de trajet, juste la fin des données (sinon la ligne trace un cadre).
+function edgeless(geo) {
+  const { lon0, lat0, dlon, dlat, nx, ny } = GRID;
+  const W = lon0 + 1.01 * dlon, E = lon0 + (nx - 2.51) * dlon, Sb = lat0 + 1.01 * dlat, N = lat0 + (ny - 2.51) * dlat;
+  const side = ([x, y]) => (x <= W ? 1 : 0) | (x >= E ? 2 : 0) | (y <= Sb ? 4 : 0) | (y >= N ? 8 : 0);
+  const lines = [];
+  for (const poly of geo.coordinates) for (const ring of poly) {
+    let cur = [];
+    for (let n = 0; n < ring.length; n++) {
+      const p = ring[n], q = ring[n + 1];
+      cur.push(p);
+      if (q && (side(p) & side(q))) { if (cur.length > 1) lines.push(cur); cur = []; } // segment le long d'un même bord : coupé
+    }
+    if (cur.length > 1) lines.push(cur);
+  }
+  return { type: "MultiLineString", coordinates: lines };
+}
 let gridCache = null;
 const gridGet = (k, i) => (GRID[k][i] == null ? 999 : GRID[k][i]);
 const gridWork = (i) => (crecheMode() ? CRECHE.grid[i] ?? 999 : gridGet("work", i) * S.iso.rush);
@@ -532,15 +550,17 @@ function drawIso() {
     comb[i] = -gridRatio(i);
   }
   layers.zone.clearLayers(); layers.iso.clearLayers();
-  L.geoJSON(contour(comb, -1), { style: { color: css("--zone"), weight: 1.5, fillColor: css("--zone"), fillOpacity: 0.22 }, interactive: false }).addTo(layers.zone);
+  const zg = contour(comb, -1);
+  L.geoJSON(zg, { style: { stroke: false, fillColor: css("--zone"), fillOpacity: 0.22 }, interactive: false }).addTo(layers.zone);
+  L.geoJSON(edgeless(zg), { style: { color: css("--zone"), weight: 1.5, fill: false }, interactive: false }).addTo(layers.zone);
   const lines = [["work", w, I.work], ["famA", a, I.famA], ["famB", b, I.famB], ...(useCity() ? [["city", l, I.city]] : [])];
   for (const [k, vals, t] of lines) {
-    L.geoJSON(contour(vals, -t), { style: { color: css("--" + k), weight: 2.2, dashArray: k === "work" || k === "city" ? null : "6 5", fill: false }, interactive: false }).addTo(layers.iso);
+    L.geoJSON(edgeless(contour(vals, -t)), { style: { color: css("--" + k), weight: 2.2, dashArray: k === "work" || k === "city" ? null : "6 5", fill: false }, interactive: false }).addTo(layers.iso);
   }
   layers.tpd.clearLayers(); layers.tpe.clearLayers();
   if (TRAIN) for (const k in TKEYS) {
     const v = Float64Array.from(TRAIN.grid[k], (_, i) => -tripGrid(k, i));
-    L.geoJSON(contour(v, -I["t" + k]), { style: { color: css("--t" + k), weight: 2.4, dashArray: "1 5", lineCap: "round", fill: false }, interactive: false }).addTo(layers["t" + k]);
+    L.geoJSON(edgeless(contour(v, -I["t" + k])), { style: { color: css("--t" + k), weight: 2.4, dashArray: "1 5", lineCap: "round", fill: false }, interactive: false }).addTo(layers["t" + k]);
   }
 }
 function drawCommunes(rows) {
