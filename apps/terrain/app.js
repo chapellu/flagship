@@ -27,7 +27,7 @@ const DEF = {
   days: 4,
   iso: { work: 55, famA: 40, famB: 75, alt: 350, rush: 1.4, tpd: 60, tpe: 60, zpd: false, zpe: false },
   f: { fibre: true, ecole: true, zone: false, prix: 200, m2: 0, constr: true },
-  show: { parcels: true, topads: true, ads: false, creches: false, cadastre: false, outside: false, tpd: true, tpe: true },
+  show: { parcels: true, topads: true, ads: false, creches: false, cadastre: false, outside: false, tpd: true, tpe: true, rail: false },
   workAt: "qg", // "qg" : le lieu de travail de config.json ; "creche" : la crèche la plus proche de chez soi
 };
 const STORE = "terrain.state.v1";
@@ -310,6 +310,8 @@ function buildMap() {
   layers.tpd = L.layerGroup(); layers.tpe = L.layerGroup(); // lignes train : affichées selon S.show
   layers.communes = L.layerGroup().addTo(map);
   layers.creches = L.layerGroup();
+  // Voies ferrées (fond OpenRailwayMap, données OSM) + gares de train.json, sous une seule case
+  layers.rail = L.layerGroup([L.tileLayer("https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png", { subdomains: "abc", maxZoom: 19, opacity: 0.75, attribution: "© OpenRailwayMap, © OpenStreetMap" })]);
   layers.parcels = L.layerGroup().addTo(map);
   layers.topads = L.layerGroup().addTo(map);
   layers.ads = L.layerGroup();
@@ -321,6 +323,7 @@ function buildMap() {
     "Parcelles repérées et mixtes": layers.parcels, "Annonces mises en avant": layers.topads, "Toutes les annonces en ligne": layers.ads,
   };
   if (CRECHE) over["Crèches"] = layers.creches;
+  over["Voies ferrées et gares"] = layers.rail;
   if (TRAIN) for (const k in TKEYS) over["→ " + TKEYS[k] + " (voiture/train)"] = layers["t" + k];
   L.control.layers({ "Plan IGN": plan, "Photo aérienne": ortho }, over, { collapsed: true }).addTo(map);
   buildToggles({ cadastre });
@@ -330,6 +333,14 @@ function buildMap() {
     const p = CFG.places[k];
     if (!p) continue;
     L.marker([p.lat, p.lon], { icon: L.divIcon({ className: "", html: `<span class="place">${esc(p.short || p.name)}</span>`, iconSize: null }), keyboard: false, interactive: false }).addTo(layers.places);
+  }
+  if (TRAIN) {
+    const mn = (v) => (v == null ? "pas de train utile" : v + " min");
+    for (const [nom, lat, lon, pd, pe, npd, npe] of TRAIN.stations) {
+      L.circleMarker([lat, lon], { radius: 5, color: "#fff", weight: 1.5, fillColor: "#3b3f99", fillOpacity: 0.95 })
+        .bindTooltip(`<b>Gare ${esc(nom)}</b><br>Train → Part-Dieu ${mn(pd)}${npd ? ` · ${npd} départs le matin` : ""}<br>Train → Perrache ${mn(pe)}${npe ? ` · ${npe} départs le matin` : ""}`, { direction: "top" })
+        .addTo(layers.rail);
+    }
   }
   if (CRECHE) {
     for (const [lat, lon, nom, commune, cap, type] of CRECHE.sites) {
@@ -363,6 +374,7 @@ function buildToggles(extra) {
     ["ads", "Toutes les annonces", layers.ads, `<span class="amark sm">€</span>`],
     ...(CRECHE ? [["creches", "Crèches", layers.creches, `<span class="cmark"></span>`]] : []),
     ...(TRAIN ? Object.entries(TKEYS).map(([k, n]) => ["t" + k, "→ " + n, layers["t" + k], `<span class="key k-t${k}"></span>`]) : []),
+    ["rail", "Voies ferrées et gares", layers.rail, `<span class="gmark"></span>`],
     ["cadastre", "Cadastre", extra.cadastre, ""],
     ["outside", "Hors zone verte aussi", null, ""],
   ];
