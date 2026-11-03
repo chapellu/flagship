@@ -14,6 +14,11 @@ spec:
   prune: true
   # Pas de wait : la première réconciliation précède la première image GHCR.
   wait: false
+  # k8s/terrain/mailin.enc.yaml (adresse des alertes e-mail) est chiffré par SOPS
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
   # Gateway + ClusterIssuer d'abord ; monitoring pour le secret OAuth que la
   # SecurityPolicy lit par ReferenceGrant.
   dependsOn:

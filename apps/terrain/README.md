@@ -40,6 +40,22 @@ marque rien. Les doublons entre sites (même commune, surface et prix à quelque
 près) sont fusionnés. L'onglet Annonces en tire « Le marché » : nouvelles, baisses de
 prix, ce qui part vite, ce qui traîne, par secteur.
 
+**Leboncoin et SeLoger** bloquent la lecture automatique (DataDome, robots.txt).
+On passe par leurs alertes e-mail, reçues sur notre propre domaine :
+
+- adresse unique et difficile à deviner `…@in.chapellu.fr`, chiffrée par SOPS
+  dans `k8s/terrain/mailin.enc.yaml` (lire : `sops -d k8s/terrain/mailin.enc.yaml`) ;
+- MX `in.chapellu.fr` → le nœud (`infra/dns.tf`), port 25 ouvert dans la
+  security list OCI et ufw (`infra/main.tf`, `infra/cloud-init.yaml`) ;
+- `apps/mailin` (aiosmtpd) : n'accepte que cette adresse, refuse tout le
+  reste (pas un relais), messages ≤ 3 Mo, boîte plafonnée, STARTTLS avec un
+  certificat cert-manager. Chaque message devient un `.eml` dans le volume
+  `terrain-inbox` ;
+- `src_alertes.py` lit ces fichiers (30 derniers jours, purge à 60 jours).
+
+Une alerte ne signale pas les retraits : sans nouvelle alerte depuis 45 jours,
+l'annonce passe en « statut inconnu ».
+
 Lancer un relevé à la main : `kubectl -n terrain create job --from=cronjob/terrain-refresh refresh-now`.
 
 Le job tourne en utilisateur 101 (comme nginx) : le dossier `/data` du volume doit lui

@@ -104,3 +104,34 @@ resource "oci_dns_rrset" "grafana_a" {
     rdata  = oci_core_instance.main.public_ip
   }
 }
+
+# Réception des alertes e-mail du terrain (k8s/terrain/mailin.yaml) : un
+# sous-domaine à part, pour laisser chapellu.fr libre d'avoir un jour une vraie
+# messagerie. A pour le défi HTTP-01 du certificat STARTTLS, MX pour le courrier.
+resource "oci_dns_rrset" "in_a" {
+  zone_name_or_id = oci_dns_zone.chapellu.id
+  domain          = "in.${var.dns_zone_name}"
+  rtype           = "A"
+  compartment_id  = local.dns_compartment_id
+
+  items {
+    domain = "in.${var.dns_zone_name}"
+    rtype  = "A"
+    ttl    = 300
+    rdata  = oci_core_instance.main.public_ip
+  }
+}
+
+resource "oci_dns_rrset" "in_mx" {
+  zone_name_or_id = oci_dns_zone.chapellu.id
+  domain          = "in.${var.dns_zone_name}"
+  rtype           = "MX"
+  compartment_id  = local.dns_compartment_id
+
+  items {
+    domain = "in.${var.dns_zone_name}"
+    rtype  = "MX"
+    ttl    = 300
+    rdata  = "10 in.${var.dns_zone_name}."
+  }
+}

@@ -46,6 +46,10 @@ AD_FIELDS = (
 # Les sources peuvent aussi fournir "desc" (texte de l'annonce) : lu pour constr_txt, jamais stocké.
 
 
+class SkipSource(Exception):
+    """Source non configurée (ex. pas de boîte d'alertes) : ignorée, pas en panne."""
+
+
 # ---------------------------------------------------------------- outils partagés par les sources
 def http_json(url, data=None, headers=None, timeout=40):
     h = {"User-Agent": UA, "Accept": "application/json"}
@@ -201,6 +205,7 @@ def dedupe(market):
 
 def main():
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # les src_*.py sont à côté
+    sys.modules.setdefault("refresh", sys.modules[__name__])  # un seul module : SkipSource est la même classe
     cfg = load("config.json", {})
     search = cfg.get("search") or {}
     com = load("communes.json", None)
@@ -216,10 +221,14 @@ def main():
         try:
             mod = importlib.import_module("src_" + name)
             ads, complete = mod.fetch(search, communes)
-            ads = [a for a in ads if a.get("insee") in communes and (a.get("m2") or 0) >= search.get("minM2", 0)]
+            # surface inconnue (certaines alertes e-mail) : gardée, l'app l'affiche « – »
+            ads = [a for a in ads if a.get("insee") in communes and (a.get("m2") is None or a["m2"] >= search.get("minM2", 0))]
             gone = merge(market, name, ads, complete, day)
             run["sources"][name] = {"ok": True, "complete": complete, "n": len(ads), "gone": gone}
             print(f"{name}: {len(ads)} annonces dans la zone, complet={complete}, parties={gone}")
+        except SkipSource as e:
+            print(f"{name}: ignorée ({e})")
+            run["sources"][name] = {"ok": True, "skipped": str(e)}
         except Exception as e:  # une source en panne ne bloque pas les autres
             traceback.print_exc()
             run["sources"][name] = {"ok": False, "error": f"{type(e).__name__}: {e}"[:300]}

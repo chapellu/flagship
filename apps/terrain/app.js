@@ -535,7 +535,7 @@ function priceBadge(a, full = true) {
 }
 function adPopup(a) {
   return `<div class="pop"><span class="tag ad">Annonce${a.top ? " mise en avant" : ""}</span>${a.photo ? `<img src="${esc(a.photo)}" alt="">` : ""}<h3>${esc(a.commune)} · ${fmtk(a.prix)}</h3>
-  <div class="sub">${a.m2} m² · ${a.eurm2} €/m²${a.vendeur ? " · " + esc(a.vendeur) : ""}${a.top ? " · " + esc(a.top) : ""}</div>
+  <div class="sub">${fm2(a)} · ${a.eurm2 ?? "–"} €/m²${a.vendeur ? " · " + esc(a.vendeur) : ""}${a.top ? " · " + esc(a.top) : ""}</div>
   ${constrBadge(a)}${priceBadge(a)}${marketLine(a)}${a.analyse ? `<p>${esc(a.analyse)}</p>` : ""}
   ${communeInAd(a)}
   ${a.lat ? routeAct(a.lat, a.lon, a.pos) : ""}${cadaAct(a)}
@@ -898,7 +898,7 @@ function renderMapList() {
   $("top5").innerHTML = list.map(({ c, ads, parcels }) => `<article class="mcard${c.why.length ? " out" : ""}">
     <button type="button" class="mhead" data-code="${c.code}">${sc(c)}<b>${esc(c.nom)}</b><span>${c.alt} m · ${esc(workShort())} ${c.wt} min · ${esc(place("famA").short)} ${c.famA} · ${esc(place("famB").short)} ${c.famB} min${c.zone ? "" : " · hors zone"}${c.why.length ? " · exclue : " + esc(c.why.join(", ")) : ""}</span></button>
     ${ads.length || parcels.length ? `<ul>${parcels.map((p) => `<li><button type="button" data-pid="${esc(p.id)}"><span class="pmark ${p.kind} sm"></span>${esc(p.kind === "mixte" ? `${p.constr} m² + ${p.agri} m² A/N` : p.surface)} · ${esc(p.zone)}</button></li>`).join("")}
-      ${ads.sort((x, y) => (!!y.top - !!x.top) || x.prix - y.prix).map((a) => `<li><button type="button" data-aid="${esc(a.id)}"><span class="amark sm${a.top ? " top" : ""}">${a.top ? "★" : "€"}</span>${a.m2} m² · ${fmtk(a.prix)}${a.drop ? ` <span class="chip wa">−${fmtk(a.drop)}</span>` : ""}${isNew(a) ? ' <span class="chip g">nouvelle</span>' : ""} ${priceBadge(a, false)}${constrVerdict(a)?.k === "oui" ? "" : " " + constrBadge(a, false)}</button>
+      ${ads.sort((x, y) => (!!y.top - !!x.top) || x.prix - y.prix).map((a) => `<li><button type="button" data-aid="${esc(a.id)}"><span class="amark sm${a.top ? " top" : ""}">${a.top ? "★" : "€"}</span>${fm2(a)} · ${fmtk(a.prix)}${a.drop ? ` <span class="chip wa">−${fmtk(a.drop)}</span>` : ""}${isNew(a) ? ' <span class="chip g">nouvelle</span>' : ""} ${priceBadge(a, false)}${constrVerdict(a)?.k === "oui" ? "" : " " + constrBadge(a, false)}</button>
         <a href="${esc(a.url)}" target="_blank" rel="noopener" aria-label="Ouvrir l'annonce">↗</a></li>`).join("")}</ul>` : ""}
   </article>`).join("");
   $("top5").onclick = (e) => {
@@ -1049,6 +1049,10 @@ function ageHTML(a) {
 }
 const median = (v) => { v = v.filter((x) => x != null).sort((a, b) => a - b); return v.length ? v[Math.floor((v.length - 1) / 2)] : null; };
 const fmtd = (iso) => (iso ? new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : "");
+// surface : certaines alertes e-mail ne la donnent pas
+const fm2 = (a) => (a.m2 ? `${a.m2} m²` : "surface ?");
+// Alertes e-mail : jamais d'avis de retrait. Sans nouvelle alerte depuis 45 j, statut inconnu.
+const QUIET = 45;
 function buildAdList() {
   const curated = Object.fromEntries(ADS.map((a) => [adKey(a.url), a]));
   if (!MARKET) { ALLADS = ADS.map((a) => ({ ...a, id: adKey(a.url) })); return; }
@@ -1058,12 +1062,15 @@ function buildAdList() {
     return { ...h, id, eurm2: h.m2 ? Math.round(h.prix / h.m2) : null, drop: max > h.prix ? max - h.prix : 0,
       top: cur.top, analyse: cur.analyse, photo: cur.photo || h.photo, lat: h.lat ?? cur.lat, lon: h.lon ?? cur.lon };
   });
+  for (const a of ALLADS) if (a.src === "alertes" && a.last && Date.parse(todayISO()) - Date.parse(a.last) > QUIET * DAY) {
+    a.stale = true; a.staleWhy = `Vue dans une alerte e-mail le ${fmtd(a.last)}, rien depuis : statut inconnu, vérifier l'annonce.`;
+  }
   const seen = new Set(ALLADS.map((a) => a.id));
   for (const [id, a] of Object.entries(curated)) if (!seen.has(id)) ALLADS.push({ ...a, id, stale: true }); // plus vue au dernier relevé
 }
 function marketLine(a) {
   if (!MARKET) return "";
-  if (a.stale) return `<p class="sub">Plus vue au dernier relevé : sans doute vendue ou retirée.</p>`;
+  if (a.stale) return `<p class="sub">${esc(a.staleWhy || "Plus vue au dernier relevé : sans doute vendue ou retirée.")}</p>`;
   const d = daysOn(a);
   const bits = [a.gone ? `partie le ${fmtd(a.gone)} après ${ageHTML(a)} en ligne` : `en ligne depuis ${ageHTML(a)}${isNew(a) ? " · nouvelle" : ""}${knownAge(a) ? "" : " (date exacte inconnue)"}`];
   if (a.drop) bits.push(`prix baissé de ${fmtk(a.drop)}`);
@@ -1086,16 +1093,16 @@ function renderAds() {
     const c = byCode[a.insee];
     return `<figure class="parcel ad" data-aid="${esc(a.id)}"><div class="adph">${a.photo ? `<img src="${esc(a.photo)}" alt="" loading="lazy">` : ""}</div>
     <figcaption><span class="tag go">${esc(a.top)}</span><div class="ptop"><b>${esc(a.commune)}</b><span class="price">${fmtk(a.prix)}</span></div>
-    <dl><div><dt>Surface</dt><dd>${a.m2} m²</dd></div>${c ? `<div><dt>${esc(workShort())}</dt><dd>${c.wt} min</dd></div><div><dt>${esc(place("famA").short)}</dt><dd>${c.famA} min</dd></div><div><dt>${esc(place("famB").short)}</dt><dd>${c.famB} min</dd></div>` : ""}</dl>
+    <dl><div><dt>Surface</dt><dd>${fm2(a)}</dd></div>${c ? `<div><dt>${esc(workShort())}</dt><dd>${c.wt} min</dd></div><div><dt>${esc(place("famA").short)}</dt><dd>${c.famA} min</dd></div><div><dt>${esc(place("famB").short)}</dt><dd>${c.famB} min</dd></div>` : ""}</dl>
     ${priceBadge(a)}${marketLine(a)}<p>${esc(a.analyse)}</p><div class="act"><a class="go" href="${esc(a.url)}" target="_blank" rel="noopener">Voir l'annonce ↗</a>${a.lat ? `<button type="button" data-ll="${a.lat},${a.lon}">Voir sur la carte</button>` : ""}</div></figcaption></figure>`;
   }).join("");
   if (hiddenTops) $("atop").insertAdjacentHTML("beforeend", `<p class="hint">${hiddenTops} annonce${hiddenTops > 1 ? "s" : ""} mise${hiddenTops > 1 ? "s" : ""} en avant masquée${hiddenTops > 1 ? "s" : ""} par les filtres (${S.f.prix} k€ max${S.f.m2 ? `, ${S.f.m2} m² min.` : ""}).</p>`);
   const m2 = S.f.m2, px = S.f.prix * 1000, z = $("a-zone").checked, g = $("a-gone").checked;
-  const rows = ALLADS.filter((a) => a.m2 >= m2 && a.prix <= px && constrOk(a) && (!z || byCode[a.insee]?.zone) && (g || (!a.gone && !a.stale)))
+  const rows = ALLADS.filter((a) => sizeOk(a) && a.prix <= px && constrOk(a) && (!z || byCode[a.insee]?.zone) && (g || (!a.gone && !a.stale)))
     .map((a) => ({ a, c: byCode[a.insee] })).sort((x, y) => (!!x.a.gone - !!y.a.gone) || (y.c?.score ?? 0) - (x.c?.score ?? 0));
   $("atbl").tHead.innerHTML = `<tr><th>Score commune</th><th>Commune</th><th>Surface</th><th>Prix</th><th>€/m²</th><th>${esc(workShort())}</th><th>Alt. bourg</th>${MARKET ? "<th>En ligne</th>" : ""}<th>Annonce</th></tr>`;
   $("atbl").tBodies[0].innerHTML = rows.map(({ a, c }) => `<tr data-aid="${esc(a.id)}"${a.gone || a.stale ? ' class="gone"' : ""}><td class="num">${c ? c.score : "–"}${c?.zone ? '<span class="sub">zone verte</span>' : ""}</td>
-    <td><strong>${esc(a.commune)}</strong>${a.top ? ' <span class="chip g">★</span>' : ""}<span class="sub">${esc(a.titre || "")}</span></td><td class="num">${a.m2} m²</td>
+    <td><strong>${esc(a.commune)}</strong>${a.top ? ' <span class="chip g">★</span>' : ""}<span class="sub">${esc(a.titre || "")}</span></td><td class="num">${fm2(a)}</td>
     <td class="num">${fmtk(a.prix)}${a.drop ? `<span class="sub">−${fmtk(a.drop)}</span>` : ""}</td><td class="num">${a.eurm2 ?? "–"}<span class="sub">${priceBadge(a, false)} ${constrBadge(a, false)}</span></td>
     <td class="num">${c ? c.wt + " min" : "–"}</td><td class="num">${c ? c.alt + " m" : "–"}</td>
     ${MARKET ? `<td class="num">${a.stale ? "–" : ageHTML(a)}<span class="sub">${a.stale ? "plus vue" : a.gone ? "partie le " + fmtd(a.gone) : isNew(a) ? "nouvelle" : knownAge(a) ? "depuis le " + fmtd(since(a)) : "date inconnue"}</span></td>` : ""}
@@ -1118,8 +1125,9 @@ function renderMarket() {
   const kLive = live.filter(knownAge), kGone = gone.filter(knownAge);
   const fast = kGone.filter((a) => daysOn(a) <= 45).sort((a, b) => b.gone.localeCompare(a.gone)).slice(0, 8);
   const slow = kLive.filter((a) => daysOn(a) >= 120).sort((a, b) => daysOn(b) - daysOn(a)).slice(0, 8);
-  const li = (a, extra) => `<li><a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.commune)} · ${a.m2} m² · ${fmtk(a.prix)}</a> <span class="sub">${extra}</span></li>`;
-  const srcs = Object.entries(last.sources).map(([k, v]) => v.ok ? `${esc(k)} ${v.n}${v.complete ? "" : " (incomplet)"}` : `<b>${esc(k)} en panne</b>`).join(" · ");
+  const li = (a, extra) => `<li><a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.commune)} · ${fm2(a)} · ${fmtk(a.prix)}</a> <span class="sub">${extra}</span></li>`;
+  const srcs = Object.entries(last.sources).filter(([, v]) => !v.skipped)
+    .map(([k, v]) => !v.ok ? `<b>${esc(k)} en panne</b>` : k === "alertes" ? `alertes e-mail ${v.n}` : `${esc(k)} ${v.n}${v.complete ? "" : " (incomplet)"}`).join(" · ");
   el.innerHTML = `<p class="hint">Relevé chaque matin. Dernier passage le ${fmtd(last.date)} : ${srcs}. Suivi depuis le ${fmtd(start)}${runs.length < 30 ? ` : il faut quelques semaines d'historique pour que les durées de vente veuillent dire quelque chose` : ""}.</p>
   <div class="kpis"><div><b>${live.length}</b><span>en ligne</span></div><div><b>${live.filter(isNew).length}</b><span>nouvelles (7 j)</span></div>
   <div><b>${live.filter((a) => a.drop).length}</b><span>prix baissé</span></div><div><b>${gone.filter(recent).length}</b><span>parties (30 j)</span></div>

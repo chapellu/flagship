@@ -47,7 +47,10 @@ spec:
                   value: /data
                 - name: TERRAIN_SOURCES
                   # ParuVendu lit des pages publiques une à une : ~10-15 min par jour
-                  value: bienici,notaires,paruvendu
+                  value: bienici,notaires,paruvendu,alertes
+                # alertes Leboncoin/SeLoger reçues par mailin (mailin.yaml)
+                - name: TERRAIN_INBOX
+                  value: /inbox
                 - name: PYTHONDONTWRITEBYTECODE
                   value: "1"
               resources:
@@ -70,6 +73,8 @@ spec:
                   mountPath: /data
                 - name: tmp
                   mountPath: /tmp
+                - name: inbox
+                  mountPath: /inbox
           volumes:
             - name: app
               configMap:
@@ -79,3 +84,6 @@ spec:
                 claimName: terrain-data
             - name: tmp
               emptyDir: {}
+            - name: inbox
+              persistentVolumeClaim:
+                claimName: terrain-inbox
