@@ -539,10 +539,11 @@ const gridWork = (i) => (crecheMode() ? CRECHE.grid[i] ?? 999 : gridGet("work", 
 // part de la limite « travail » consommée au point i (voiture seule, ou trajet mixte)
 const gridWorkF = (i) => (COM() && !crecheMode() ? commuteGrid("work", i).f : gridWork(i) / S.iso.work);
 // valeur combinée au point i : le pire des rapports « valeur / seuil » ; la zone est là où il vaut ≤ 1
-function gridRatio(i) {
+// (wf, lf : parts travail / ville déjà calculées par drawIso, pour ne pas refaire les trajets)
+function gridRatio(i, wf = gridWorkF(i), lf = null) {
   const I = S.iso;
-  let m = Math.max(gridWorkF(i), gridGet("famA", i) / I.famA, gridGet("famB", i) / I.famB);
-  if (useCity() && I.zcity) m = Math.max(m, commuteGrid("city", i).f);
+  let m = Math.max(wf, gridGet("famA", i) / I.famA, gridGet("famB", i) / I.famB);
+  if (useCity() && I.zcity) m = Math.max(m, lf ?? commuteGrid("city", i).f);
   let r = I.alt > 0 ? Math.max(m, I.alt / Math.max(1, GRID.alt[i])) : m;
   for (const k of tzKeys()) r = Math.max(r, tripGrid(k, i) / I["t" + k]); // Part-Dieu / Perrache cochés : critère de zone
   return r;
@@ -551,9 +552,10 @@ function drawIso() {
   const n = GRID.nx * GRID.ny, I = S.iso;
   const comb = new Float64Array(n), w = new Float64Array(n), a = new Float64Array(n), b = new Float64Array(n), l = new Float64Array(n);
   for (let i = 0; i < n; i++) {
-    w[i] = -gridWorkF(i) * I.work; a[i] = -gridGet("famA", i); b[i] = -gridGet("famB", i);
-    if (useCity()) l[i] = -commuteGrid("city", i).f * I.city;
-    comb[i] = -gridRatio(i);
+    const wf = gridWorkF(i), lf = useCity() ? commuteGrid("city", i).f : null;
+    w[i] = -wf * I.work; a[i] = -gridGet("famA", i); b[i] = -gridGet("famB", i);
+    if (lf != null) l[i] = -lf * I.city;
+    comb[i] = -gridRatio(i, wf, lf);
   }
   layers.zone.clearLayers(); layers.iso.clearLayers();
   const zg = contour(comb, -1);

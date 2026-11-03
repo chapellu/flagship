@@ -28,7 +28,7 @@ demandés étant en cache. La grille ne rétrécit jamais.
 cette zone (lib.in_area, refresh.in_area) : hors d'elle, une commune ne peut jamais
 être dans la zone verte.
 
-Réglages facultatifs dans config.json : "grid": {"maxKm": 100, "maxNew": 8000,
+Réglages facultatifs dans config.json : "grid": {"maxKm": 120, "maxNew": 8000,
 "limits": {…}} ; TERRAIN_GRID_MAX_NEW pour un passage à la main.
 """
 import datetime as dt
@@ -43,7 +43,7 @@ LIMITS = {"work": 90, "workTr": 120, "city": 120, "cityTr": 120, "famA": 90, "fa
 RUSH_MIN = 1.0     # curseur « heure de pointe » au minimum : les lignes les plus loin
 MARGIN = 2         # rangées de bord hors d'atteinte (l'app force la rangée du bord à « hors d'atteinte »)
 STEP = 3           # cellules ajoutées par côté et par tour
-MAX_KM = 100
+MAX_KM = 120
 MAX_NEW = 8000
 CAR = ("work", "famA", "famB", "city")   # lieux de config.json : minutes de voiture
 ZONE = ("famA", "famB")                  # critères toujours dans la zone verte → reach

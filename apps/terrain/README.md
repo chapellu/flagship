@@ -209,11 +209,11 @@ gares de Lyon, et les trajets voiture / marche / vélo + train comme l'app. Tant
 côté a un point atteignable, il gagne 3 cellules, puis on teste à nouveau ; les
 points existants ne bougent pas (cellules entières), leurs temps restent en cache.
 
-Garde-fous : chaque côté s'arrête à 100 km du centre des lieux de `config.json`
+Garde-fous : chaque côté s'arrête à 120 km du centre des lieux de `config.json`
 (une ligne qui irait plus loin est alors fermée par l'app au bord de la grille), et
 un passage n'ajoute pas plus de 8 000 cellules (le serveur OSRM de démonstration
 limite le débit : ~1 requête/s) ; la croissance reprend la semaine suivante, ou au
-passage lancé à la main. `config.json` peut régler `"grid": {"maxKm": 100,
+passage lancé à la main. `config.json` peut régler `"grid": {"maxKm": 120,
 "maxNew": 8000, "limits": {…}}`. La grille ne rétrécit jamais ; `grid.json.auto` dit
 de combien chaque côté a grandi et lesquels sont au plafond.
 
