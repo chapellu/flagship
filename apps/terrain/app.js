@@ -124,7 +124,9 @@ function buildControls() {
     });
   }
 
-  $("weights").innerHTML = WKEYS.map((k) => `<div class="w"><label for="w-${k}">${esc(LBL[k])}</label><input type="range" id="w-${k}" min="0" max="40" step="5"><output for="w-${k}"></output></div>`).join("");
+  // le partage Tassin / Cogny se règle juste sous le poids « Près de la famille », qu'il répartit
+  const famRow = `<div class="w w-sub"><label for="famshare">↳ ${esc(place("famA").short)} ↔ ${esc(place("famB").short)}</label><input type="range" id="famshare" min="0" max="100" step="10"></div><p class="hint sub-hint" id="famshare-txt"></p>`;
+  $("weights").innerHTML = WKEYS.map((k) => `<div class="w"><label for="w-${k}">${esc(LBL[k])}</label><input type="range" id="w-${k}" min="0" max="40" step="5"><output for="w-${k}"></output></div>` + (k === "famille" ? famRow : "")).join("");
   WKEYS.forEach((k) => $("w-" + k).addEventListener("input", (e) => { prof().w[k] = +e.target.value; render(); }));
   $("famshare").addEventListener("input", (e) => { prof().famshare = +e.target.value; render(); });
 
@@ -1129,7 +1131,8 @@ function doRender() {
   for (const id of ["f-m2", "a-m2"]) { $(id).value = S.f.m2; document.querySelector(`output[for=${id}]`).textContent = S.f.m2 ? S.f.m2 + " m²" : "toutes"; }
   const p = effW(S.profile);
   WKEYS.forEach((k) => { if (S.profile === "mix") $("w-" + k).value = p.w[k]; document.querySelector(`output[for=w-${k}]`).textContent = Math.round(p.w[k]); });
-  document.querySelector("output[for=famshare]").textContent = `${Math.round(p.famshare)}/${100 - Math.round(p.famshare)}`;
+  const sh = Math.round(p.famshare);
+  $("famshare-txt").textContent = p.w.famille ? `${place("famA").short} ${sh} % · ${place("famB").short} ${100 - sh} % du critère famille` : "Sans effet : le poids « Près de la famille » est à 0.";
   $("weekly").textContent = `Le poids du trajet suit les jours. À ${S.days} jours, 45 min de trajet font ${Math.round(S.days * 2 * 45 / 6) / 10} h par semaine, 60 min en font ${S.days * 2} h.`;
 
   compute();
