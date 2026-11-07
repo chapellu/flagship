@@ -35,7 +35,7 @@ def load_json(path, default=None):
         return default
 
 
-def save_json(path, obj, compact=True):
+def save_json(path, obj, compact=True, indent=None):
     """Écriture atomique (fichier temporaire puis rename) : nginx ne sert jamais un
     fichier à moitié écrit, et une erreur en cours de route laisse l'ancien intact."""
     d = os.path.dirname(path) or "."
@@ -43,7 +43,7 @@ def save_json(path, obj, compact=True):
     fd, tmp = tempfile.mkstemp(dir=d, prefix="." + os.path.basename(path) + ".")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
-            json.dump(obj, f, ensure_ascii=False, separators=(",", ":") if compact else None)
+            json.dump(obj, f, ensure_ascii=False, separators=(",", ":") if compact and indent is None else None, indent=indent)
         os.chmod(tmp, 0o644)
         os.replace(tmp, path)
     except BaseException:

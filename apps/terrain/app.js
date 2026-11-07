@@ -19,8 +19,8 @@ const fmtk = (v) => (v == null ? "–" : Math.round(v / 1000) + " k€");
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 // ---------------------------------------------------------------- état
-const WKEYS = ["climat", "work", "famille", "train", "ecole", "eau", "prix", "risques", "offre"];
-const DEF_W = { climat: 10, work: 20, famille: 15, train: 5, ecole: 15, eau: 5, prix: 15, risques: 15, offre: 0 };
+const WKEYS = ["climat", "work", "famille", "foret", "train", "ecole", "eau", "prix", "risques", "offre"];
+const DEF_W = { climat: 10, work: 20, famille: 15, foret: 15, train: 5, ecole: 15, eau: 5, prix: 15, risques: 15, offre: 0 };
 const DEF = {
   profile: "A",
   profiles: { A: { w: { ...DEF_W }, famshare: 80 }, B: { w: { ...DEF_W }, famshare: 80 } },
@@ -87,7 +87,7 @@ function init() {
   $("eyebrow").textContent = CFG.budget || "Recherche de terrain";
   document.querySelectorAll("[data-place]").forEach((el) => (el.textContent = place(el.dataset.place).short || place(el.dataset.place).name));
   LBL = {
-    climat: "Fraîcheur (altitude)", work: "Trajet → travail", famille: "Près de la famille",
+    climat: "Fraîcheur (altitude)", work: "Trajet → travail", famille: "Près de la famille", foret: "Forêt et sentiers",
     train: `Train → ${place("city").name}`, ecole: "Écoles", eau: "Eau, sources", prix: "Prix du terrain",
     risques: "Peu de risques", offre: "Grands terrains vendus",
   };
@@ -323,6 +323,8 @@ function parts(c, wt) {
   s.train = 1 - clip(c.train ?? 99, 35, 65);
   s.ecole = 0.35 * clip(c.cl25, 3, 10) + 0.15 * (c.cl25 >= c.cl19 ? 1 : 0) + 0.2 * (c.priv ? 1 : 0) + 0.3 * (c.colkm != null ? 1 - clip(c.colkm, 5, 18) : 0);
   s.eau = clip(c.srckm, 0, 1.2);
+  // forêt où l'on peut marcher : surtout les km de chemins en forêt autour du village (m_foret.py)
+  s.foret = c.sent == null ? 0.5 : 0.25 * clip(c.foret, 3, 40) + 0.5 * clip(c.sent, 10, 100) + 0.25 * clip(c.rando, 0, 15);
   s.prix = 1 - clip(c.prix ?? 999999, 70000, 180000);
   const p = 0.3 * clip(c.inond, 2, 10) + 0.2 * (c.sech ? 1 : 0) + 0.15 * clip(c.mvt, 0, 4) + 0.15 * c.feu + 0.2 * c.indus;
   s.risques = c.inond == null ? 0.5 : 1 - Math.min(1, p); // risques pas encore calculés (fiche récente) : neutre, pas « aucun risque »
@@ -400,6 +402,9 @@ function buildMap() {
   const relief = L.tileLayer("https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ELEVATION.ELEVATIONGRIDCOVERAGE.HIGHRES.MULTIDIRECTIONAL&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image/png", { maxZoom: 18, opacity: 0.35, attribution: "© IGN" });
   // Cadastre IGN en surcouche : les parcelles et leurs numéros, sans quitter la carte
   const cadastre = L.tileLayer("https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS&STYLE=PCI%20vecteur&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image/png", { maxZoom: 20, minZoom: 13, attribution: "© IGN cadastre" });
+  // Forêts : Masque Forêt IGN (celui du score) et forêts publiques ONF, ouvertes au public
+  const wms = (layer, opacity) => L.tileLayer.wms("https://data.geopf.fr/wms-r/wms", { layers: layer, format: "image/png", transparent: true, version: "1.3.0", opacity, attribution: "© IGN, ONF" });
+  const forets = wms("IGNF_MASQUE-FORET.2021-2023", 0.45), fpub = wms("FORETS.PUBLIQUES", 0.6);
   layers.zone = L.layerGroup().addTo(map);
   layers.iso = L.layerGroup().addTo(map);
   layers.tpd = L.layerGroup(); layers.tpe = L.layerGroup(); // lignes train : affichées selon S.show
@@ -414,7 +419,7 @@ function buildMap() {
   layers.route = L.layerGroup().addTo(map); // un seul itinéraire à la fois
   layers.hl = L.layerGroup().addTo(map); // une seule parcelle surlignée à la fois
   const over = {
-    "Relief (ombrage)": relief, "Cadastre (zoomer)": cadastre, "Zone verte": layers.zone, "Lignes de trajet": layers.iso, "Communes": layers.communes,
+    "Relief (ombrage)": relief, "Forêts": forets, "Forêts publiques (ONF)": fpub, "Cadastre (zoomer)": cadastre, "Zone verte": layers.zone, "Lignes de trajet": layers.iso, "Communes": layers.communes,
     "Parcelles repérées et mixtes": layers.parcels, "Annonces mises en avant": layers.topads, "Toutes les annonces en ligne": layers.ads,
   };
   if (CRECHE) over["Crèches"] = layers.creches;
@@ -639,10 +644,24 @@ function communeBody(c) {
   ${TRAIN ? trainRows(c) : `<dt>Train</dt><dd>${c.train != null ? `${c.train} min${c.gare ? " · " + esc(c.gare) : ""}` : "pas de gare proche"}</dd>`}
   <dt>Terrain médian</dt><dd>${fmtk(c.prix)}${c.eurm2 ? ` · ${c.eurm2} €/m²` : ""}${c.nv != null ? ` · ${c.nv} ventes` : ""}${c.cheap ? `<span class="sub">${c.cheap} annonce${c.cheap > 1 ? "s" : ""} en ligne dans le budget${c.prix > pxMax() ? " (médiane au-dessus)" : ""}</span>` : ""}</dd>
   ${live ? `<dt>Annonces</dt><dd>${live} en ligne</dd>` : ""}
+  ${foretRow(c)}
   <dt>Fibre</dt><dd>${c.fibre ?? "–"} %</dd></dl>
   ${schoolHTML(c)}
   <div class="sub">${c.zone ? '<span class="chip g">zone verte</span>' : `<span class="chip">hors zone verte</span> ${esc(zw.join(" · "))}`}</div>
   ${c.why.length ? `<div class="sub"><span class="chip wa">exclue du classement</span> ${esc(c.why.join(", "))}</div>` : ""}`;
+}
+const fkm = (n) => (+n).toLocaleString("fr-FR"); // 117,3
+// forêt autour du centre de la commune (m_foret.py) : bois ≥ 10 ha à 2 km, chemins en forêt à 3 km
+function foretRow(c) {
+  if (c.sent == null) return "";
+  const pub = c.fpub >= 5 ? ` · ${c.fpub} % publique` : "";
+  return `<dt>Forêt</dt><dd>${fkm(c.sent)} km de chemins en forêt à 3 km${c.rando ? `, dont ${fkm(c.rando)} km balisés` : ""}<span class="sub">${c.foret} % de bois à 2 km${pub}${c.rnoms ? " · " + esc(c.rnoms) : ""}</span></dd>`;
+}
+// même mesure à 1,5 km d'une parcelle : à pied depuis la maison
+function parcelForet(p) {
+  const f = p.foret;
+  if (!f) return "";
+  return `${fkm(f.sent)} km de chemins en forêt à 1,5 km${f.rando ? `, dont ${fkm(f.rando)} km balisés` : ""}${f.m != null ? ` · le plus proche à ${f.m < 100 ? "moins de 100" : f.m} m` : ""}`;
 }
 function communePopup(c) {
   return `<div class="pop"><h3>${esc(c.nom)}</h3><div class="sub">${esc(c.sect)} · ${c.alt} m</div>
@@ -716,7 +735,7 @@ function parcelPopup(p) {
   <div class="pref">${PID.test(p.id) ? esc(parcelName(p.id)) : esc(p.id)}${parcelM2(p) ? " · " + fmtm2(parcelM2(p)) : ""}</div>
   <div class="sub">${p.kind === "mixte" ? `${p.constr} m² constructibles + ${p.agri} m² en zone A/N` : esc(p.surface) + " · " + esc(p.zone)} · ${esc(parcelRef(p.id))}</div>
   <p>${esc(p.note)}</p><dl><dt>Altitude</dt><dd>${esc(p.alt)}</dd><dt>Pente</dt><dd>${esc(p.pente)}</dd><dt>Exposition</dt><dd>${esc(p.expo)}</dd>
-  ${c ? `<dt>${esc(workShort())}</dt><dd>${c.wt} min</dd>` : ""}</dl>
+  ${c ? `<dt>${esc(workShort())}</dt><dd>${c.wt} min</dd>` : ""}${p.foret ? `<dt>Forêt</dt><dd>${parcelForet(p)}</dd>` : ""}</dl>
   ${p.ring && SPOTZ.has(p.id) ? `<div class="cada">${zonHtml(spotGeo(p), SPOTZ.get(p.id))}</div>` : ""}
   ${routeAct(p.lat, p.lon, "exact")}
   <div class="act">${p.ring && PID.test(p.id) ? `<button type="button" onclick="window.__seeParcel('${p.id}')">Voir la parcelle</button>` : ""}<button type="button" onclick="window.__goParcel('${esc(p.id)}')">Fiche de la parcelle</button>
@@ -1310,13 +1329,13 @@ function renderTable(rows) {
   const mix = S.profile === "mix";
   const cols = [
     ["score", "Score"], ["nom", "Commune"], ["alt", "Alt."], ["wt", workShort()], ["famA", place("famA").short], ["famB", place("famB").short],
-    ["train", "Train"], ["prix", "Terrain médian"], ["cl25", "École"], ["colkm", "Collège catho."], ["srckm", "Eau"], ["risk", "Risques"],
+    ["train", "Train"], ["prix", "Terrain médian"], ["cl25", "École"], ["colkm", "Collège catho."], ["srckm", "Eau"], ["sent", "Forêt"], ["risk", "Risques"],
   ];
   if (mix) cols.splice(1, 0, ["gap", "Écart"]);
   const thead = $("tbl").tHead;
   thead.innerHTML = "<tr>" + cols.map(([k, l]) => `<th data-k="${k}"${k === sortK ? ` aria-sort="${sortDir < 0 ? "descending" : "ascending"}"` : ""}>${esc(l)}</th>`).join("") + "</tr>";
   thead.onclick = (e) => { const th = e.target.closest("th"); if (!th) return; const k = th.dataset.k; if (k === sortK) sortDir = -sortDir; else { sortK = k; sortDir = ["nom", "wt", "famA", "famB", "train", "prix", "colkm"].includes(k) ? 1 : -1; } render(); };
-  const val = { gap: (c) => Math.abs(c.sA - c.sB), risk: (c) => c.inond + 3 * c.sech, train: (c) => c.train ?? 999, prix: (c) => c.prix ?? 9e9, colkm: (c) => c.colkm ?? 99 };
+  const val = { sent: (c) => c.sent ?? -1, gap: (c) => Math.abs(c.sA - c.sB), risk: (c) => c.inond + 3 * c.sech, train: (c) => c.train ?? 999, prix: (c) => c.prix ?? 9e9, colkm: (c) => c.colkm ?? 99 };
   const v = val[sortK] || ((c) => c[sortK]);
   let r = rows.filter((c) => !c.why.length || c.code === forceRow).sort((a, b) => (typeof v(a) === "string" ? v(a).localeCompare(v(b)) : v(a) - v(b)) * sortDir);
   const total = r.length;
@@ -1344,7 +1363,8 @@ function renderTable(rows) {
       <td class="num">${fmtk(c.prix)}<span class="sub">${c.m2 ? c.m2 + " m² · " + c.eurm2 + " €/m²" : ""} · ${c.nv} ventes</span></td>
       <td class="num">${c.cl25} cl.<span class="sub">${schoolBrief(c) || `${c.cl19}→${c.cl25} depuis 2019${c.priv ? " · privée" : ""}`}</span></td>
       <td>${c.col ? `${esc(c.colc)} · ${c.colkm} km<span class="sub">${esc(c.col)}${c.va != null ? " · VA " + (c.va > 0 ? "+" : "") + c.va : ""}</span>` : "–"}</td>
-      <td class="num">${c.src}<span class="sub">${c.srckm}/km²</span></td><td>${ch.join("")}</td></tr>`;
+      <td class="num">${c.src}<span class="sub">${c.srckm}/km²</span></td>
+      <td class="num">${c.sent != null ? `${fkm(c.sent)} km<span class="sub">${c.foret} % de bois${c.rando ? " · " + fkm(c.rando) + " km balisés" : ""}</span>` : "–"}</td><td>${ch.join("")}</td></tr>`;
   }).join("");
   $("tbl").tBodies[0].onclick = (e) => { const tr = e.target.closest("tr"); if (tr) window.__goMap(tr.dataset.code); };
 }
@@ -1402,7 +1422,7 @@ function renderParcels() {
   $("plist").innerHTML = list.map(({ p, c }) => `<figure class="parcel" data-pid="${esc(p.id)}">
     <div class="ph"><img src="${DATA + esc(p.img)}" alt="Photo aérienne, ${esc(p.commune)}" loading="lazy"><svg viewBox="0 0 360 240" aria-hidden="true"><polygon points="${esc(p.svg)}"/></svg><span class="scale">${esc(p.scale)}</span></div>
     <figcaption><div class="ptop"><b>${esc(p.commune)}</b><span class="z ${p.kind === "mixte" ? "u" : /AU/.test(p.zone) ? "au" : "u"}">${p.kind === "mixte" ? `${p.constr} m² ${esc(p.zone)} + ${p.agri} m² A/N` : esc(p.surface) + " · " + esc(p.zone)}</span></div>
-    <p>${esc(p.note)}</p>
+    <p>${esc(p.note)}</p>${p.foret ? `<p class="sub">🌲 ${parcelForet(p)}${p.foret.noms ? " · " + esc(p.foret.noms) : ""}</p>` : ""}
     <dl><div><dt>Altitude</dt><dd>${esc(p.alt)}</dd></div><div><dt>Pente</dt><dd>${esc(p.pente)}</dd></div><div><dt>Expo.</dt><dd>${esc(p.expo)}</dd></div>
     ${c ? `<div><dt>${esc(workShort())}</dt><dd>${c.wt} min</dd></div><div><dt>Score</dt><dd>${c.score}${c.zone ? " ✓" : ""}</dd></div>` : ""}</dl>
     <div class="act"><button type="button" data-ll="${p.lat},${p.lon}">Voir sur la carte</button><a href="${cadastreUrl(p.lat, p.lon, p.id)}" target="_blank" rel="noopener">Cadastre ↗</a><a href="${plu(p.lat, p.lon)}" target="_blank" rel="noopener">Zonage ↗</a><span class="sub">${esc(parcelRef(p.id))}</span></div>
