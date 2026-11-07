@@ -117,6 +117,7 @@ EPCI dans `communes.json`, sinon le nom de l'EPCI raccourci (« CC du Pays de X 
 | `col`, `colc`, `colkm`, `va` | collège privé sous contrat le plus proche, sa valeur ajoutée (note à l'écrit du brevet) | 229 / 229 (nom de commune parfois écrit autrement) |
 | `inond`, `sech`, `mvt`, `feu`, `indus` | Géorisques : arrêtés CatNat inondation / sécheresse / mouvement de terrain ; risques feu de forêt et industriel recensés | 229 / 229 |
 | `src`, `srckm` | BD TOPO : sources, sources captées, fontaines, lavoirs ; par km² | 178 identiques, jamais plus haut (gelés, voir plus bas) |
+| `foret`, `fpub`, `sent`, `rando`, `rnoms` | `m_foret.py` : Masque Forêt IGN 2021-2023 (WMS, pixels de 50 m), bois d'au moins 10 ha seulement : part de bois à 2 km du centre, part publique (ONF) ; sentiers, chemins et routes empierrées non privés de la BD TOPO qui passent dans ces bois (ou en lisière) à 3 km : km, dont km d'itinéraires de randonnée pédestre balisés, et les noms des trois plus longs. Les mêmes mesures à 1,5 km de chaque parcelle vont dans `parcels.json` (`foret`). Cache : 90 jours | nouveau (2026-11) |
 | `train`, `gare`, `tmin`, `arr`, `ntr` | horaires SNCF : voiture jusqu'à la gare + 4 min + train vers une gare à moins de 6 km de `city` + 3 min/km | écart médian 0, 2 min en valeur absolue (gelés) |
 | `worktrain`, `workgare` | idem vers `work` : + 14 min, + 4 min/km de la gare d'arrivée | écart médian −1, 3 min en valeur absolue (gelés) |
 | `workpr` | voiture + 7 min (pas utilisé par l'app) | 119 identiques (gelé) |

@@ -46,6 +46,7 @@ import m_dvf  # noqa: E402
 import m_eau  # noqa: E402
 import m_ecoles  # noqa: E402
 import m_fibre  # noqa: E402
+import m_foret  # noqa: E402
 import m_geo  # noqa: E402
 import m_grid  # noqa: E402
 import m_risques  # noqa: E402
@@ -63,6 +64,7 @@ MODULE_FIELDS = {
     "ecoles": ("cl19", "cl25", "priv", "col", "colc", "colkm", "va"),
     "risques": ("inond", "sech", "mvt", "feu", "indus"),
     "eau": ("src", "srckm"),
+    "foret": ("foret", "fpub", "sent", "rando", "rnoms"),
 }
 ESSENTIAL = ("alt", "workcar", "famA", "famB")  # sans eux, une nouvelle commune attend la semaine suivante
 SKIP = {s for s in os.environ.get("TERRAIN_COMMUNES_SKIP", "").split(",") if s}
@@ -114,6 +116,9 @@ def main():
     if not cfg or not old or not grid:
         sys.exit("config.json, communes.json et grid.json sont nécessaires")
     F = cfg["fields"]
+    # champ d'un nouveau module : ajouté en fin de liste (config.json est réécrit juste avant communes.json)
+    new_fields = [f for fs in MODULE_FIELDS.values() for f in fs if f not in F]
+    F += new_fields
     existing = {r[F.index("code")]: dict(zip(F, r)) for r in old["c"]}
 
     osrm = lib.Osrm()
@@ -172,6 +177,16 @@ def main():
     gares, tj = {}, None
     if r:
         res["train"], gares, tj = r
+    gt = bpe = None  # horaires SNCF et BPE libérés avant la forêt (limite mémoire du job)
+    # forêt et sentiers des communes, et des parcelles repérées (p["foret"] dans parcels.json)
+    parcels = lib.load_json(path("parcels.json")) or []
+    r = step("foret", lambda: m_foret.run(com, [p for p in parcels if p.get("lat") and p.get("lon")]))
+    if r:
+        res["foret"], par = r
+        for p in parcels:
+            if p.get("id") in par:
+                p["foret"] = par[p["id"]]
+        lib.save_json(path("parcels.json"), parcels)
     # Fichiers alignés sur la grille : écrits ensemble, grid.json en dernier. Une
     # grille agrandie n'est écrite que si crèches et train ont été recalculés sur
     # elle ; sinon l'ancienne grille et ses fichiers restent tels quels.
@@ -249,6 +264,9 @@ def main():
                  "legacy": list(LEGACY) if legacy else [], "status": status},
     }
     lib.save_json(os.path.join(lib.CACHE, "communes.prev.json"), old)  # filet : la version précédente
+    if new_fields:
+        lib.save_json(path("config.json"), cfg, indent=1)
+        log("config.json : champs ajoutés " + ", ".join(new_fields))
     lib.save_json(path("communes.json"), out)
     log(f"écrit communes.json : {len(rows)} communes ; " + ", ".join(f"{k} {v}" for k, v in status.items()))
     if any(v.startswith("erreur") for v in status.values()):
