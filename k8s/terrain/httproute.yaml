@@ -13,6 +13,14 @@ spec:
   hostnames:
     - terrain.chapellu.fr
   rules:
+    # suivi partagé (suivi.yaml) : même SecurityPolicy, puisqu'elle vise toute la route
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/suivi
+      backendRefs:
+        - name: terrain-suivi
+          port: 80
     - backendRefs:
         - name: terrain
           port: 80

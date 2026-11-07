@@ -269,6 +269,29 @@ Chaque profil (« Lui », « Elle ») garde ses poids dans le navigateur.
 dans le profil correspondant, puis « Compromis » classe sur la moyenne et
 montre l'écart entre les deux scores.
 
+## Suivi partagé des annonces et des parcelles
+
+Sur chaque annonce et chaque parcelle repérée (bulle, cartes, liste des annonces) :
+« ♥ J'aime » et « ✕ Pas pour nous » (l'avis de chacun), l'étape de la prise de
+contact (À contacter → Contacté → Réponse reçue → Visite prévue → Visité → Offre
+faite, ou Abandonné, commune aux deux) et un journal daté. Ouvrir une annonce
+(« Voir l'annonce ») la note comme vue. L'onglet « Suivi » range par étape ce que
+l'un de vous aime ou suit. Dans la liste des annonces, le filtre « Suivi » cache par
+défaut celles qu'on a soi-même écartées ; sur la carte elles sont estompées, celles
+que l'un de vous aime sont cerclées de rose.
+
+Le service est `k8s/terrain/suivi/suivi.py` (bibliothèque standard seule, monté
+depuis un ConfigMap dans `python:3.13-alpine`, `k8s/terrain/suivi.yaml`), sur le
+chemin `/api/suivi` de la même route, donc derrière la même connexion Google. Il
+sait qui clique par l'e-mail du jeton déjà vérifié par Envoy : `OWNER_EMAIL` est la
+1re personne de `config.people`, `PARTNER_EMAIL` la 2e (secret `terrain-vars`, voir
+`k8s/flux/terrain.yaml`). Une NetworkPolicy ne laisse passer que le proxy Envoy.
+Les données vivent dans `suivi.json` sur le volume `terrain-suivi` (sauvegardé par
+Velero avec les autres). Chaque fiche garde un instantané de l'annonce (titre, prix,
+lien, photo), si bien qu'une annonce retirée reste dans le suivi.
+
+Sans le service (app ouverte en local), l'onglet et les boutons n'apparaissent pas.
+
 ## Tester en local
 
 Copier ce dossier et un dossier `data/` à côté, puis servir le tout.
