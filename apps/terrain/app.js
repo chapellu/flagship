@@ -98,6 +98,7 @@ function init() {
   buildParcels();
   buildAds();
   buildNotes();
+  loadSuivi().then(() => { $("tab-suivi").hidden = !SUIVI; if (SUIVI) refreshSuivi(); });
   readShared();
   render();
 }
@@ -458,8 +459,7 @@ function buildMap() {
   }
   for (const a of ALLADS) {
     if (a.lat == null || a.gone) continue;
-    const cls = ["amark", a.top && "top", isNew(a) && "new", a.drop && "drop"].filter(Boolean).join(" ");
-    const m = L.marker([a.lat, a.lon], { icon: L.divIcon({ className: "", html: `<div class="${cls}">${a.top ? "★" : "€"}</div>`, iconSize: a.top ? [22, 22] : [18, 18] }), title: `Annonce · ${a.commune} · ${fmtk(a.prix)}` });
+    const m = L.marker([a.lat, a.lon], { icon: adIcon(a), title: `Annonce · ${a.commune} · ${fmtk(a.prix)}` });
     m.bindPopup(() => adPopup(a), { maxWidth: 300 });
     a._m = m;
   }
@@ -734,12 +734,29 @@ function parcelPopup(p) {
   return `<div class="pop"><span class="tag">Parcelle repérée</span><img src="${DATA + esc(p.img)}" alt=""><h3>${esc(p.commune)}</h3>
   <div class="pref">${PID.test(p.id) ? esc(parcelName(p.id)) : esc(p.id)}${parcelM2(p) ? " · " + fmtm2(parcelM2(p)) : ""}</div>
   <div class="sub">${p.kind === "mixte" ? `${p.constr} m² constructibles + ${p.agri} m² en zone A/N` : esc(p.surface) + " · " + esc(p.zone)} · ${esc(parcelRef(p.id))}</div>
-  <p>${esc(p.note)}</p><dl><dt>Altitude</dt><dd>${esc(p.alt)}</dd><dt>Pente</dt><dd>${esc(p.pente)}</dd><dt>Exposition</dt><dd>${esc(p.expo)}</dd>
+  <p>${esc(p.note)}</p>${svBar("p:" + p.id, parcelSnap(p))}<dl><dt>Altitude</dt><dd>${esc(p.alt)}</dd><dt>Pente</dt><dd>${esc(p.pente)}</dd><dt>Exposition</dt><dd>${esc(p.expo)}</dd>
   ${c ? `<dt>${esc(workShort())}</dt><dd>${c.wt} min</dd>` : ""}${p.foret ? `<dt>Forêt</dt><dd>${parcelForet(p)}</dd>` : ""}</dl>
   ${p.ring && SPOTZ.has(p.id) ? `<div class="cada">${zonHtml(spotGeo(p), SPOTZ.get(p.id))}</div>` : ""}
   ${routeAct(p.lat, p.lon, "exact")}
   <div class="act">${p.ring && PID.test(p.id) ? `<button type="button" onclick="window.__seeParcel('${p.id}')">Voir la parcelle</button>` : ""}<button type="button" onclick="window.__goParcel('${esc(p.id)}')">Fiche de la parcelle</button>
   <a href="${cadastreUrl(p.lat, p.lon, p.id)}" target="_blank" rel="noopener">Cadastre ↗</a><a href="${plu(p.lat, p.lon)}" target="_blank" rel="noopener">Zonage ↗</a></div></div>`;
+}
+// annonces en ligne comparables, par secteur : calculées une fois (sinon chaque annonce
+// reparcourt toutes les autres et toutes les communes, 30 s pour la liste)
+let PEERS = null;
+function peerAds(sect) {
+  if (!PEERS) {
+    PEERS = new Map();
+    const byCode = new Map(C.map((c) => [c.code, c]));
+    for (const x of ALLADS) {
+      if (x.gone || x.stale || !x.m2 || constrVerdict(x)?.k === "non") continue;
+      const s = byCode.get(x.insee)?.sect;
+      if (s == null) continue;
+      if (!PEERS.has(s)) PEERS.set(s, []);
+      PEERS.get(s).push(x);
+    }
+  }
+  return PEERS.get(sect) || [];
 }
 // Prix d'une annonce face au marché : son €/m² contre le €/m² médian des ventes
 // de la commune (communes.json, au moins 5 ventes). À défaut, les annonces en ligne
@@ -748,7 +765,7 @@ function priceVerdict(a) {
   if (!a.m2 || !a.prix || constrVerdict(a)?.k === "non") return null; // vignes, loisir : pas comparable
   const e = a.prix / a.m2, c = C.find((x) => x.code === a.insee);
   if (!c) return null;
-  const peers = () => ALLADS.filter((x) => x !== a && !x.gone && !x.stale && x.m2 && constrVerdict(x)?.k !== "non" && C.find((y) => y.code === x.insee)?.sect === c.sect).map((x) => x.prix / x.m2);
+  const peers = () => peerAds(c.sect).filter((x) => x !== a).map((x) => x.prix / x.m2);
   let ref, src, typ, weak = false;
   if (c.eurm2 && c.nv >= 5) { ref = c.eurm2; src = `médiane de ${c.nv} ventes à ${c.nom}`; typ = c.m2; }
   else if (peers().length >= 5) { const p = peers(); ref = median(p); src = `médiane de ${p.length} annonces en ligne, secteur ${c.sect}`; }
@@ -774,9 +791,10 @@ function adPopup(a) {
   return `<div class="pop"><span class="tag ad">Annonce${a.top ? " mise en avant" : ""}</span>${a.photo ? `<img src="${esc(a.photo)}" alt="">` : ""}<h3>${esc(a.commune)} · ${fmtk(a.prix)}</h3>
   <div class="sub">${fm2(a)} · ${a.eurm2 ?? "–"} €/m²${a.vendeur ? " · " + esc(a.vendeur) : ""}${a.top ? " · " + esc(a.top) : ""}</div>
   ${constrBadge(a)}${priceBadge(a)}${marketLine(a)}${a.analyse ? `<p>${esc(a.analyse)}</p>` : ""}
+  ${svBar(a.id, adSnap(a))}
   ${communeInAd(a)}
   ${a.lat ? routeAct(a.lat, a.lon, a.pos) : ""}${cadaAct(a)}
-  <div class="act"><a class="go" href="${esc(a.url)}" target="_blank" rel="noopener">Voir l'annonce ↗</a><button type="button" onclick="window.__goAd('${esc(a.id)}')">Dans la liste</button>
+  <div class="act"><a class="go" href="${esc(a.url)}" target="_blank" rel="noopener"${vuAttr(a.id)}>Voir l'annonce ↗</a><button type="button" onclick="window.__goAd('${esc(a.id)}')">Dans la liste</button>
   ${a.lat ? `<a href="${cadastreUrl(a.lat, a.lon)}" target="_blank" rel="noopener">Cadastre ↗</a>` : ""}</div></div>`;
 }
 
@@ -1405,6 +1423,7 @@ function showTab(t) {
   document.querySelector(".layout").style.gridTemplateColumns = $("side").hidden ? "1fr" : "";
   if (t === "carte") setTimeout(() => map.invalidateSize(), 30);
   if (t === "annonces") renderAds();
+  if (t === "suivi") renderSuivi();
   if (!location.hash.startsWith("#r=")) history.replaceState(null, "", "#" + t);
 }
 
@@ -1423,6 +1442,7 @@ function renderParcels() {
     <div class="ph"><img src="${DATA + esc(p.img)}" alt="Photo aérienne, ${esc(p.commune)}" loading="lazy"><svg viewBox="0 0 360 240" aria-hidden="true"><polygon points="${esc(p.svg)}"/></svg><span class="scale">${esc(p.scale)}</span></div>
     <figcaption><div class="ptop"><b>${esc(p.commune)}</b><span class="z ${p.kind === "mixte" ? "u" : /AU/.test(p.zone) ? "au" : "u"}">${p.kind === "mixte" ? `${p.constr} m² ${esc(p.zone)} + ${p.agri} m² A/N` : esc(p.surface) + " · " + esc(p.zone)}</span></div>
     <p>${esc(p.note)}</p>${p.foret ? `<p class="sub">🌲 ${parcelForet(p)}${p.foret.noms ? " · " + esc(p.foret.noms) : ""}</p>` : ""}
+    ${svBar("p:" + p.id, parcelSnap(p))}
     <dl><div><dt>Altitude</dt><dd>${esc(p.alt)}</dd></div><div><dt>Pente</dt><dd>${esc(p.pente)}</dd></div><div><dt>Expo.</dt><dd>${esc(p.expo)}</dd></div>
     ${c ? `<div><dt>${esc(workShort())}</dt><dd>${c.wt} min</dd></div><div><dt>Score</dt><dd>${c.score}${c.zone ? " ✓" : ""}</dd></div>` : ""}</dl>
     <div class="act"><button type="button" data-ll="${p.lat},${p.lon}">Voir sur la carte</button><a href="${cadastreUrl(p.lat, p.lon, p.id)}" target="_blank" rel="noopener">Cadastre ↗</a><a href="${plu(p.lat, p.lon)}" target="_blank" rel="noopener">Zonage ↗</a><span class="sub">${esc(parcelRef(p.id))}</span></div>
@@ -1470,6 +1490,7 @@ const fm2 = (a) => (a.m2 ? `${a.m2} m²` : "surface ?");
 // Alertes e-mail : jamais d'avis de retrait. Sans nouvelle alerte depuis 45 j, statut inconnu.
 const QUIET = 45;
 function buildAdList() {
+  PEERS = null; // voisines par secteur, recalculées sur la nouvelle liste
   const curated = Object.fromEntries(ADS.map((a) => [adKey(a.url), a]));
   if (!MARKET) { ALLADS = ADS.map((a) => ({ ...a, id: adKey(a.url) })); return; }
   ALLADS = Object.entries(MARKET.ads).filter(([, h]) => !h.dup).map(([id, h]) => {
@@ -1497,6 +1518,7 @@ function buildAds() {
   $("aintro").innerHTML = NOTES.annonces_intro;
   $("a-zone").addEventListener("change", renderAds);
   $("a-gone").addEventListener("change", renderAds);
+  $("a-suivi").addEventListener("change", renderAds);
   $("a-gone-wrap").hidden = !MARKET;
   renderMarket();
 }
@@ -1510,20 +1532,21 @@ function renderAds() {
     return `<figure class="parcel ad" data-aid="${esc(a.id)}"><div class="adph">${a.photo ? `<img src="${esc(a.photo)}" alt="" loading="lazy">` : ""}</div>
     <figcaption><span class="tag go">${esc(a.top)}</span><div class="ptop"><b>${esc(a.commune)}</b><span class="price">${fmtk(a.prix)}</span></div>
     <dl><div><dt>Surface</dt><dd>${fm2(a)}</dd></div>${c ? `<div><dt>${esc(workShort())}</dt><dd>${c.wt} min</dd></div><div><dt>${esc(place("famA").short)}</dt><dd>${c.famA} min</dd></div><div><dt>${esc(place("famB").short)}</dt><dd>${c.famB} min</dd></div>` : ""}</dl>
-    ${priceBadge(a)}${marketLine(a)}<p>${esc(a.analyse)}</p><div class="act"><a class="go" href="${esc(a.url)}" target="_blank" rel="noopener">Voir l'annonce ↗</a>${a.lat ? `<button type="button" data-ll="${a.lat},${a.lon}">Voir sur la carte</button>` : ""}</div></figcaption></figure>`;
+    ${priceBadge(a)}${marketLine(a)}<p>${esc(a.analyse)}</p>${svBar(a.id, adSnap(a))}<div class="act"><a class="go" href="${esc(a.url)}" target="_blank" rel="noopener"${vuAttr(a.id)}>Voir l'annonce ↗</a>${a.lat ? `<button type="button" data-ll="${a.lat},${a.lon}">Voir sur la carte</button>` : ""}</div></figcaption></figure>`;
   }).join("");
   if (hiddenTops) $("atop").insertAdjacentHTML("beforeend", `<p class="hint">${hiddenTops} annonce${hiddenTops > 1 ? "s" : ""} mise${hiddenTops > 1 ? "s" : ""} en avant masquée${hiddenTops > 1 ? "s" : ""} par les filtres (prix ${pxTxt()}${S.f.m2 ? `, ${S.f.m2} m² min.` : ""}).</p>`);
   const z = $("a-zone").checked, g = $("a-gone").checked;
-  const rows = ALLADS.filter((a) => adOk(a) && (!z || adInZone(a, byCode)) && (g || (!a.gone && !a.stale)))
+  const rows = ALLADS.filter((a) => adOk(a) && (!z || adInZone(a, byCode)) && (g || (!a.gone && !a.stale)) && svFilter(a))
     .map((a) => ({ a, c: byCode[a.insee] })).sort((x, y) => (!!x.a.gone - !!y.a.gone) || (y.c?.score ?? 0) - (x.c?.score ?? 0));
-  $("atbl").tHead.innerHTML = `<tr><th>Score commune</th><th>Commune</th><th>Surface</th><th>Prix</th><th>€/m²</th><th>${esc(workShort())}</th><th>Alt. bourg</th>${MARKET ? "<th>En ligne</th>" : ""}<th>Annonce</th></tr>`;
+  $("atbl").tHead.innerHTML = `<tr><th>Score commune</th><th>Commune</th><th>Surface</th><th>Prix</th><th>€/m²</th><th>${esc(workShort())}</th><th>Alt. bourg</th>${MARKET ? "<th>En ligne</th>" : ""}<th>Annonce</th>${SUIVI ? "<th>Suivi</th>" : ""}</tr>`;
   $("atbl").tBodies[0].innerHTML = rows.map(({ a, c }) => `<tr data-aid="${esc(a.id)}"${a.gone || a.stale ? ' class="gone"' : ""}><td class="num">${c ? c.score : "–"}${c?.zone ? '<span class="sub">zone verte</span>' : ""}</td>
     <td><strong>${esc(a.commune)}</strong>${a.top ? ' <span class="chip g">★</span>' : ""}<span class="sub">${esc(a.titre || "")}</span></td><td class="num">${fm2(a)}</td>
     <td class="num">${fmtk(a.prix)}${a.drop ? `<span class="sub">−${fmtk(a.drop)}</span>` : ""}</td><td class="num">${a.eurm2 ?? "–"}<span class="sub">${priceBadge(a, false)} ${constrBadge(a, false)}</span></td>
     <td class="num">${c ? c.wt + " min" : "–"}</td><td class="num">${c ? c.alt + " m" : "–"}</td>
     ${MARKET ? `<td class="num">${a.stale ? "–" : ageHTML(a)}<span class="sub">${a.stale ? "plus vue" : a.gone ? "partie le " + fmtd(a.gone) : isNew(a) ? "nouvelle" : knownAge(a) ? "depuis le " + fmtd(since(a)) : "date inconnue"}</span></td>` : ""}
-    <td><a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.agence || a.vendeur || "voir")} ↗</a>${a.src ? `<span class="sub">${esc(a.src)}${a.constructeur ? " · constructeur" : ""}</span>` : a.constructeur ? '<span class="sub">constructeur</span>' : ""}
-    ${a.lat && !a.gone ? `<button type="button" class="linkish" data-ll="${a.lat},${a.lon}">carte</button>` : ""}</td></tr>`).join("") || `<tr><td colspan="9">Aucune annonce avec ces filtres.</td></tr>`;
+    <td><a href="${esc(a.url)}" target="_blank" rel="noopener"${vuAttr(a.id)}>${esc(a.agence || a.vendeur || "voir")} ↗</a>${a.src ? `<span class="sub">${esc(a.src)}${a.constructeur ? " · constructeur" : ""}</span>` : a.constructeur ? '<span class="sub">constructeur</span>' : ""}
+    ${a.lat && !a.gone ? `<button type="button" class="linkish" data-ll="${a.lat},${a.lon}">carte</button>` : ""}</td>
+    ${SUIVI ? `<td class="svcell">${SUIVI.me && !seenByMe(a.id) && !myAvis(a.id) ? '<span class="chip sv-new">pas encore vue</span>' : ""}${svBar(a.id, adSnap(a), false)}</td>` : ""}</tr>`).join("") || `<tr><td colspan="10">Aucune annonce avec ces filtres.</td></tr>`;
   const goLL = (e) => { const b = e.target.closest("button[data-ll]"); if (!b) return; const [la, lo] = b.dataset.ll.split(",").map(Number); showTab("carte"); setTimeout(() => { map.invalidateSize(); map.setView([la, lo], 15); }, 50); };
   $("atbl").tBodies[0].onclick = goLL; $("atop").onclick = goLL;
 }
@@ -1566,4 +1589,138 @@ function buildNotes() {
     try { cb.checked = localStorage.getItem("terrain.g." + cb.id) === "1"; } catch (e) { /* rien */ }
     cb.addEventListener("change", () => { try { localStorage.setItem("terrain.g." + cb.id, cb.checked ? "1" : "0"); } catch (e) { /* rien */ } });
   });
+}
+
+// ---------------------------------------------------------------- suivi partagé
+// Service k8s/terrain/suivi (même connexion Google que l'app) : l'avis de chacun
+// (j'aime / pas pour nous), ce qu'on a déjà regardé, l'étape de la prise de contact
+// et un journal daté, pour les annonces (clé : a.id) et les parcelles (« p: » + id).
+// Sans le service (app ouverte en local), rien ne s'affiche.
+const ETAPES = [["a_contacter", "À contacter"], ["contacte", "Contacté"], ["reponse", "Réponse reçue"], ["visite", "Visite prévue"],
+  ["visite_faite", "Visité"], ["offre", "Offre faite"], ["abandon", "Abandonné"]];
+const ETL = Object.fromEntries(ETAPES);
+let SUIVI = null; // { me: "A" | "B" | null, items }
+const SNAPS = new Map(), OPENJ = new Set();
+async function loadSuivi() {
+  try {
+    const r = await fetch("api/suivi", { cache: "no-store", credentials: "same-origin", redirect: "error" });
+    SUIVI = r.ok && /json/.test(r.headers.get("content-type") || "") ? await r.json() : null;
+  } catch (e) { SUIVI = null; }
+}
+const sv = (k) => SUIVI?.items?.[k] || null;
+const pname = (w) => CFG.people[w === "B" ? 1 : 0];
+const myAvis = (k) => sv(k)?.avis?.[SUIVI?.me];
+const seenByMe = (k) => !!sv(k)?.vu?.[SUIVI?.me];
+const rejectedByMe = (k) => myAvis(k) === "non";
+const likedByAny = (k) => Object.values(sv(k)?.avis || {}).includes("aime");
+const adSnap = (a) => ({ t: "annonce", titre: a.titre || "", commune: a.commune || "", prix: a.prix || 0, m2: a.m2 || 0, url: a.url || "", photo: a.photo || "", lat: a.lat || 0, lon: a.lon || 0, id: a.id });
+const parcelSnap = (p) => ({ t: "parcelle", titre: PID.test(p.id) ? parcelName(p.id) : p.id, commune: p.commune, m2: parcelM2(p), photo: p.img ? DATA + p.img : "", lat: p.lat, lon: p.lon, id: p.id });
+const fmtDay = (iso) => new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+// Pastilles d'avis : « Lui ♥ · Elle ✕ » et l'étape
+function svChips(k) {
+  const it = sv(k);
+  if (!it) return "";
+  const av = Object.entries(it.avis || {}).map(([w, v]) => `<span class="chip ${v === "aime" ? "sv-like" : "sv-no"}">${esc(pname(w))} ${v === "aime" ? "♥" : "✕"}</span>`);
+  if (it.etape) av.push(`<span class="chip sv-et">${esc(ETL[it.etape] || it.etape)}</span>`);
+  return av.join("");
+}
+// Barre de suivi d'une annonce ou d'une parcelle ; full : avec le journal
+function svBar(k, snap, full = true) {
+  if (!SUIVI) return "";
+  SNAPS.set(k, snap);
+  const it = sv(k) || {}, me = SUIVI.me, mine = it.avis?.[me];
+  const oth = Object.entries(it.avis || {}).filter(([w]) => w !== me).map(([w, v]) => `${esc(pname(w))} ${v === "aime" ? "♥" : "✕"}`).join(" · ");
+  if (!me) return `<div class="sv">${svChips(k)}</div>`;
+  const j = it.journal || [];
+  const line = (e) => `<li><time>${fmtDay(e.t)}</time> <b>${esc(pname(e.qui))}</b> ${e.txt ? esc(e.txt) : e.etape !== undefined ? "→ " + esc(ETL[e.etape] || "plus de suivi") : e.avis === "aime" ? "♥ aime" : e.avis === "non" ? "✕ pas pour nous" : "retire son avis"}</li>`;
+  return `<div class="sv" data-svk="${esc(k)}">
+    <div class="sv-row"><button type="button" class="sv-b like" aria-pressed="${mine === "aime"}" onclick="window.__sv(this,'avis','aime')">♥ J'aime</button><button type="button" class="sv-b no" aria-pressed="${mine === "non"}" onclick="window.__sv(this,'avis','non')">✕ Pas pour nous</button>
+    <select aria-label="Étape du suivi" onchange="window.__sv(this,'etape',this.value)"><option value="">Pas de suivi</option>${ETAPES.map(([v, l]) => `<option value="${v}"${it.etape === v ? " selected" : ""}>${l}</option>`).join("")}</select>
+    ${oth ? `<span class="sub">${oth}</span>` : ""}</div>
+    ${full ? `<details class="sv-j"${OPENJ.has(k) ? " open" : ""} ontoggle="window.__svTog(this)"><summary>Journal${j.length ? ` (${j.length})` : ""}</summary>
+      ${j.length ? `<ol>${j.slice().reverse().map(line).join("")}</ol>` : ""}
+      <form onsubmit="return window.__svNote(this)"><input name="txt" maxlength="2000" placeholder="Appel, réponse, rendez-vous…" aria-label="Ajouter une note"><button type="submit">Ajouter</button></form></details>` : ""}</div>`;
+}
+async function svPost(k, body) {
+  const snap = SNAPS.get(k);
+  try {
+    const r = await fetch("api/suivi", { method: "POST", credentials: "same-origin", redirect: "error", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: k, snap, ...body }) });
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).err || r.status);
+    const d = await r.json();
+    SUIVI.items[k] = d.item;
+    return true;
+  } catch (e) {
+    alert(`Suivi non enregistré (${e.message || "réseau"}). Rechargez la page pour vous reconnecter.`);
+    return false;
+  }
+}
+window.__sv = async (el, op, v) => {
+  const k = el.closest("[data-svk]").dataset.svk;
+  if (op === "avis" && myAvis(k) === v) v = null; // second clic : on retire son avis
+  if (op === "etape" && !v) v = null;
+  if (await svPost(k, { op, v })) refreshSuivi();
+};
+window.__svNote = (form) => {
+  const k = form.closest("[data-svk]").dataset.svk, txt = form.txt.value.trim();
+  if (txt) svPost(k, { op: "note", txt }).then((ok) => { if (ok) { OPENJ.add(k); refreshSuivi(); } });
+  return false;
+};
+window.__svTog = (d) => { const k = d.closest("[data-svk]").dataset.svk; if (d.open) OPENJ.add(k); else OPENJ.delete(k); };
+// « Voir l'annonce » : on note qu'on l'a regardée (une fois)
+window.__svVu = (k) => { if (SUIVI?.me && !seenByMe(k)) svPost(k, { op: "vu" }).then((ok) => ok && refreshSuivi(false)); };
+const vuAttr = (k) => (SUIVI?.me ? ` onclick="window.__svVu('${esc(k)}')"` : "");
+// marqueur d'annonce : estompé si je l'ai rejetée, cerclé si l'un de nous l'aime
+function adIcon(a) {
+  const cls = ["amark", a.top && "top", isNew(a) && "new", a.drop && "drop", rejectedByMe(a.id) && "rej", likedByAny(a.id) && "liked"].filter(Boolean).join(" ");
+  return L.divIcon({ className: "", html: `<div class="${cls}">${a.top ? "★" : "€"}</div>`, iconSize: a.top ? [22, 22] : [18, 18] });
+}
+function refreshSuivi(full = true) {
+  for (const a of ALLADS) if (a._m) a._m.setIcon(adIcon(a));
+  if (!full) { if (!document.querySelector(".view[data-view=annonces]").hidden) renderAds(); return; }
+  renderParcels();
+  if (!document.querySelector(".view[data-view=annonces]").hidden) renderAds();
+  renderSuivi();
+  const pop = map._popup;
+  if (pop && pop.isOpen()) pop.update();
+}
+// Onglet « Suivi » : ce qu'on aime et ce qu'on a contacté, par étape
+function renderSuivi() {
+  const el = $("suivi");
+  if (!el) return;
+  if (!SUIVI) { el.innerHTML = `<p class="hint">Le suivi partagé n'est pas joignable (app ouverte hors du serveur, ou session expirée : rechargez la page).</p>`; return; }
+  const keys = Object.keys(SUIVI.items).filter((k) => sv(k).etape || likedByAny(k));
+  const groups = [["", "Aimées, pas encore contactées"], ...ETAPES];
+  const card = (k) => {
+    const it = sv(k), s = it.snap || {}, isP = k.startsWith("p:");
+    const a = isP ? null : ALLADS.find((x) => x.id === k), p = isP ? PARCELS.find((x) => "p:" + x.id === k) : null;
+    const snap = a ? adSnap(a) : p ? parcelSnap(p) : s;
+    const gone = !isP && (!a || a.gone || a.stale);
+    const last = (it.journal || []).filter((e) => e.txt).slice(-1)[0];
+    const ll = snap.lat ? `<button type="button" onclick="window.__svMap(${+snap.lat},${+snap.lon})">Voir sur la carte</button>` : "";
+    return `<figure class="parcel svcard" data-svid="${esc(k)}"><div class="adph">${snap.photo ? `<img src="${esc(snap.photo)}" alt="" loading="lazy">` : ""}</div>
+    <figcaption><div class="ptop"><b>${esc(snap.commune || "?")}</b><span class="price">${isP ? (snap.m2 ? fmtm2(snap.m2) : "") : fmtk(snap.prix)}</span></div>
+    <div class="sub">${isP ? "Parcelle repérée · " + esc(snap.titre || "") : `${snap.m2 ? fmtm2(snap.m2) + " · " : ""}${esc(snap.titre || "Annonce")}`}${gone ? ' · <span class="chip b">annonce partie</span>' : ""}</div>
+    ${last ? `<p class="sub">« ${esc(last.txt)} » — ${esc(pname(last.qui))}, ${fmtDay(last.t)}</p>` : ""}
+    ${svBar(k, snap)}
+    <div class="act">${snap.url ? `<a class="go" href="${esc(snap.url)}" target="_blank" rel="noopener">Voir l'annonce ↗</a>` : ""}${ll}${isP ? `<button type="button" onclick="window.__goParcel('${esc(snap.id)}')">Fiche de la parcelle</button>` : ""}</div></figcaption></figure>`;
+  };
+  const html = groups.map(([v, l]) => {
+    const ks = keys.filter((k) => (sv(k).etape || "") === v).sort((x, y) => (sv(y).maj || "").localeCompare(sv(x).maj || ""));
+    return ks.length ? `<h2>${esc(l)} <span class="sub">${ks.length}</span></h2><div class="parcels">${ks.map(card).join("")}</div>` : "";
+  }).join("");
+  const nrej = Object.keys(SUIVI.items).filter(rejectedByMe).length;
+  el.innerHTML = (html || `<p class="hint">Rien pour l'instant : sur une annonce ou une parcelle, « ♥ J'aime » la met ici, et l'étape du suivi la range par étape de contact.</p>`)
+    + (nrej ? `<p class="hint">${nrej} annonce${nrej > 1 ? "s" : ""} ou parcelle${nrej > 1 ? "s" : ""} que vous avez écartée${nrej > 1 ? "s" : ""} : masquée${nrej > 1 ? "s" : ""} de la liste des annonces (filtre « Suivi »).</p>` : "");
+}
+window.__svMap = (la, lo) => { showTab("carte"); setTimeout(() => { map.invalidateSize(); map.setView([la, lo], 16); }, 50); };
+// filtre « Suivi » de la liste des annonces
+function svFilter(a) {
+  const v = $("a-suivi")?.value || "sansrej";
+  if (!SUIVI?.me || v === "tout") return true;
+  if (v === "sansrej") return !rejectedByMe(a.id);
+  if (v === "nonvues") return !seenByMe(a.id) && !myAvis(a.id);
+  if (v === "aimees") return likedByAny(a.id);
+  if (v === "rej") return rejectedByMe(a.id);
+  if (v === "suivi") return !!sv(a.id)?.etape;
+  return true;
 }

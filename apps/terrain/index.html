@@ -23,6 +23,7 @@
     <button role="tab" data-tab="classement">Classement</button>
     <button role="tab" data-tab="parcelles">Parcelles</button>
     <button role="tab" data-tab="annonces">Annonces</button>
+    <button role="tab" data-tab="suivi" id="tab-suivi" hidden>Suivi</button>
     <button role="tab" data-tab="analyse">Analyse</button>
     <button role="tab" data-tab="visite">Visite &amp; plan</button>
   </nav>
@@ -158,9 +159,17 @@
         <div class="w"><label for="a-m2">Surface min.</label><input type="range" id="a-m2" min="0" max="3000" step="100"><output for="a-m2"></output></div>
         <div class="w"><label for="a-prix">Prix max</label><input type="range" id="a-prix" min="40" max="500" step="10"><output for="a-prix"></output></div>
         <label class="chk"><input type="checkbox" id="a-zone"> Dans la zone verte</label>
+        <div class="w" id="a-suivi-wrap"><label for="a-suivi">Suivi</label><select id="a-suivi">
+          <option value="sansrej">Sans celles que j'ai écartées</option><option value="nonvues">Pas encore vues</option><option value="aimees">Aimées (par l'un de nous)</option>
+          <option value="suivi">En cours de contact</option><option value="rej">Celles que j'ai écartées</option><option value="tout">Toutes</option></select></div>
         <label class="chk" id="a-gone-wrap" hidden><input type="checkbox" id="a-gone"> Montrer aussi les annonces parties</label>
       </div>
       <div class="tablewrap"><table id="atbl"><thead></thead><tbody></tbody></table></div>
+    </section>
+
+    <section class="view" data-view="suivi" hidden>
+      <p class="hint">Partagé entre vous deux : chacun donne son avis, l'étape et le journal sont communs.</p>
+      <div id="suivi"></div>
     </section>
 
     <section class="view prose-view" data-view="analyse" hidden><div id="analyse"></div></section>

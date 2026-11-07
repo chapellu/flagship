@@ -10,6 +10,7 @@ resources:
   - referencegrant.yaml
   - cronjob.yaml
   - communes.yaml
+  - suivi.yaml
   - mailin.yaml
   - mailin.enc.yaml
 # Le code du relevé quotidien, monté dans le CronJob. Le suffixe de hash fait
@@ -48,3 +49,11 @@ configMapGenerator:
       - communes/m_risques.py
       - communes/m_train.py
       - communes/m_voiture.py
+  # Le service de suivi partagé (suivi.yaml).
+  - name: terrain-suivi
+    namespace: terrain
+    options:
+      annotations:
+        kustomize.toolkit.fluxcd.io/substitute: disabled
+    files:
+      - suivi/suivi.py

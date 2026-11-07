@@ -1,0 +1,133 @@
+# Suivi partagé des annonces et des parcelles (avis de chacun, prise de contact,
+# journal) : k8s/terrain/suivi/suivi.py, bibliothèque standard seule, monté depuis
+# le ConfigMap terrain-suivi comme le code des CronJobs. Joignable seulement par
+# la passerelle (HTTPRoute terrain, chemin /api/suivi), donc derrière la même
+# connexion Google que l'app. Le fichier vit dans son propre volume, que Velero
+# sauvegarde chaque nuit avec les autres.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: terrain-suivi
+  namespace: terrain
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: terrain-suivi
+  namespace: terrain
+spec:
+  replicas: 1
+  # un seul écrivain du fichier, jamais deux pods en même temps
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: terrain-suivi
+  template:
+    metadata:
+      labels:
+        app: terrain-suivi
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: suivi
+          image: python:3.13-alpine
+          command: ["python3", "-I", "/app/suivi.py"]
+          env:
+            - name: SUIVI_FILE
+              value: /suivi/suivi.json
+            # personne A = 1re de config.people, B = 2e (mêmes adresses que la SecurityPolicy)
+            - name: OWNER_EMAIL
+              value: "${OWNER_EMAIL}"
+            - name: PARTNER_EMAIL
+              value: "${PARTNER_EMAIL:=nobody@invalid.invalid}"
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 5m
+              memory: 24Mi
+            limits:
+              cpu: 200m
+              memory: 96Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: code
+              mountPath: /app
+            - name: suivi
+              mountPath: /suivi
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: code
+          configMap:
+            name: terrain-suivi
+        - name: suivi
+          persistentVolumeClaim:
+            claimName: terrain-suivi
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: terrain-suivi
+  namespace: terrain
+spec:
+  selector:
+    app: terrain-suivi
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+# Le service croit l'e-mail du jeton parce que la passerelle l'a vérifié : seul
+# le proxy Envoy peut donc lui parler.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: terrain-suivi-from-gateway
+  namespace: terrain
+spec:
+  podSelector:
+    matchLabels:
+      app: terrain-suivi
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: envoy-gateway-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: envoy
+      ports:
+        - port: 8080
