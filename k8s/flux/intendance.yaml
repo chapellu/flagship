@@ -47,4 +47,10 @@ spec:
   # parent, et sans le ClusterIssuer il n'y a pas de certificat.
   dependsOn:
     - name: infrastructure-config
-  # Rien de secret : pas de bloc decryption.
+  # Les Secrets chiffrés d'intendance (`k8s/*.enc.yaml` : les références du
+  # magasin et la clé qui les protège), déchiffrés avec la même clé age que
+  # le reste du cluster. Le dépôt public n'en porte que le chiffré.
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-age
